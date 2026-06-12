@@ -1,0 +1,38 @@
+{
+  "near_island": {
+    "name": "Isla Cercana",
+    "direction": "east",
+    "duration": 3,
+    "base_success": 90,
+    "season_block": [],
+    "requires": {},
+    "cost": {"food": 4, "wood": 5},
+    "safe_reward": {"wood": 8, "gold": 90},
+    "risk_reward": {"wood": 14, "gold": 140, "map_piece": 1},
+    "description": "Ruta sencilla para empezar a explorar."
+  },
+  "southern_cove": {
+    "name": "Cala del Sur",
+    "direction": "south",
+    "duration": 4,
+    "base_success": 75,
+    "season_block": ["winter"],
+    "requires": {},
+    "cost": {"food": 6, "wood": 8},
+    "safe_reward": {"coral": 2, "gold": 140},
+    "risk_reward": {"coral": 4, "gold": 220},
+    "description": "Arrecifes templados. Bloqueada en invierno."
+  },
+  "black_reef": {
+    "name": "Arrecife Negro",
+    "direction": "west",
+    "duration": 6,
+    "base_success": 55,
+    "season_block": ["fall", "winter"],
+    "requires": {"steel_keel": true},
+    "cost": {"food": 9, "wood": 12, "iron": 2},
+    "safe_reward": {"pearls": 1, "coral": 3, "gold": 300},
+    "risk_reward": {"pearls": 3, "coral": 7, "gold": 650},
+    "description": "Ruta peligrosa. Requiere Orza de Acero."
+  }
+}

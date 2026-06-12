@@ -1,0 +1,7 @@
+{
+  "steel_keel": {
+    "name": "Orza de Acero",
+    "cost": {"iron": 50, "carbon": 30, "gold": 800},
+    "description": "Permite cruzar arrecifes violentos."
+  }
+}

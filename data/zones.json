@@ -1,0 +1,7 @@
+{
+  "farm": {"name": "Granja", "action": "gather_food", "x": 180, "y": 360},
+  "forest": {"name": "Bosque", "action": "chop_wood", "x": 180, "y": 160},
+  "mine": {"name": "Mina", "action": "mine_resources", "x": 460, "y": 160},
+  "coast": {"name": "Costa", "action": "fish", "x": 460, "y": 360},
+  "dock": {"name": "Muelle", "action": "dock", "x": 320, "y": 260}
+}

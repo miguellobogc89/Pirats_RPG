@@ -1,0 +1,9 @@
+{
+  "season_days": 28,
+  "seasons": ["spring", "summer", "fall", "winter"],
+  "initial_day": 1,
+  "initial_season_index": 1,
+  "max_energy": 10,
+  "max_health": 100,
+  "initial_wind": "east"
+}
