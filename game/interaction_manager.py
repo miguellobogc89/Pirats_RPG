@@ -1,8 +1,9 @@
 import random
 
+from core.save_manager import save_state
 from game.inventory.hotbar_manager import get_active_tool
 from game.world_objects import WORLD_OBJECTS
-from core.save_manager import save_state
+from game.collectable_manager import spawn_collectables_from_drops
 
 
 def get_nearby_object(state, game_data, interaction_range):
@@ -10,7 +11,12 @@ def get_nearby_object(state, game_data, interaction_range):
     closest_object = None
     closest_distance = interaction_range
 
+    destroyed_objects = state.get("destroyed_world_objects", [])
+
     for world_object in WORLD_OBJECTS:
+        if world_object["id"] in destroyed_objects:
+            continue
+
         dx = world_object["x"] - player["x"]
         dy = world_object["y"] - player["y"]
         distance = (dx * dx + dy * dy) ** 0.5
@@ -33,7 +39,7 @@ def interact_with_nearby_object(app):
         app.menu_open = True
         app.menu_tab = "routes"
         return
-    
+
     if world_object["type"] == "bed":
         app.sleep_day()
         save_state(app.state)
@@ -63,39 +69,75 @@ def interact_with_resource_object(app, world_object):
     app.state["energy"]["current"] -= energy_cost
     world_object["hp"] -= 1
 
-    reward_on_hit = world_object.get("reward_on_hit", {})
-    apply_reward(app.state, reward_on_hit)
-
     app.add_log(f"Golpeas {world_object['name']}. Energía -{energy_cost}.")
 
+    hit_drops = roll_drops(world_object, "on_hit")
+    spawn_collectables_from_drops(app.state, hit_drops, world_object["x"], world_object["y"])
+
     if world_object["hp"] <= 0:
-        reward_on_destroy = world_object.get("reward_on_destroy", {})
-        gained_text = apply_reward(app.state, reward_on_destroy)
+        destroy_drops = roll_drops(world_object, "on_destroy")
+        spawn_collectables_from_drops(app.state, destroy_drops, world_object["x"], world_object["y"])
 
         app.add_log(f"{world_object['name']} destruido.")
 
-        if gained_text:
-            app.add_log(f"Obtienes {gained_text}.")
 
+        if "destroyed_world_objects" not in app.state:
+            app.state["destroyed_world_objects"] = []
+
+        app.state["destroyed_world_objects"].append(world_object["id"])
         WORLD_OBJECTS.remove(world_object)
         app.nearby_object = None
 
 
-def apply_reward(state, reward_data):
-    gained_parts = []
+def roll_drops(world_object, drop_moment):
+    drops = world_object.get("drops", {}).get(drop_moment, [])
+    rolled_drops = []
 
-    for resource, value in reward_data.items():
-        amount = roll_reward_amount(value)
-        state["resources"][resource] = state["resources"].get(resource, 0) + amount
-        gained_parts.append(f"{resource} x{amount}")
+    for drop in drops:
+        chance = drop.get("chance", 100)
+        roll = random.randint(1, 100)
 
-    return ", ".join(gained_parts)
+        if roll > chance:
+            continue
+
+        amount = roll_drop_amount(drop.get("amount", 1))
+
+        if amount <= 0:
+            continue
+
+        rolled_drops.append(
+            {
+                "item_id": drop["item_id"],
+                "amount": amount,
+            }
+        )
+
+    return rolled_drops
 
 
-def roll_reward_amount(value):
-    if isinstance(value, list):
-        minimum = value[0]
-        maximum = value[1]
+def roll_drop_amount(amount_data):
+    if isinstance(amount_data, list):
+        minimum = amount_data[0]
+        maximum = amount_data[1]
         return random.randint(minimum, maximum)
 
-    return value
+    return amount_data
+
+
+def add_drops_to_resources(app, drops):
+    if not drops:
+        return
+
+    if "resources" not in app.state:
+        app.state["resources"] = {}
+
+    gained_parts = []
+
+    for drop in drops:
+        item_id = drop["item_id"]
+        amount = drop["amount"]
+
+        app.state["resources"][item_id] = app.state["resources"].get(item_id, 0) + amount
+        gained_parts.append(f"{item_id} x{amount}")
+
+    app.add_log(f"Obtienes {', '.join(gained_parts)}.")

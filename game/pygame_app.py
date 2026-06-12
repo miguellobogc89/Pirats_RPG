@@ -1,86 +1,36 @@
 import sys
 import pygame
-from game.world_objects import WORLD_OBJECTS
-from game.hud.hud_renderer import draw_hud
-from game.ui_renderer import draw_log
-from game.world.world_renderer import draw_world_background
-from game.world.camera import get_camera_position
-from game.world.world_config import WORLD_WIDTH, WORLD_HEIGHT
-from game.inventory.hotbar_state import HOTBAR_SIZE, ensure_hotbar_state
-from game.inventory.inventory_manager import has_item
-from game.inventory.item_database import get_item_data
 
-
-def get_hotbar_slots(state):
-    ensure_hotbar_state(state)
-    return state["hotbar"]["slots"]
-
-
-def get_active_hotbar_index(state):
-    ensure_hotbar_state(state)
-    return state["hotbar"]["active_index"]
-
-
-def set_active_hotbar_index(state, index):
-    ensure_hotbar_state(state)
-
-    if index < 0 or index >= HOTBAR_SIZE:
-        return False
-
-    state["hotbar"]["active_index"] = index
-    return True
-
-
-def get_active_item_id(state):
-    slots = get_hotbar_slots(state)
-    active_index = get_active_hotbar_index(state)
-
-    return slots[active_index]
-
-
-def get_active_item_data(state):
-    active_item_id = get_active_item_id(state)
-
-    if active_item_id is None:
-        return None
-
-    return get_item_data(active_item_id)
-
-
-def get_active_tool(state):
-    item_data = get_active_item_data(state)
-
-    if item_data is None:
-        return None
-
-    if item_data.get("type") != "tool":
-        return None
-
-    return item_data.get("tool_type")
-
-
-def assign_item_to_hotbar(state, index, item_id):
-    ensure_hotbar_state(state)
-
-    if index < 0 or index >= HOTBAR_SIZE:
-        return False
-
-    if item_id is not None and not has_item(state, item_id):
-        return False
-
-    state["hotbar"]["slots"][index] = item_id
-    return True
 from core.rules_engine import (
     advance_day,
-    build_upgrade,
-    continue_and_risk,
-    secure_return,
-    start_trip,
 )
-from core.save_manager import save_state
-
-from game.player_controller import update_player_movement
+from game.hud.hud_renderer import draw_hud
+from game.time_manager import update_time
 from game.interaction_manager import get_nearby_object, interact_with_nearby_object
+
+from game.inventory.hotbar_manager import (
+    get_active_item_data,
+    get_active_item_id,
+    get_active_tool,
+    set_active_hotbar_index,
+)
+from game.world.grid_manager import TILE_SIZE, world_to_grid, grid_to_world
+from game.player_controller import update_player_movement
+from game.ui_renderer import draw_log
+from game.world.camera import get_camera_position
+from game.world.world_config import WORLD_WIDTH, WORLD_HEIGHT
+from game.world.world_renderer import draw_world_background
+from game.world_objects import WORLD_OBJECTS
+from game.hud.menu_overlay import draw_menu
+from game.collectable_manager import update_collectables
+from game.data.item_database import get_item_data
+from game.farming.farming_manager import advance_farming_day
+from game.world.grid_renderer import (
+    draw_world_grid,
+    draw_tilled_cells,
+    draw_watered_cells,
+    draw_crops,
+)
 
 WIDTH = 960
 HEIGHT = 640
@@ -88,7 +38,6 @@ FPS = 60
 
 PANEL = (238, 230, 204)
 DARK = (48, 55, 43)
-ACCENT = (119, 146, 88)
 WARN = (151, 76, 60)
 WHITE = (250, 248, 235)
 
@@ -103,9 +52,21 @@ class PygameApp:
         self.state = state
         self.game_data = game_data
 
+        self.placement_mode = False
+        self.placement_item_id = None
+
         self.font = pygame.font.SysFont("consolas", 18)
         self.big_font = pygame.font.SysFont("consolas", 28, bold=True)
         self.small_font = pygame.font.SysFont("consolas", 14)
+
+        self.player_sprite = pygame.image.load(
+            "assets/player/player_idle.png"
+        ).convert_alpha()
+
+        self.PANEL = PANEL
+        self.DARK = DARK
+        self.WARN = WARN
+        self.WHITE = WHITE
 
         self.nearby_object = None
         self.player_speed = 180
@@ -132,40 +93,149 @@ class PygameApp:
 
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == 1 and not self.menu_open:
-                    interact_with_nearby_object(self)
+                    self.handle_game_key(pygame.K_e)
 
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
                     self.menu_open = not self.menu_open
-
                 elif self.menu_open:
                     self.handle_menu_key(event.key)
-
                 else:
                     self.handle_game_key(event.key)
 
     def handle_game_key(self, key):
-        if key == pygame.K_1:
-            set_active_hotbar_index(self.state, 0)
+        number_keys = [
+            pygame.K_1,
+            pygame.K_2,
+            pygame.K_3,
+            pygame.K_4,
+            pygame.K_5,
+            pygame.K_6,
+            pygame.K_7,
+            pygame.K_8,
+        ]
+
+        if key in number_keys:
+            index = number_keys.index(key)
+            set_active_hotbar_index(self.state, index)
+
             item = get_active_item_data(self.state)
-            self.add_log(f"Equipado: {item['name']}")
+
+            if item is None:
+                self.add_log(f"Slot {index + 1} vacío.")
+            else:
+                self.add_log(f"Equipado: {item['name']}")
+
             return
 
-        if key == pygame.K_2:
-            set_active_hotbar_index(self.state, 1)
-            item = get_active_item_data(self.state)
-            self.add_log(f"Equipado: {item['name']}")
-            return
-
-        if key == pygame.K_3:
-            set_active_hotbar_index(self.state, 2)
-            item = get_active_item_data(self.state)
-            self.add_log(f"Equipado: {item['name']}")
-            return
-        
         if key == pygame.K_RETURN or key == pygame.K_e:
-            interact_with_nearby_object(self)
+            if self.nearby_object is not None:
+                if self.nearby_object["type"] == "bed" or self.nearby_object["type"] == "dock":
+                    interact_with_nearby_object(self)
+                    return
+                
 
+            from game.farming.farming_manager import harvest_crop
+            from game.inventory.inventory_manager import add_item
+
+            harvest_result = harvest_crop(
+                self.state,
+                self.state["player"]["x"],
+                self.state["player"]["y"],
+            )
+
+            if harvest_result["status"] == "harvested":
+                added = add_item(
+                    self.state,
+                    harvest_result["item_id"],
+                    harvest_result["amount"],
+                )
+
+                if added:
+                    self.add_log(f"Cosechas {harvest_result['item_id']} x{harvest_result['amount']}.")
+                else:
+                    self.add_log("Inventario lleno.")
+
+                return
+
+            if harvest_result["status"] == "removed_dead":
+                self.add_log("Has retirado una planta seca.")
+                return
+            active_item = get_active_item_data(self.state)
+            active_tool = get_active_tool(self.state)
+
+            if active_item is not None and active_item.get("type") == "placeable":
+                self.placement_mode = True
+                self.placement_item_id = get_active_item_id(self.state)
+                self.add_log(f"Colocando: {active_item['name']}")
+                return
+
+            if active_tool == "hoe":
+                from game.farming.farming_manager import till_cell
+
+                tilled = till_cell(
+                    self.state,
+                    self.state["player"]["x"],
+                    self.state["player"]["y"],
+                )
+
+                if tilled:
+                    self.add_log("Has arado la tierra.")
+                else:
+                    self.add_log("Esta celda ya está arada.")
+
+                return
+
+            if active_tool == "watering_can":
+                from game.farming.farming_manager import water_cell
+
+                result = water_cell(
+                    self.state,
+                    self.state["player"]["x"],
+                    self.state["player"]["y"],
+                )
+
+                if result == "not_tilled":
+                    self.add_log("Solo puedes regar tierra arada.")
+                    return
+
+                if result == "already_watered":
+                    self.add_log("Esta celda ya está regada.")
+                    return
+
+                self.add_log("Has regado la tierra.")
+                return
+
+            if active_item is not None and active_item.get("type") == "seed":
+                from game.farming.farming_manager import plant_crop
+                from game.inventory.inventory_manager import remove_item
+
+                result = plant_crop(
+                    self.state,
+                    self.state["player"]["x"],
+                    self.state["player"]["y"],
+                    active_item["crop_id"],
+                )
+
+                if result == "not_tilled":
+                    self.add_log("Primero tienes que arar la tierra.")
+                    return
+
+                if result == "occupied":
+                    self.add_log("Ya hay algo plantado aquí.")
+                    return
+
+                active_item_id = get_active_item_id(self.state)
+                removed = remove_item(self.state, active_item_id, 1)
+
+                if not removed:
+                    self.add_log("No tienes semillas suficientes.")
+                    return
+
+                self.add_log("Has plantado una semilla.")
+                return
+
+            interact_with_nearby_object(self)
 
     def handle_menu_key(self, key):
         tabs = ["inventory", "routes", "upgrades", "plants", "recipes", "options"]
@@ -177,22 +247,28 @@ class PygameApp:
         elif key == pygame.K_LEFT:
             self.menu_tab = tabs[(current_index - 1) % len(tabs)]
 
-
-
     def update(self, dt):
+        update_time(self.state, dt)
+
         if self.menu_open:
             return
 
         update_player_movement(self.state, self.player_speed, dt)
+        update_collectables(self)
 
         self.nearby_object = get_nearby_object(
             self.state,
             self.game_data,
-            self.interaction_range
+            self.interaction_range,
         )
 
     def sleep_day(self):
         messages = advance_day(self.state, self.game_data)
+
+        dead_crops = advance_farming_day(self.state)
+
+        for crop in dead_crops:
+            self.add_log("Una planta se ha secado.")
 
         for message in messages:
             self.add_log(message)
@@ -203,20 +279,32 @@ class PygameApp:
         self.state["log"] = self.log
 
     def draw(self):
-        draw_world_background(self.screen)
+        player = self.state["player"]
+
+        camera_x, camera_y = get_camera_position(
+            player["x"],
+            player["y"],
+            WIDTH,
+            HEIGHT,
+            WORLD_WIDTH,
+            WORLD_HEIGHT,
+        )
+
+        draw_world_background(self.screen, camera_x, camera_y)
+        draw_tilled_cells(self.screen, self.state, camera_x, camera_y)
+        draw_watered_cells(self.screen, self.state, camera_x, camera_y)
+        draw_crops(self.screen, self.state, camera_x, camera_y)
+        draw_world_grid(self.screen, camera_x, camera_y)
 
         self.draw_map()
-        draw_log(self)
 
         if self.hud_visible:
             draw_hud(self)
 
         if self.menu_open and self.hud_visible:
-            self.draw_menu()
+            draw_menu(self)
 
         pygame.display.flip()
-
-
 
     def draw_map(self):
         player = self.state["player"]
@@ -229,19 +317,29 @@ class PygameApp:
             WORLD_WIDTH,
             WORLD_HEIGHT,
         )
+        draw_world_grid(self.screen, camera_x, camera_y)
+
+        destroyed_objects = self.state.get("destroyed_world_objects", [])
 
         for world_object in WORLD_OBJECTS:
+
+            if world_object["id"] in destroyed_objects:
+                continue
+
             x = int(world_object["x"] - camera_x)
             y = int(world_object["y"] - camera_y)
             selected = self.nearby_object is not None and world_object["id"] == self.nearby_object["id"]
 
-            radius = world_object["radius"] + 7 if selected else world_object["radius"]
-            color = WHITE if selected else PANEL
+            radius = world_object["radius"]
+            if selected:
+                radius += 7
+
+            color = PANEL
+            if selected:
+                color = WHITE
 
             pygame.draw.circle(self.screen, color, (x, y), radius)
             pygame.draw.circle(self.screen, DARK, (x, y), radius, 3)
-
-            icon = world_object["icon"]
 
             icon = world_object["icon"]
 
@@ -261,29 +359,63 @@ class PygameApp:
             if selected:
                 self.draw_text("E", x - 5, y - radius - 28, WARN, self.big_font)
 
-        player = self.state["player"]
+        for collectable in self.state.get("collectables", []):
+            x = int(collectable["x"] - camera_x)
+            y = int(collectable["y"] - camera_y)
+
+            item_data = get_item_data(collectable["item_id"])
+
+            pygame.draw.circle(self.screen, WHITE, (x, y), collectable["radius"])
+            pygame.draw.circle(self.screen, DARK, (x, y), collectable["radius"], 2)
+
+            if item_data is not None:
+                self.draw_text(item_data["icon"], x - 5, y - 10, DARK, self.small_font)
         px = int(player["x"] - camera_x)
         py = int(player["y"] - camera_y)
 
         pygame.draw.circle(self.screen, DARK, (px, py), 13)
         pygame.draw.circle(self.screen, WHITE, (px, py - 18), 9)
 
-        if self.nearby_object is None:
-            self.draw_text(
-                "WASD/Flechas: moverse | E/Enter: interactuar",
-                80,
-                530,
-                DARK
-            )
-        else:
-            self.draw_text(
-                f"Cerca: {self.nearby_object['name']} | E/Enter interactuar",
-                80,
-                530,
-                DARK
-            )
 
-        self.draw_ship_panel()
+        if self.placement_mode and self.placement_item_id is not None:
+            item_data = get_item_data(self.placement_item_id)
+
+            if item_data is not None:
+                footprint = item_data.get("footprint", [1, 1])
+                width = footprint[0]
+                height = footprint[1]
+
+                mouse_x, mouse_y = pygame.mouse.get_pos()
+                world_mouse_x = mouse_x + camera_x
+                world_mouse_y = mouse_y + camera_y
+
+                grid_x, grid_y = world_to_grid(world_mouse_x, world_mouse_y)
+                world_x, world_y = grid_to_world(grid_x, grid_y)
+
+                screen_x = int(world_x - camera_x)
+                screen_y = int(world_y - camera_y)
+
+                preview_rect = pygame.Rect(
+                    screen_x,
+                    screen_y,
+                    width * TILE_SIZE,
+                    height * TILE_SIZE,
+                )
+
+                pygame.draw.rect(self.screen, (240, 220, 80), preview_rect, 2)
+                self.draw_text(
+                    item_data["icon"],
+                    screen_x + 10,
+                    screen_y + 6,
+                    DARK,
+                    self.big_font,
+                )
+
+        if self.nearby_object is None:
+            self.draw_text("WASD/Flechas: moverse | E/Enter: interactuar", 80, 530, DARK)
+        else:
+            self.draw_text(f"Cerca: {self.nearby_object['name']} | E/Enter interactuar", 80, 530, DARK)
+
 
     def draw_ship_panel(self):
         ship = self.state["ship"]
@@ -306,147 +438,6 @@ class PygameApp:
         if ship.get("pending_event") == "arrival_decision":
             self.draw_text("DECISION!", 730, 285, WARN, self.big_font)
             self.draw_text("ESC > Rutas", 730, 325, DARK)
-
-    def draw_log(self):
-        pygame.draw.rect(self.screen, PANEL, (60, 555, 870, 70), border_radius=8)
-        pygame.draw.rect(self.screen, DARK, (60, 555, 870, 70), 2, border_radius=8)
-
-        last_messages = self.log[-3:]
-
-        for index, message in enumerate(last_messages):
-            self.draw_text(message[:105], 76, 568 + index * 18, DARK, self.small_font)
-
-    def draw_menu(self):
-        overlay = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
-        overlay.fill((0, 0, 0, 120))
-        self.screen.blit(overlay, (0, 0))
-
-        pygame.draw.rect(self.screen, PANEL, (90, 95, 780, 450), border_radius=10)
-        pygame.draw.rect(self.screen, DARK, (90, 95, 780, 450), 3, border_radius=10)
-
-        tabs = ["inventory", "routes", "upgrades", "plants", "recipes", "options"]
-
-        labels = {
-            "inventory": "Inventario",
-            "routes": "Rutas",
-            "upgrades": "Mejoras",
-            "plants": "Plantas",
-            "recipes": "Recetas",
-            "options": "Opciones",
-        }
-
-        for index, tab in enumerate(tabs):
-            x = 115 + index * 120
-            color = WHITE if tab == self.menu_tab else (220, 210, 180)
-
-            pygame.draw.rect(self.screen, color, (x, 115, 105, 34), border_radius=5)
-            pygame.draw.rect(self.screen, DARK, (x, 115, 105, 34), 2, border_radius=5)
-
-            self.draw_text(labels[tab], x + 8, 124, DARK, self.small_font)
-
-        if self.menu_tab == "inventory":
-            self.draw_inventory_tab()
-
-        elif self.menu_tab == "routes":
-            self.draw_routes_tab()
-
-        elif self.menu_tab == "upgrades":
-            self.draw_upgrades_tab()
-
-        else:
-            self.draw_text("Pendiente de prototipar.", 130, 190, DARK)
-
-        self.draw_text("ESC cerrar | LEFT/RIGHT tabs | S guardar", 130, 510, DARK, self.small_font)
-
-    def draw_inventory_tab(self):
-        resources = self.state["resources"]
-        x0 = 130
-        y0 = 180
-        cell_w = 165
-        cell_h = 70
-
-        for index, item in enumerate(self.game_data["resources"].items()):
-            key, data = item
-            row = index // 4
-            col = index % 4
-
-            x = x0 + col * cell_w
-            y = y0 + row * cell_h
-
-            pygame.draw.rect(self.screen, WHITE, (x, y, 145, 54), border_radius=6)
-            pygame.draw.rect(self.screen, DARK, (x, y, 145, 54), 2, border_radius=6)
-
-            amount = resources.get(key, 0)
-
-            self.draw_text(f"{data['icon']} {data['name']}", x + 10, y + 8, DARK, self.small_font)
-            self.draw_text(f"x{amount}", x + 10, y + 30, DARK)
-
-    def draw_routes_tab(self):
-        y = 180
-        ship = self.state["ship"]
-
-        if ship.get("pending_event") == "arrival_decision":
-            self.draw_text("Decision de expedicion pendiente:", 130, y, WARN)
-            self.draw_text("A = asegurar botin | R = arriesgar", 130, y + 30, DARK)
-
-            keys = pygame.key.get_pressed()
-
-            if keys[pygame.K_a]:
-                self.add_log(secure_return(self.state, self.game_data))
-                self.menu_open = False
-
-            elif keys[pygame.K_r]:
-                self.add_log(continue_and_risk(self.state, self.game_data))
-                self.menu_open = False
-
-            return
-
-        self.draw_text("Pulsa 1/2/3 para enviar el barco.", 130, y, DARK)
-        y += 35
-
-        route_keys = list(self.game_data["routes"].keys())
-        keys = pygame.key.get_pressed()
-
-        for index, route_key in enumerate(route_keys):
-            route = self.game_data["routes"][route_key]
-
-            self.draw_text(
-                f"{index + 1}. {route['name']} - {route['duration']} dias - coste {route['cost']}",
-                130,
-                y,
-                DARK,
-                self.small_font
-            )
-            y += 42
-
-            if keys[pygame.K_1 + index]:
-                self.add_log(start_trip(self.state, self.game_data, route_key))
-                self.menu_open = False
-
-    def draw_upgrades_tab(self):
-        self.draw_text("Pulsa 1/2/3 para construir mejora.", 130, 180, DARK)
-
-        y = 220
-        upgrade_keys = list(self.game_data["upgrades"].keys())
-        keys = pygame.key.get_pressed()
-
-        for index, upgrade_key in enumerate(upgrade_keys):
-            upgrade = self.game_data["upgrades"][upgrade_key]
-            owned = self.state["upgrades"].get(upgrade_key, False)
-            status = "OK" if owned else "Pendiente"
-
-            self.draw_text(
-                f"{index + 1}. {upgrade['name']} - {status} - coste {upgrade['cost']}",
-                130,
-                y,
-                DARK,
-                self.small_font
-            )
-            y += 42
-
-            if keys[pygame.K_1 + index]:
-                self.add_log(build_upgrade(self.state, self.game_data, upgrade_key))
-                self.menu_open = False
 
     def draw_text(self, text, x, y, color, font=None):
         if font is None:

@@ -1,23 +1,32 @@
 from game.inventory.inventory_state import ensure_inventory_state
-from game.inventory.item_database import get_item_data
+from game.data.item_database import get_item_data
 
 
-def get_inventory_items(state):
+def get_inventory_grid(state):
     ensure_inventory_state(state)
-    return state["inventory"]["items"]
+    return state["inventory"]["grid"]
 
 
 def get_inventory_capacity(state):
     ensure_inventory_state(state)
-    return state["inventory"]["capacity"]
+    return state["inventory"]["rows"] * state["inventory"]["columns"]
 
 
 def has_item(state, item_id):
-    items = get_inventory_items(state)
-    return items.get(item_id, 0) > 0
+    grid = get_inventory_grid(state)
+
+    for row in grid:
+        for slot in row:
+            if slot is None:
+                continue
+
+            if slot["item_id"] == item_id:
+                return True
+
+    return False
 
 
-def add_item(state, item_id, amount):
+def add_item(state, item_id, amount=1):
     ensure_inventory_state(state)
 
     item_data = get_item_data(item_id)
@@ -25,28 +34,48 @@ def add_item(state, item_id, amount):
     if item_data is None:
         return False
 
-    current_amount = state["inventory"]["items"].get(item_id, 0)
+    grid = state["inventory"]["grid"]
 
-    if not item_data.get("stackable", True) and current_amount > 0:
-        return False
+    if item_data.get("stackable", True):
+        for row in grid:
+            for slot in row:
+                if slot is None:
+                    continue
 
-    state["inventory"]["items"][item_id] = current_amount + amount
-    return True
+                if slot["item_id"] == item_id:
+                    slot["amount"] += amount
+                    return True
 
+    for row in grid:
+        for index, slot in enumerate(row):
+            if slot is None:
+                row[index] = {
+                    "item_id": item_id,
+                    "amount": amount,
+                }
+                return True
 
-def remove_item(state, item_id, amount):
-    ensure_inventory_state(state)
+    return False
 
-    current_amount = state["inventory"]["items"].get(item_id, 0)
+def remove_item(state, item_id, amount=1):
+    grid = get_inventory_grid(state)
 
-    if current_amount < amount:
-        return False
+    for row in grid:
+        for index, slot in enumerate(row):
+            if slot is None:
+                continue
 
-    new_amount = current_amount - amount
+            if slot["item_id"] != item_id:
+                continue
 
-    if new_amount <= 0:
-        del state["inventory"]["items"][item_id]
-    else:
-        state["inventory"]["items"][item_id] = new_amount
+            if slot["amount"] < amount:
+                return False
 
-    return True
+            slot["amount"] -= amount
+
+            if slot["amount"] <= 0:
+                row[index] = None
+
+            return True
+
+    return False

@@ -93,17 +93,24 @@ def draw_hud(app):
 
 
 def draw_log(app):
-    pygame.draw.rect(app.screen, PANEL, (60, 555, 870, 70), border_radius=8)
-    pygame.draw.rect(app.screen, DARK, (60, 555, 870, 70), 2, border_radius=8)
+    x = 710
+    y = 120
+    width = 220
+    height = 260
 
-    last_messages = app.log[-3:]
+    pygame.draw.rect(app.screen, PANEL, (x, y, width, height), border_radius=8)
+    pygame.draw.rect(app.screen, DARK, (x, y, width, height), 3, border_radius=8)
+
+    draw_text(app.screen, app.big_font, "LOG", x + 20, y + 18, DARK)
+
+    last_messages = app.log[-10:]
 
     for index, message in enumerate(last_messages):
         draw_text(
             app.screen,
             app.small_font,
-            message[:105],
-            76,
-            568 + index * 18,
+            message[:24],
+            x + 16,
+            y + 60 + index * 18,
             DARK,
         )

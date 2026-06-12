@@ -5,6 +5,9 @@ SEASON_NAMES = {
     "winter": "Invierno",
 }
 
+MINUTES_PER_REAL_SECOND = 10
+DISPLAY_MINUTE_STEP = 10
+
 
 def ensure_time_state(state):
     if "time" not in state:
@@ -17,15 +20,14 @@ def ensure_time_state(state):
 def update_time(state, dt):
     ensure_time_state(state)
 
-    # 1 segundo real = 1 minuto de juego
-    state["time"]["minute"] += dt * 1
+    state["time"]["minute"] += dt * MINUTES_PER_REAL_SECOND
 
-    if state["time"]["minute"] >= 60:
+    while state["time"]["minute"] >= 60:
         state["time"]["minute"] -= 60
         state["time"]["hour"] += 1
 
-    if state["time"]["hour"] >= 24:
-        state["time"]["hour"] = 0
+    while state["time"]["hour"] >= 24:
+        state["time"]["hour"] -= 24
 
 
 def get_time_text(state):
@@ -34,7 +36,9 @@ def get_time_text(state):
     hour = int(state["time"]["hour"])
     minute = int(state["time"]["minute"])
 
-    return f"{hour:02d}:{minute:02d}"
+    display_minute = int(minute / DISPLAY_MINUTE_STEP) * DISPLAY_MINUTE_STEP
+
+    return f"{hour:02d}:{display_minute:02d}"
 
 
 def get_calendar_text(state, game_data):

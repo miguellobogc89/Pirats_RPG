@@ -11,8 +11,12 @@ WORLD_OBJECTS = [
         "max_hp": 3,
         "required_tool": "axe",
         "energy_cost": 2,
-        "reward_on_hit": {},
-        "reward_on_destroy": {"wood": [4, 8]},
+        "drops": {
+            "on_hit": [],
+            "on_destroy": [
+                {"item_id": "wood", "amount": [4, 8], "chance": 100},
+            ],
+        },
     },
     {
         "id": "tree_02",
@@ -26,8 +30,12 @@ WORLD_OBJECTS = [
         "max_hp": 3,
         "required_tool": "axe",
         "energy_cost": 2,
-        "reward_on_hit": {},
-        "reward_on_destroy": {"wood": [4, 8]},
+        "drops": {
+            "on_hit": [],
+            "on_destroy": [
+                {"item_id": "wood", "amount": [4, 8], "chance": 100},
+            ],
+        },
     },
     {
         "id": "tree_03",
@@ -41,8 +49,12 @@ WORLD_OBJECTS = [
         "max_hp": 3,
         "required_tool": "axe",
         "energy_cost": 2,
-        "reward_on_hit": {},
-        "reward_on_destroy": {"wood": [4, 8]},
+        "drops": {
+            "on_hit": [],
+            "on_destroy": [
+                {"item_id": "wood", "amount": [4, 8], "chance": 100},
+            ],
+        },
     },
     {
         "id": "rock_01",
@@ -56,10 +68,15 @@ WORLD_OBJECTS = [
         "max_hp": 4,
         "required_tool": "pickaxe",
         "energy_cost": 3,
-        "reward_on_hit": {},
-        "reward_on_destroy": {
-            "iron": [2, 5],
-            "carbon": [1, 3],
+        "drops": {
+            "on_hit": [
+                {"item_id": "stone", "amount": [1, 2], "chance": 45},
+            ],
+            "on_destroy": [
+                {"item_id": "stone", "amount": [4, 7], "chance": 100},
+                {"item_id": "iron", "amount": [1, 3], "chance": 60},
+                {"item_id": "carbon", "amount": [1, 2], "chance": 35},
+            ],
         },
     },
     {
@@ -74,10 +91,15 @@ WORLD_OBJECTS = [
         "max_hp": 4,
         "required_tool": "pickaxe",
         "energy_cost": 3,
-        "reward_on_hit": {},
-        "reward_on_destroy": {
-            "iron": [2, 5],
-            "carbon": [1, 3],
+        "drops": {
+            "on_hit": [
+                {"item_id": "stone", "amount": [1, 2], "chance": 45},
+            ],
+            "on_destroy": [
+                {"item_id": "stone", "amount": [4, 7], "chance": 100},
+                {"item_id": "iron", "amount": [1, 3], "chance": 60},
+                {"item_id": "carbon", "amount": [1, 2], "chance": 35},
+            ],
         },
     },
     {
@@ -92,8 +114,12 @@ WORLD_OBJECTS = [
         "max_hp": 1,
         "required_tool": None,
         "energy_cost": 1,
-        "reward_on_hit": {},
-        "reward_on_destroy": {"food": [2, 5]},
+        "drops": {
+            "on_hit": [],
+            "on_destroy": [
+                {"item_id": "food", "amount": [2, 5], "chance": 100},
+            ],
+        },
     },
     {
         "id": "bush_02",
@@ -107,8 +133,12 @@ WORLD_OBJECTS = [
         "max_hp": 1,
         "required_tool": None,
         "energy_cost": 1,
-        "reward_on_hit": {},
-        "reward_on_destroy": {"food": [2, 5]},
+        "drops": {
+            "on_hit": [],
+            "on_destroy": [
+                {"item_id": "food", "amount": [2, 5], "chance": 100},
+            ],
+        },
     },
     {
         "id": "fishing_spot_01",
@@ -122,8 +152,12 @@ WORLD_OBJECTS = [
         "max_hp": 1,
         "required_tool": "fishing_rod",
         "energy_cost": 3,
-        "reward_on_hit": {},
-        "reward_on_destroy": {"gold": [20, 60]},
+        "drops": {
+            "on_hit": [],
+            "on_destroy": [
+                {"item_id": "gold", "amount": [20, 60], "chance": 100},
+            ],
+        },
     },
     {
         "id": "dock_01",
@@ -136,7 +170,6 @@ WORLD_OBJECTS = [
         "required_tool": None,
         "energy_cost": 0,
     },
-
     {
         "id": "bed_01",
         "name": "Cama",

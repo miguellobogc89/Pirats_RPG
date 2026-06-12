@@ -1,17 +1,16 @@
 import pygame
 
 from game.hud.ui_helpers import DARK, PANEL, WHITE, draw_text
+from game.inventory.hotbar_manager import (
+    get_active_hotbar_index,
+    get_hotbar_slots,
+)
+from game.data.item_database import get_item_data
 
 
 def draw_hotbar_widget(app):
-    slots = [
-        {"key": "1", "name": "Hacha", "tool": "axe", "icon": "A"},
-        {"key": "2", "name": "Pico", "tool": "pickaxe", "icon": "P"},
-        {"key": "3", "name": "Caña", "tool": "fishing_rod", "icon": "C"},
-    ]
-
-    from game.player.player_state import get_active_tool
-    active_tool = get_active_tool(app.state)
+    slots = get_hotbar_slots(app.state)
+    active_index = get_active_hotbar_index(app.state)
 
     slot_size = 58
     gap = 10
@@ -22,7 +21,7 @@ def draw_hotbar_widget(app):
 
     for index, slot in enumerate(slots):
         x = start_x + index * (slot_size + gap)
-        selected = active_tool == slot["tool"]
+        selected = active_index == index
 
         fill = WHITE if selected else PANEL
         border_width = 4 if selected else 2
@@ -30,5 +29,20 @@ def draw_hotbar_widget(app):
         pygame.draw.rect(app.screen, fill, (x, y, slot_size, slot_size), border_radius=8)
         pygame.draw.rect(app.screen, DARK, (x, y, slot_size, slot_size), border_width, border_radius=8)
 
-        draw_text(app.screen, app.big_font, slot["icon"], x + 20, y + 8, DARK)
-        draw_text(app.screen, app.small_font, slot["key"], x + 5, y + 38, DARK)
+        key_text = str(index + 1)
+        draw_text(app.screen, app.small_font, key_text, x + 5, y + 38, DARK)
+
+        if slot is None:
+            continue
+
+        item_id = slot["item_id"]
+        amount = slot["amount"]
+        item_data = get_item_data(item_id)
+
+        if item_data is None:
+            continue
+
+        draw_text(app.screen, app.big_font, item_data["icon"], x + 20, y + 8, DARK)
+
+        if amount > 1:
+            draw_text(app.screen, app.small_font, str(amount), x + 38, y + 38, DARK)

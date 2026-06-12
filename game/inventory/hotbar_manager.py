@@ -1,42 +1,53 @@
-from game.inventory.hotbar_state import HOTBAR_SIZE, ensure_hotbar_state
-from game.inventory.inventory_manager import has_item
-from game.inventory.item_database import get_item_data
+from game.inventory.inventory_state import (
+    HOTBAR_ROW,
+    INVENTORY_COLUMNS,
+    ensure_inventory_state,
+)
+from game.data.item_database import get_item_data
 
 
 def get_hotbar_slots(state):
-    ensure_hotbar_state(state)
-    return state["hotbar"]["slots"]
+    ensure_inventory_state(state)
+    return state["inventory"]["grid"][HOTBAR_ROW]
 
 
 def get_active_hotbar_index(state):
-    ensure_hotbar_state(state)
-    return state["hotbar"]["active_index"]
+    ensure_inventory_state(state)
+    return state["inventory"]["active_hotbar_index"]
 
 
 def set_active_hotbar_index(state, index):
-    ensure_hotbar_state(state)
+    ensure_inventory_state(state)
 
-    if index < 0 or index >= HOTBAR_SIZE:
+    if index < 0 or index >= INVENTORY_COLUMNS:
         return False
 
-    state["hotbar"]["active_index"] = index
+    state["inventory"]["active_hotbar_index"] = index
     return True
 
 
-def get_active_item_id(state):
+def get_active_slot(state):
     slots = get_hotbar_slots(state)
     active_index = get_active_hotbar_index(state)
-
     return slots[active_index]
 
 
-def get_active_item_data(state):
-    active_item_id = get_active_item_id(state)
+def get_active_item_id(state):
+    slot = get_active_slot(state)
 
-    if active_item_id is None:
+    if slot is None:
         return None
 
-    return get_item_data(active_item_id)
+    return slot["item_id"]
+
+
+def get_active_item_data(state):
+    item_id = get_active_item_id(state)
+
+    if item_id is None:
+        return None
+
+    return get_item_data(item_id)
 
 
 def get_active_tool(state):
@@ -49,16 +60,3 @@ def get_active_tool(state):
         return None
 
     return item_data.get("tool_type")
-
-
-def assign_item_to_hotbar(state, index, item_id):
-    ensure_hotbar_state(state)
-
-    if index < 0 or index >= HOTBAR_SIZE:
-        return False
-
-    if item_id is not None and not has_item(state, item_id):
-        return False
-
-    state["hotbar"]["slots"][index] = item_id
-    return True
