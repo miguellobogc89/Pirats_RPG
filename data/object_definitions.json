@@ -1,0 +1,40 @@
+{
+  "player": {
+    "sprite": "assets/player/player.png",
+    "visual_size": [1, 1],
+    "footprint": [1, 1],
+    "solid": true
+  },
+  "bush": {
+    "sprite": "assets/world/bush.png",
+    "visual_size": [1, 1],
+    "footprint": [1, 1],
+    "solid": true
+  },
+  "small_rock": {
+    "sprite": "assets/world/small_rock.png",
+    "visual_size": [1, 1],
+    "footprint": [1, 1],
+    "solid": true
+  },
+  "big_rock": {
+    "sprite": "assets/world/big_rock.png",
+    "visual_size": [2, 2],
+    "footprint": [2, 2],
+    "solid": true
+  },
+  "tree": {
+    "sprite": "assets/world/tree.png",
+    "visual_size": [5, 8],
+    "footprint": [2, 2],
+    "footprint_anchor": [0.5, 1.0],
+    "solid": true
+  },
+  "house": {
+    "sprite": "assets/world/house.png",
+    "visual_size": [7, 7],
+    "footprint": [7, 4],
+    "solid": true,
+    "target_scene": "house_inside"
+  }
+}

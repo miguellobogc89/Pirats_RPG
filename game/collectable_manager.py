@@ -62,6 +62,7 @@ def update_collectables(app):
             item_name = item_data["name"]
 
         app.add_log(f"Recoges {item_name} x{collectable['amount']}.")
+        app.skill_manager.register_action("collectable_picked")
         collected.append(collectable)
 
     for collectable in collected:

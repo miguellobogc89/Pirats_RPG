@@ -1,3 +1,8 @@
+from game.world.collision_manager import (
+    is_map_cell_blocked,
+    is_world_object_cell_blocked,
+)
+
 def ensure_construction_state(state):
     if "placed_objects" not in state:
         state["placed_objects"] = []
@@ -5,6 +10,11 @@ def ensure_construction_state(state):
 
 def is_cell_occupied(state, grid_x, grid_y):
     ensure_construction_state(state)
+
+    if is_map_cell_blocked(grid_x, grid_y):
+        return True
+    if is_world_object_cell_blocked(state, grid_x, grid_y):
+        return True
 
     for obj in state["placed_objects"]:
         start_x = obj["grid_x"]

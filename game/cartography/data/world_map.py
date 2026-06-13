@@ -1,0 +1,30 @@
+WORLD_MAP = [
+    [
+        "pirate_bay",
+        None,
+        "iron_shoals",
+        None,
+        "volcano_island",
+    ],
+    [
+        None,
+        None,
+        "home_port",
+        None,
+        None,
+    ],
+    [
+        None,
+        "driftwood_coast",
+        "calm_waters",
+        "misty_reef",
+        None,
+    ],
+    [
+        "old_lighthouse",
+        None,
+        "turtle_island",
+        "coral_banks",
+        None,
+    ],
+]

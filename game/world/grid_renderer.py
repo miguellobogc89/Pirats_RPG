@@ -2,6 +2,8 @@ import pygame
 
 from game.world.grid_manager import TILE_SIZE, grid_to_world
 from game.world.world_config import WORLD_WIDTH, WORLD_HEIGHT
+from game.data.item_database import get_item_data
+from game.world.collision_manager import BLOCKED_CELLS
 
 
 GRID_COLOR = (90, 130, 80)
@@ -93,3 +95,68 @@ def draw_watered_cells(screen, state, camera_x, camera_y):
 
         rect = pygame.Rect(screen_x, screen_y, TILE_SIZE, TILE_SIZE)
         pygame.draw.rect(screen, WATERED_COLOR, rect)
+
+def draw_placed_objects(screen, state, camera_x, camera_y):
+    placed_objects = state.get("placed_objects", [])
+
+    for obj in placed_objects:
+        world_x, world_y = grid_to_world(obj["grid_x"], obj["grid_y"])
+
+        screen_x = int(world_x - camera_x)
+        screen_y = int(world_y - camera_y)
+
+        rect = pygame.Rect(
+            screen_x,
+            screen_y,
+            obj["width"] * TILE_SIZE,
+            obj["height"] * TILE_SIZE,
+        )
+
+        pygame.draw.rect(screen, (170, 95, 55), rect)
+        pygame.draw.rect(screen, (48, 55, 43), rect, 2)
+
+        item_data = get_item_data(obj["item_id"])
+        if item_data is not None:
+            font = pygame.font.SysFont("consolas", 18, bold=True)
+            text = font.render(item_data["icon"], True, (48, 55, 43))
+            screen.blit(text, (screen_x + 10, screen_y + 6))
+
+def draw_occupied_cells_debug(screen, state, camera_x, camera_y):
+    placed_objects = state.get("placed_objects", [])
+
+    for obj in placed_objects:
+        start_x = obj["grid_x"]
+        start_y = obj["grid_y"]
+
+        for grid_x in range(start_x, start_x + obj["width"]):
+            for grid_y in range(start_y, start_y + obj["height"]):
+                world_x, world_y = grid_to_world(grid_x, grid_y)
+
+                screen_x = int(world_x - camera_x)
+                screen_y = int(world_y - camera_y)
+
+                rect = pygame.Rect(
+                    screen_x,
+                    screen_y,
+                    TILE_SIZE,
+                    TILE_SIZE,
+                )
+
+                pygame.draw.rect(screen, (190, 60, 60), rect, 2)
+
+
+def draw_collision_debug(screen, camera_x, camera_y):
+    for grid_x, grid_y in BLOCKED_CELLS:
+        world_x, world_y = grid_to_world(grid_x, grid_y)
+
+        screen_x = int(world_x - camera_x)
+        screen_y = int(world_y - camera_y)
+
+        rect = pygame.Rect(
+            screen_x,
+            screen_y,
+            TILE_SIZE,
+            TILE_SIZE,
+        )
+
+        pygame.draw.rect(screen, (255, 0, 0), rect, 1)

@@ -1,0 +1,202 @@
+{
+  "day": 17,
+  "season_index": 3,
+  "health": {
+    "current": 100,
+    "max": 100
+  },
+  "energy": {
+    "current": 10,
+    "max": 10
+  },
+  "resources": {
+    "food": 14,
+    "wood": 35,
+    "iron": 10,
+    "carbon": 6,
+    "gold": 450,
+    "coral": 0,
+    "pearls": 0,
+    "map_piece": 0
+  },
+  "upgrades": {
+    "steel_keel": false
+  },
+  "destroyed_world_objects": [
+    "rock_01",
+    "tree_02",
+    "tree_01",
+    "tree_03"
+  ],
+  "wind": "south",
+  "ship": {
+    "status": "available",
+    "days_left": 0,
+    "route": null,
+    "success_rate": 0,
+    "pending_event": null,
+    "secured_reward": {}
+  },
+  "player": {
+    "zone": "dock",
+    "x": 140.17313041641754,
+    "y": 520.4219085784114,
+    "direction": "left"
+  },
+  "log": [
+    "Duermes y recuperas energia.",
+    "Has dormido y la partida se ha guardado.",
+    "Duermes y recuperas energia.",
+    "Has dormido y la partida se ha guardado.",
+    "Duermes y recuperas energia.",
+    "Has dormido y la partida se ha guardado.",
+    "Duermes y recuperas energia."
+  ],
+  "inventory": {
+    "rows": 2,
+    "columns": 8,
+    "active_hotbar_index": 0,
+    "grid": [
+      [
+        {
+          "item_id": "axe",
+          "amount": 1
+        },
+        {
+          "item_id": "pickaxe",
+          "amount": 1
+        },
+        {
+          "item_id": "stone",
+          "amount": 11
+        },
+        {
+          "item_id": "hoe",
+          "amount": 1
+        },
+        {
+          "item_id": "corn_seed",
+          "amount": 10
+        },
+        {
+          "item_id": "watering_can",
+          "amount": 1
+        },
+        {
+          "item_id": "iron",
+          "amount": 3
+        },
+        {
+          "item_id": "wood",
+          "amount": 5
+        },
+        {
+          "item_id": "campfire",
+          "amount": 1
+        }
+      ],
+      [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ]
+    ]
+  },
+  "farming": {
+    "tilled_cells": [],
+    "watered_cells": [],
+    "crops": []
+  },
+  "collectables": [],
+  "time": {
+    "hour": 18,
+    "minute": 45.33999999999477
+  },
+  "placed_objects": [
+    {
+      "item_id": "campfire",
+      "grid_x": 8,
+      "grid_y": 15,
+      "width": 2,
+      "height": 2
+    }
+  ],
+  "hotbar": [],
+  "construction": {
+    "placed_objects": []
+  },
+  "destroyed_objects": [],
+  "skills": {
+    "farming": {
+      "level": 1,
+      "xp": 0
+    },
+    "gathering": {
+      "level": 1,
+      "xp": 0
+    },
+    "mining": {
+      "level": 1,
+      "xp": 0
+    },
+    "crafting": {
+      "level": 1,
+      "xp": 10,
+      "total_xp": 10
+    },
+    "construction": {
+      "level": 1,
+      "xp": 0
+    },
+    "navigation": {
+      "level": 1,
+      "xp": 0
+    },
+    "cartography": {
+      "level": 1,
+      "xp": 0
+    },
+    "combat": {
+      "level": 1,
+      "xp": 0,
+      "total_xp": 0
+    }
+  },
+  "bestiary": {
+    "known_creatures": [
+      "rock_turtle",
+      "fire_worm"
+    ],
+    "owned_creatures": [
+      {
+        "creature_id": "rock_turtle",
+        "level": 1,
+        "xp": 0,
+        "nickname": "Roca",
+        "equipped_abilities": [
+          "stone_guard",
+          "shell_bash"
+        ]
+      },
+      {
+        "creature_id": "fire_worm",
+        "level": 1,
+        "xp": 0,
+        "nickname": "Brasa",
+        "equipped_abilities": [
+          "ember_bite",
+          "burning_spit"
+        ]
+      }
+    ],
+    "active_party": [
+      0,
+      1
+    ]
+  }
+}

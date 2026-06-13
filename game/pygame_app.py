@@ -14,22 +14,33 @@ from game.inventory.hotbar_manager import (
     get_active_tool,
     set_active_hotbar_index,
 )
+from assets.bitmaps.bitmap_database import get_bitmap_data
+from assets.bitmap_renderer import render_bitmap
 from game.world.grid_manager import TILE_SIZE, world_to_grid, grid_to_world
+from game.cartography.cartography_manager import CartographyManager
 from game.player_controller import update_player_movement
+from game.skills.skill_manager import SkillManager
 from game.ui_renderer import draw_log
 from game.world.camera import get_camera_position
 from game.world.world_config import WORLD_WIDTH, WORLD_HEIGHT
 from game.world.world_renderer import draw_world_background
 from game.world_objects import WORLD_OBJECTS
-from game.hud.menu_overlay import draw_menu
 from game.collectable_manager import update_collectables
+from game.cartography.ui.cartography_overlay import draw_cartography_overlay
 from game.data.item_database import get_item_data
 from game.farming.farming_manager import advance_farming_day
+from game.input.input_manager import handle_events
+from game.bestiary.bestiary_manager import BestiaryManager
+from game.combat.combat_manager import CombatManager
+from game.hud.menu_overlay import draw_menu, get_menu_tab_at_position
 from game.world.grid_renderer import (
     draw_world_grid,
     draw_tilled_cells,
     draw_watered_cells,
     draw_crops,
+    draw_placed_objects,
+    draw_occupied_cells_debug,
+    draw_collision_debug,
 )
 
 WIDTH = 960
@@ -52,6 +63,24 @@ class PygameApp:
         self.state = state
         self.game_data = game_data
 
+        self.cartography_manager = CartographyManager()
+        self.cartography_manager.load_from_data(
+            self.state["cartography"]
+        )
+        self.selected_region_id = None
+        self.pending_expedition_region_id = None
+        self.cartography_cells = {}
+        self.cartography_expedition_button = None
+        self.cartography_modal_open = False
+
+        self.cartography_cancel_button = None
+        self.cartography_launch_button = None
+
+        self.skill_manager = SkillManager(self.state)
+
+        self.bestiary_manager = BestiaryManager(self.state)
+        self.combat_manager = CombatManager(self)
+
         self.placement_mode = False
         self.placement_item_id = None
 
@@ -73,6 +102,8 @@ class PygameApp:
         self.interaction_range = 45
 
         self.menu_open = False
+        self.cartography_menu_open = False
+        self.selected_region_id = None
         self.menu_tab = "inventory"
         self.hud_visible = True
 
@@ -81,173 +112,16 @@ class PygameApp:
     def run(self):
         while True:
             dt = self.clock.tick(FPS) / 1000.0
-            self.handle_events()
+            handle_events(self)
             self.update(dt)
             self.draw()
 
-    def handle_events(self):
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                sys.exit()
 
-            if event.type == pygame.MOUSEBUTTONDOWN:
-                if event.button == 1 and not self.menu_open:
-                    self.handle_game_key(pygame.K_e)
-
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_ESCAPE:
-                    self.menu_open = not self.menu_open
-                elif self.menu_open:
-                    self.handle_menu_key(event.key)
-                else:
-                    self.handle_game_key(event.key)
-
-    def handle_game_key(self, key):
-        number_keys = [
-            pygame.K_1,
-            pygame.K_2,
-            pygame.K_3,
-            pygame.K_4,
-            pygame.K_5,
-            pygame.K_6,
-            pygame.K_7,
-            pygame.K_8,
-        ]
-
-        if key in number_keys:
-            index = number_keys.index(key)
-            set_active_hotbar_index(self.state, index)
-
-            item = get_active_item_data(self.state)
-
-            if item is None:
-                self.add_log(f"Slot {index + 1} vacío.")
-            else:
-                self.add_log(f"Equipado: {item['name']}")
-
-            return
-
-        if key == pygame.K_RETURN or key == pygame.K_e:
-            if self.nearby_object is not None:
-                if self.nearby_object["type"] == "bed" or self.nearby_object["type"] == "dock":
-                    interact_with_nearby_object(self)
-                    return
-                
-
-            from game.farming.farming_manager import harvest_crop
-            from game.inventory.inventory_manager import add_item
-
-            harvest_result = harvest_crop(
-                self.state,
-                self.state["player"]["x"],
-                self.state["player"]["y"],
-            )
-
-            if harvest_result["status"] == "harvested":
-                added = add_item(
-                    self.state,
-                    harvest_result["item_id"],
-                    harvest_result["amount"],
-                )
-
-                if added:
-                    self.add_log(f"Cosechas {harvest_result['item_id']} x{harvest_result['amount']}.")
-                else:
-                    self.add_log("Inventario lleno.")
-
-                return
-
-            if harvest_result["status"] == "removed_dead":
-                self.add_log("Has retirado una planta seca.")
-                return
-            active_item = get_active_item_data(self.state)
-            active_tool = get_active_tool(self.state)
-
-            if active_item is not None and active_item.get("type") == "placeable":
-                self.placement_mode = True
-                self.placement_item_id = get_active_item_id(self.state)
-                self.add_log(f"Colocando: {active_item['name']}")
-                return
-
-            if active_tool == "hoe":
-                from game.farming.farming_manager import till_cell
-
-                tilled = till_cell(
-                    self.state,
-                    self.state["player"]["x"],
-                    self.state["player"]["y"],
-                )
-
-                if tilled:
-                    self.add_log("Has arado la tierra.")
-                else:
-                    self.add_log("Esta celda ya está arada.")
-
-                return
-
-            if active_tool == "watering_can":
-                from game.farming.farming_manager import water_cell
-
-                result = water_cell(
-                    self.state,
-                    self.state["player"]["x"],
-                    self.state["player"]["y"],
-                )
-
-                if result == "not_tilled":
-                    self.add_log("Solo puedes regar tierra arada.")
-                    return
-
-                if result == "already_watered":
-                    self.add_log("Esta celda ya está regada.")
-                    return
-
-                self.add_log("Has regado la tierra.")
-                return
-
-            if active_item is not None and active_item.get("type") == "seed":
-                from game.farming.farming_manager import plant_crop
-                from game.inventory.inventory_manager import remove_item
-
-                result = plant_crop(
-                    self.state,
-                    self.state["player"]["x"],
-                    self.state["player"]["y"],
-                    active_item["crop_id"],
-                )
-
-                if result == "not_tilled":
-                    self.add_log("Primero tienes que arar la tierra.")
-                    return
-
-                if result == "occupied":
-                    self.add_log("Ya hay algo plantado aquí.")
-                    return
-
-                active_item_id = get_active_item_id(self.state)
-                removed = remove_item(self.state, active_item_id, 1)
-
-                if not removed:
-                    self.add_log("No tienes semillas suficientes.")
-                    return
-
-                self.add_log("Has plantado una semilla.")
-                return
-
-            interact_with_nearby_object(self)
-
-    def handle_menu_key(self, key):
-        tabs = ["inventory", "routes", "upgrades", "plants", "recipes", "options"]
-        current_index = tabs.index(self.menu_tab)
-
-        if key == pygame.K_RIGHT:
-            self.menu_tab = tabs[(current_index + 1) % len(tabs)]
-
-        elif key == pygame.K_LEFT:
-            self.menu_tab = tabs[(current_index - 1) % len(tabs)]
 
     def update(self, dt):
+        if self.combat_manager.is_active():
+            self.combat_manager.update(dt)
+            return
         update_time(self.state, dt)
 
         if self.menu_open:
@@ -295,6 +169,9 @@ class PygameApp:
         draw_watered_cells(self.screen, self.state, camera_x, camera_y)
         draw_crops(self.screen, self.state, camera_x, camera_y)
         draw_world_grid(self.screen, camera_x, camera_y)
+        draw_placed_objects(self.screen,self.state,camera_x,camera_y)
+        draw_occupied_cells_debug(self.screen,self.state,camera_x,camera_y)
+        draw_collision_debug(self.screen, camera_x, camera_y)
 
         self.draw_map()
 
@@ -304,6 +181,12 @@ class PygameApp:
         if self.menu_open and self.hud_visible:
             draw_menu(self)
 
+        if self.cartography_menu_open:
+            draw_cartography_overlay(self)
+
+        if self.combat_manager.is_active():
+            self.combat_manager.draw()
+        
         pygame.display.flip()
 
     def draw_map(self):
@@ -353,7 +236,19 @@ class PygameApp:
                 else:
                     icon = "|"
 
-            self.draw_text(icon, x - 6, y - 10, DARK, self.big_font)
+            bitmap_id = world_object.get("bitmap_id")
+
+            if bitmap_id is not None:
+                bitmap_data = get_bitmap_data(bitmap_id)
+
+                if bitmap_data is not None:
+                    bitmap_surface = render_bitmap(bitmap_data)
+                    self.screen.blit(bitmap_surface, (x - bitmap_surface.get_width() // 2, y - bitmap_surface.get_height()))
+                else:
+                    self.draw_text(icon, x - 6, y - 10, DARK, self.big_font)
+            else:
+                self.draw_text(icon, x - 6, y - 10, DARK, self.big_font)
+
             self.draw_text(world_object["name"], x - 34, y + radius + 8, DARK, self.small_font)
 
             if selected:
@@ -375,6 +270,40 @@ class PygameApp:
 
         pygame.draw.circle(self.screen, DARK, (px, py), 13)
         pygame.draw.circle(self.screen, WHITE, (px, py - 18), 9)
+
+        from game.world.grid_manager import TILE_SIZE, world_to_grid, grid_to_world
+
+        foot_x = player["x"]
+        foot_y = player["y"] + 6
+
+        foot_grid_x, foot_grid_y = world_to_grid(foot_x, foot_y)
+        foot_world_x, foot_world_y = grid_to_world(foot_grid_x, foot_grid_y)
+
+        foot_screen_x = int(foot_world_x - camera_x)
+        foot_screen_y = int(foot_world_y - camera_y)
+
+        foot_rect = pygame.Rect(
+            foot_screen_x,
+            foot_screen_y,
+            TILE_SIZE,
+            TILE_SIZE,
+        )
+
+        pygame.draw.rect(self.screen, (220, 80, 80), foot_rect, 2)
+
+        direction = player.get("direction", "down")
+
+        if direction == "up":
+            pygame.draw.circle(self.screen, WARN, (px, py - 18), 4)
+
+        elif direction == "down":
+            pygame.draw.circle(self.screen, WARN, (px, py + 18), 4)
+
+        elif direction == "left":
+            pygame.draw.circle(self.screen, WARN, (px - 18, py), 4)
+
+        elif direction == "right":
+            pygame.draw.circle(self.screen, WARN, (px + 18, py), 4)
 
 
         if self.placement_mode and self.placement_item_id is not None:

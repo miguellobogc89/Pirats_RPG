@@ -19,14 +19,20 @@ def can_craft(state, recipe_id):
     return True
 
 
-def craft_item(state, recipe_id):
+def craft_item(state, recipe_id, skill_manager=None):
     recipe = get_recipe_data(recipe_id)
 
     if recipe is None:
-        return "recipe_not_found"
+        return {
+            "status": "recipe_not_found",
+            "skill_result": None,
+        }
 
     if not can_craft(state, recipe_id):
-        return "missing_resources"
+        return {
+            "status": "missing_resources",
+            "skill_result": None,
+        }
 
     ingredients = recipe["ingredients"]
 
@@ -39,7 +45,15 @@ def craft_item(state, recipe_id):
         recipe["result_amount"],
     )
 
-    return "crafted"
+    skill_result = None
+
+    if skill_manager is not None:
+        skill_result = skill_manager.register_action("item_crafted")
+
+    return {
+        "status": "crafted",
+        "skill_result": skill_result,
+    }
 
 
 def get_item_quantity(state, item_id):

@@ -35,6 +35,11 @@ def interact_with_nearby_object(app):
 
     world_object = app.nearby_object
 
+    if world_object["type"] == "ship":
+        app.cartography_menu_open = True
+        app.add_log("Abres el mapa cartográfico.")
+        return
+
     if world_object["type"] == "dock":
         app.menu_open = True
         app.menu_tab = "routes"
@@ -79,6 +84,12 @@ def interact_with_resource_object(app, world_object):
         spawn_collectables_from_drops(app.state, destroy_drops, world_object["x"], world_object["y"])
 
         app.add_log(f"{world_object['name']} destruido.")
+
+        if world_object["type"] == "rock":
+            app.skill_manager.register_action("rock_destroyed")
+
+        if world_object["type"] == "tree":
+            app.skill_manager.register_action("tree_destroyed")
 
 
         if "destroyed_world_objects" not in app.state:

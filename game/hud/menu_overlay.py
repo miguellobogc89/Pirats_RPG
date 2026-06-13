@@ -5,6 +5,24 @@ from game.inventory.hotbar_manager import get_active_item_data
 from game.data.item_database import get_item_data
 from game.data.recipe_database import get_all_recipes
 from game.crafting.crafting_manager import can_craft, craft_item
+from game.skills.skill_database import SKILL_DATABASE
+
+
+def get_menu_tabs():
+    return ["inventory", "routes", "upgrades", "plants", "recipes", "skills", "options"]
+
+
+def get_menu_tab_at_position(mouse_x, mouse_y):
+    tabs = get_menu_tabs()
+
+    for index, tab in enumerate(tabs):
+        x = 105 + index * 100
+        rect = pygame.Rect(x, 115, 90, 34)
+
+        if rect.collidepoint(mouse_x, mouse_y):
+            return tab
+
+    return None
 
 
 def draw_menu(app):
@@ -15,26 +33,27 @@ def draw_menu(app):
     pygame.draw.rect(app.screen, app.PANEL, (90, 95, 780, 450), border_radius=10)
     pygame.draw.rect(app.screen, app.DARK, (90, 95, 780, 450), 3, border_radius=10)
 
-    tabs = ["inventory", "routes", "upgrades", "plants", "recipes", "options"]
+    tabs = get_menu_tabs()
 
     labels = {
-        "inventory": "Inventario",
+        "inventory": "Invent.",
         "routes": "Rutas",
         "upgrades": "Mejoras",
         "plants": "Plantas",
         "recipes": "Recetas",
+        "skills": "Skills",
         "options": "Opciones",
     }
 
     for index, tab in enumerate(tabs):
-        x = 115 + index * 120
+        x = 105 + index * 100
 
         color = (220, 210, 180)
         if tab == app.menu_tab:
             color = app.WHITE
 
-        pygame.draw.rect(app.screen, color, (x, 115, 105, 34), border_radius=5)
-        pygame.draw.rect(app.screen, app.DARK, (x, 115, 105, 34), 2, border_radius=5)
+        pygame.draw.rect(app.screen, color, (x, 115, 90, 34), border_radius=5)
+        pygame.draw.rect(app.screen, app.DARK, (x, 115, 90, 34), 2, border_radius=5)
 
         app.draw_text(labels[tab], x + 8, 124, app.DARK, app.small_font)
 
@@ -50,10 +69,13 @@ def draw_menu(app):
     elif app.menu_tab == "recipes":
         draw_recipes_tab(app)
 
+    elif app.menu_tab == "skills":
+        draw_skills_tab(app)
+
     else:
         app.draw_text("Pendiente de prototipar.", 130, 190, app.DARK)
 
-    app.draw_text("ESC cerrar | LEFT/RIGHT tabs", 130, 510, app.DARK, app.small_font)
+    app.draw_text("ESC cerrar | LEFT/RIGHT tabs | Click para seleccionar", 130, 510, app.DARK, app.small_font)
 
 
 def draw_inventory_tab(app):
@@ -163,56 +185,114 @@ def draw_upgrades_tab(app):
             app.add_log(build_upgrade(app.state, app.game_data, upgrade_key))
             app.menu_open = False
 
+
 def draw_recipes_tab(app):
-            app.draw_text("Pulsa 1 para fabricar.", 130, 180, app.DARK)
+    app.draw_text("Pulsa numero para fabricar.", 130, 180, app.DARK)
 
-            recipes = get_all_recipes()
-            recipe_keys = list(recipes.keys())
-            keys = pygame.key.get_pressed()
+    recipes = get_all_recipes()
+    recipe_keys = list(recipes.keys())
+    keys = pygame.key.get_pressed()
 
-            y = 220
+    y = 220
 
-            for index, recipe_id in enumerate(recipe_keys):
-                recipe = recipes[recipe_id]
-                craftable = can_craft(app.state, recipe_id)
+    for index, recipe_id in enumerate(recipe_keys):
+        recipe = recipes[recipe_id]
+        craftable = can_craft(app.state, recipe_id)
 
-                status = "OK"
-                if not craftable:
-                    status = "Faltan recursos"
+        status = "OK"
+        if not craftable:
+            status = "Faltan recursos"
 
-                app.draw_text(
-                    f"{index + 1}. {recipe['name']} - {status}",
-                    130,
-                    y,
-                    app.DARK,
-                    app.small_font,
-                )
+        app.draw_text(
+            f"{index + 1}. {recipe['name']} - {status}",
+            130,
+            y,
+            app.DARK,
+            app.small_font,
+        )
 
-                ingredient_texts = []
+        ingredient_texts = []
 
-                for item_id, amount in recipe["ingredients"].items():
-                    item_data = get_item_data(item_id)
+        for item_id, amount in recipe["ingredients"].items():
+            item_data = get_item_data(item_id)
 
-                    item_name = item_id
-                    if item_data is not None:
-                        item_name = item_data["name"]
+            item_name = item_id
+            if item_data is not None:
+                item_name = item_data["name"]
 
-                    ingredient_texts.append(f"{item_name} x{amount}")
+            ingredient_texts.append(f"{item_name} x{amount}")
 
-                app.draw_text(
-                    " + ".join(ingredient_texts),
-                    160,
-                    y + 20,
-                    app.DARK,
-                    app.small_font,
-                )
+        app.draw_text(
+            " + ".join(ingredient_texts),
+            160,
+            y + 20,
+            app.DARK,
+            app.small_font,
+        )
 
-                if keys[pygame.K_1 + index]:
-                    result = craft_item(app.state, recipe_id)
+        if keys[pygame.K_1 + index]:
+            result = craft_item(
+                app.state,
+                recipe_id,
+                app.skill_manager,
+            )
 
-                    if result == "crafted":
-                        app.add_log(f"Fabricado: {recipe['name']}")
-                    else:
-                        app.add_log("No tienes recursos suficientes.")
+            if result["status"] == "crafted":
+                app.add_log(f"Fabricado: {recipe['name']}")
 
-                y += 58
+                skill_result = result["skill_result"]
+
+                if skill_result is not None:
+                    app.add_log("Artesanía +10 XP")
+
+                    if skill_result["leveled_up"]:
+                        app.add_log(f"Artesanía sube a nivel {skill_result['level']}.")
+            else:
+                app.add_log("No tienes recursos suficientes.")
+
+        y += 58
+
+
+def draw_skills_tab(app):
+    app.draw_text("Habilidades", 130, 180, app.DARK, app.big_font)
+
+    y = 225
+
+    for skill_id, skill_data in SKILL_DATABASE.items():
+        skill_state = app.skill_manager.get_skill_state(skill_id)
+
+        if skill_state is None:
+            continue
+
+        level = skill_state.get("level", 1)
+        xp = skill_state.get("xp", 0)
+        total_xp = skill_state.get("total_xp", 0)
+
+        xp_required = app.skill_manager.get_xp_required_for_next_level(level)
+
+        percent = 0
+        if xp_required > 0:
+            percent = int((xp / xp_required) * 100)
+
+        app.draw_text(
+            f"{skill_data['name']} | Nivel {level} | XP {xp}/{xp_required} | Total {total_xp} | {percent}%",
+            130,
+            y,
+            app.DARK,
+            app.small_font,
+        )
+
+        bar_x = 130
+        bar_y = y + 22
+        bar_width = 280
+        bar_height = 12
+
+        filled_width = int((bar_width * percent) / 100)
+
+        pygame.draw.rect(app.screen, app.WHITE, (bar_x, bar_y, bar_width, bar_height))
+        pygame.draw.rect(app.screen, app.DARK, (bar_x, bar_y, bar_width, bar_height), 2)
+
+        if filled_width > 0:
+            pygame.draw.rect(app.screen, app.WARN, (bar_x, bar_y, filled_width, bar_height))
+
+        y += 48
