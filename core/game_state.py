@@ -2,13 +2,19 @@ from game.skills.skill_database import SKILL_DATABASE
 from game.skills.skill_state import create_default_skills_state
 from game.bestiary.bestiary_state import create_default_bestiary_state
 from game.cartography.cartography_manager import CartographyManager
+from game.inventory.inventory_state import ensure_inventory_state
+
+
+def create_default_inventory_state():
+    state = {}
+    ensure_inventory_state(state)
+    return state["inventory"]
 
 
 def create_initial_state(game_data):
     return {
         "resources": {},
-        "inventory": [],
-        "hotbar": [],
+        "inventory": create_default_inventory_state(),
         "player": {
             "x": 400,
             "y": 300,
@@ -37,11 +43,15 @@ def normalize_state(state):
     if "resources" not in state:
         state["resources"] = {}
 
-    if "inventory" not in state:
-        state["inventory"] = []
+    if not isinstance(state.get("inventory"), dict):
+        state["legacy_inventory"] = state.get("inventory", [])
+        state["inventory"] = create_default_inventory_state()
+    else:
+        ensure_inventory_state(state)
 
-    if "hotbar" not in state:
-        state["hotbar"] = []
+    if "hotbar" in state:
+        state["legacy_hotbar"] = state["hotbar"]
+        del state["hotbar"]
 
     if "player" not in state:
         state["player"] = {
