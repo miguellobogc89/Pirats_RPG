@@ -7,14 +7,23 @@ SEASON_NAMES = {
 
 MINUTES_PER_REAL_SECOND = 10
 DISPLAY_MINUTE_STEP = 10
+WAKE_UP_HOUR = 6
+WAKE_UP_MINUTE = 0
 
 
 def ensure_time_state(state):
     if "time" not in state:
         state["time"] = {
-            "hour": 6,
-            "minute": 0,
+            "hour": WAKE_UP_HOUR,
+            "minute": WAKE_UP_MINUTE,
         }
+
+
+def reset_time_to_wake_up(state):
+    ensure_time_state(state)
+
+    state["time"]["hour"] = WAKE_UP_HOUR
+    state["time"]["minute"] = WAKE_UP_MINUTE
 
 
 def update_time(state, dt):

@@ -1,5 +1,5 @@
 import pygame
-from game.time_manager import get_time_text, get_calendar_text
+from game.time.time_manager import get_time_text, get_calendar_text
 
 PANEL = (238, 230, 204)
 DARK = (48, 55, 43)

@@ -5,7 +5,7 @@ from core.rules_engine import (
     advance_day,
 )
 from game.hud.hud_renderer import draw_hud
-from game.time_manager import update_time
+from game.time.time_manager import update_time, reset_time_to_wake_up
 from game.interaction_manager import get_nearby_object, interact_with_nearby_object
 
 from game.inventory.hotbar_manager import (
@@ -74,7 +74,7 @@ class PygameApp:
     def __init__(self, state, game_data):
         pygame.init()
         self.screen = pygame.display.set_mode((WIDTH, HEIGHT))
-        pygame.display.set_caption("Maritime RPG Prototype v4")
+        pygame.display.set_caption("Pirats RPG - RELOAD TEST")
         self.clock = pygame.time.Clock()
 
         self.state = state
@@ -152,6 +152,7 @@ class PygameApp:
 
     def sleep_day(self):
         messages = advance_day(self.state, self.game_data)
+        reset_time_to_wake_up(self.state)
 
         dead_crops = advance_farming_day(self.state)
 

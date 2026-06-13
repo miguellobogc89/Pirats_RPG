@@ -12,10 +12,12 @@ from game.inventory.hotbar_manager import (
 from game.data.item_database import get_item_data
 from game.world.camera import get_camera_position
 from game.world.world_config import WORLD_WIDTH, WORLD_HEIGHT
+from game.debug.debug_reload import restart_game_with_current_state
 
 
 def handle_events(app):
     for event in pygame.event.get():
+        print("[DEBUG EVENT]", event)
         if event.type == pygame.QUIT:
             pygame.quit()
             sys.exit()
@@ -38,9 +40,13 @@ def handle_events(app):
                 else:
                     handle_game_key(app, pygame.K_e)
 
-        if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_ESCAPE:
-                app.menu_open = not app.menu_open
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_F9:
+                        restart_game_with_current_state(app.state)
+                        return
+
+                    if event.key == pygame.K_ESCAPE:
+                        app.menu_open = not app.menu_open
 
             elif app.menu_open:
                 handle_menu_key(app, event.key)
