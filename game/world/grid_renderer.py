@@ -4,6 +4,7 @@ from game.world.grid_manager import TILE_SIZE, grid_to_world
 from game.world.world_config import WORLD_WIDTH, WORLD_HEIGHT
 from game.data.item_database import get_item_data
 from game.world.collision_manager import BLOCKED_CELLS
+from game.ui.sprite_renderer import draw_item_sprite
 
 
 GRID_COLOR = (90, 130, 80)
@@ -62,23 +63,35 @@ def draw_crops(screen, state, camera_x, camera_y):
         screen_x = int(world_x - camera_x)
         screen_y = int(world_y - camera_y)
 
-        center_x = screen_x + TILE_SIZE // 2
-        center_y = screen_y + TILE_SIZE // 2
-
         stage = crop.get("stage", 0)
 
-        color = SEED_COLOR
-        radius = 3
+        sprite_item_id = "corn_seed"
+        sprite_size = 18
 
         if stage == 1:
-            color = SPROUT_COLOR
-            radius = 4
+            sprite_item_id = "corn_seed"
+            sprite_size = 24
 
         elif stage >= 2:
-            color = GROWN_COLOR
-            radius = 6
+            sprite_item_id = "corn"
+            sprite_size = 34
 
-        pygame.draw.circle(screen, color, (center_x, center_y), radius)
+        item_data = get_item_data(sprite_item_id)
+
+        if item_data is None:
+            continue
+
+        draw_item_sprite(
+            screen,
+            item_data,
+            pygame.Rect(
+                screen_x + (TILE_SIZE - sprite_size) // 2,
+                screen_y + TILE_SIZE - sprite_size,
+                sprite_size,
+                sprite_size,
+            ),
+            padding=0,
+        )
 
 def draw_watered_cells(screen, state, camera_x, camera_y):
     farming = state.get("farming", {})
@@ -112,14 +125,9 @@ def draw_placed_objects(screen, state, camera_x, camera_y):
             obj["height"] * TILE_SIZE,
         )
 
-        pygame.draw.rect(screen, (170, 95, 55), rect)
-        pygame.draw.rect(screen, (48, 55, 43), rect, 2)
-
         item_data = get_item_data(obj["item_id"])
         if item_data is not None:
-            font = pygame.font.SysFont("consolas", 18, bold=True)
-            text = font.render(item_data["icon"], True, (48, 55, 43))
-            screen.blit(text, (screen_x + 10, screen_y + 6))
+            draw_item_sprite(screen, item_data, rect, padding=2)
 
 def draw_occupied_cells_debug(screen, state, camera_x, camera_y):
     placed_objects = state.get("placed_objects", [])

@@ -3,6 +3,7 @@ import pygame
 from game.combat.combat_turns import execute_player_action
 from game.combat.combat_targeting import ability_requires_manual_target
 from game.combat.ui.combat_layout import get_actor_by_unit_id
+from game.combat.ui.combat_log import LOG_RECT, LOG_VISIBLE_MESSAGES
 
 
 def handle_combat_event(manager, event):
@@ -20,8 +21,21 @@ def handle_combat_event(manager, event):
                 manager.end_combat()
                 return
 
+    if event.type == pygame.MOUSEWHEEL:
+        handle_log_scroll(manager, event.y)
+        return
+
     if manager.combat.get("combat_result") is not None:
         return
+
+    if event.type == pygame.MOUSEBUTTONDOWN:
+        if event.button == 4:
+            handle_log_scroll(manager, 1)
+            return
+
+        if event.button == 5:
+            handle_log_scroll(manager, -1)
+            return
 
     if event.type != pygame.MOUSEBUTTONDOWN:
         return
@@ -77,3 +91,25 @@ def handle_combat_event(manager, event):
             None,
         )
         return
+
+
+def handle_log_scroll(manager, wheel_y):
+    if not LOG_RECT.collidepoint(pygame.mouse.get_pos()):
+        return
+
+    log = manager.combat["log"]
+    max_offset = len(log) - LOG_VISIBLE_MESSAGES
+
+    if max_offset < 0:
+        max_offset = 0
+
+    current_offset = manager.combat["ui"].get("log_scroll_offset", 0)
+    current_offset += wheel_y
+
+    if current_offset < 0:
+        current_offset = 0
+
+    if current_offset > max_offset:
+        current_offset = max_offset
+
+    manager.combat["ui"]["log_scroll_offset"] = current_offset

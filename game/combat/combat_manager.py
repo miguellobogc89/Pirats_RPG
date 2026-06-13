@@ -70,7 +70,8 @@ class CombatManager:
 
     def add_log(self, message):
         self.combat["log"].append(message)
-        self.combat["log"] = self.combat["log"][-7:]
+        self.combat["log"] = self.combat["log"][-50:]
+        self.combat["ui"]["log_scroll_offset"] = 0
 
     def draw(self):
         draw_combat(self)

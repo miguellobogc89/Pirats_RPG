@@ -2,69 +2,63 @@ import pygame
 
 from game.cartography.data.world_map import WORLD_MAP
 from game.cartography.data.region_database import REGION_DATABASE
+from game.ui.ui_components import (
+    PARCHMENT_LIGHT,
+    TEXT_DARK,
+    TEXT_DISABLED,
+    WOOD_DARK,
+    draw_button,
+    draw_button_text,
+    draw_content_panel,
+    draw_label_value,
+    draw_panel,
+    draw_progress_bar,
+    draw_window,
+)
 
 
 GRID_COLS = 5
 GRID_ROWS = 4
+WINDOW_PADDING = 20
+MAP_SIZE = (560, 400)
+INFO_WIDTH = 250
 
 
 def draw_cartography_overlay(app):
-
-    panel_x = 40
-    panel_y = 40
-    panel_w = 880
-    panel_h = 560
-
-    pygame.draw.rect(
+    window_rect = pygame.Rect(40, 40, 880, 560)
+    draw_window(
         app.screen,
-        app.PANEL,
-        (panel_x, panel_y, panel_w, panel_h),
-        border_radius=10,
-    )
-
-    pygame.draw.rect(
-        app.screen,
-        app.DARK,
-        (panel_x, panel_y, panel_w, panel_h),
-        3,
-        border_radius=10,
-    )
-
-    app.draw_text(
+        window_rect,
         "MAPA CARTOGRAFICO",
-        panel_x + 20,
-        panel_y + 15,
-        app.DARK,
+        app.font,
         app.big_font,
     )
 
-    map_x = panel_x + 20
-    map_y = panel_y + 60
-    map_w = 560
-    map_h = 400
-
-    info_x = map_x + map_w + 20
-    info_y = map_y
-    info_w = 240
-    info_h = 400
-
-    pygame.draw.rect(
-        app.screen,
-        app.WHITE,
-        (map_x, map_y, map_w, map_h),
+    content_x = window_rect.x + WINDOW_PADDING
+    content_y = window_rect.y + 60
+    map_rect = pygame.Rect(content_x, content_y, MAP_SIZE[0], MAP_SIZE[1])
+    info_content_rect = pygame.Rect(
+        map_rect.right + 28,
+        content_y + 6,
+        INFO_WIDTH,
+        306,
     )
 
-    pygame.draw.rect(
-        app.screen,
-        app.DARK,
-        (map_x, map_y, map_w, map_h),
-        2,
-    )
+    selected_region = draw_map_panel(app, map_rect)
+    draw_region_panel(app, selected_region, info_content_rect)
+    draw_cartography_footer(app, window_rect)
 
-    cell_w = map_w // GRID_COLS
-    cell_h = map_h // GRID_ROWS
+    if app.cartography_modal_open:
+        draw_expedition_modal(app)
 
-    regions = REGION_DATABASE
+
+def draw_map_panel(app, map_rect):
+    map_inner = draw_content_panel(app.screen, map_rect, padding=10)
+    pygame.draw.rect(app.screen, PARCHMENT_LIGHT, map_inner)
+    pygame.draw.rect(app.screen, WOOD_DARK, map_inner, 2)
+
+    cell_w = map_inner.width // GRID_COLS
+    cell_h = map_inner.height // GRID_ROWS
 
     if not hasattr(app, "cartography_cells"):
         app.cartography_cells = {}
@@ -73,349 +67,182 @@ def draw_cartography_overlay(app):
 
     if app.selected_region_id is None:
         app.selected_region_id = "home_port"
-        
+
     selected_region = None
 
     for row, row_data in enumerate(WORLD_MAP):
-
         for col, region_id in enumerate(row_data):
+            x = map_inner.x + col * cell_w
+            y = map_inner.y + row * cell_h
+            cell_rect = pygame.Rect(x, y, cell_w, cell_h)
 
-            x = map_x + col * cell_w
-            y = map_y + row * cell_h
-
-            pygame.draw.rect(
-                app.screen,
-                (80, 80, 80),
-                (x, y, cell_w, cell_h),
-                1,
-            )
+            pygame.draw.rect(app.screen, (102, 90, 68), cell_rect, 1)
 
             if region_id is None:
                 continue
 
-            region = regions[region_id]
+            region = REGION_DATABASE[region_id]
+            app.cartography_cells[region_id] = cell_rect
+
             if region_id == app.selected_region_id:
                 selected_region = region
 
-            if region["hidden"]:
+            draw_region_cell(app, region_id, region, cell_rect)
 
-                pygame.draw.rect(
-                    app.screen,
-                    (40, 40, 40),
-                    (x + 2, y + 2, cell_w - 4, cell_h - 4),
-                )
+    return selected_region
 
-                app.cartography_cells[region_id] = pygame.Rect(
-                    x,
-                    y,
-                    cell_w,
-                    cell_h,
-                )
 
-                continue
+def draw_region_cell(app, region_id, region, cell_rect):
+    inner_rect = cell_rect.inflate(-4, -4)
 
-                app.draw_text(
-                    "???",
-                    x + 8,
-                    y + 8,
-                    (120, 120, 120),
-                    app.small_font,
-                )
+    if region["hidden"]:
+        pygame.draw.rect(app.screen, (58, 49, 39), inner_rect)
+        app.draw_text("???", inner_rect.x + 8, inner_rect.y + 8, TEXT_DISABLED, app.small_font)
+        return
 
-            app.cartography_cells[region_id] = pygame.Rect(
-                x,
-                y,
-                cell_w,
-                cell_h,
-            )
+    color = (213, 196, 145)
 
-            color = (200, 200, 180)
+    if region["state"] == "settled":
+        color = (170, 205, 145)
 
-            if region["state"] == "settled":
-                color = (180, 220, 180)
+    pygame.draw.rect(app.screen, color, inner_rect)
+    pygame.draw.rect(app.screen, WOOD_DARK, inner_rect, 2)
 
-            pygame.draw.rect(
-                app.screen,
-                color,
-                (x + 2, y + 2, cell_w - 4, cell_h - 4),
-            )
+    if region_id == app.selected_region_id:
+        pygame.draw.rect(app.screen, (255, 220, 100), cell_rect, 3)
 
-            pygame.draw.rect(
-                app.screen,
-                app.DARK,
-                (x + 2, y + 2, cell_w - 4, cell_h - 4),
-                2,
-            )
+    app.draw_text(region["name"], inner_rect.x + 8, inner_rect.y + 8, TEXT_DARK, app.small_font)
 
-            if region_id == app.selected_region_id:
 
-                pygame.draw.rect(
-                    app.screen,
-                    (255, 220, 100),
-                    (x, y, cell_w, cell_h),
-                    3,
-                )
+def draw_region_panel(app, selected_region, content_rect):
+    inner = draw_content_panel(app.screen, content_rect, padding=14)
+    app.cartography_expedition_button = None
 
-                selected_region = region
+    app.draw_text("REGION", inner.x, inner.y, TEXT_DISABLED, app.small_font)
 
-            app.draw_text(
-                region["name"],
-                x + 8,
-                y + 8,
-                app.DARK,
-                app.small_font,
-            )
-    
-    pygame.draw.rect(
+    if selected_region is None:
+        app.draw_text("Selecciona una region.", inner.x, inner.y + 34, TEXT_DARK, app.font)
+        return
+
+    app.draw_text(selected_region["name"], inner.x, inner.y + 34, TEXT_DARK, app.font)
+
+    draw_label_value(
         app.screen,
-        app.WHITE,
-        (info_x, info_y, info_w, info_h),
+        app.small_font,
+        "Estado",
+        selected_region["state"],
+        inner.x,
+        inner.y + 78,
     )
 
-    pygame.draw.rect(
+    draw_label_value(
         app.screen,
-        app.DARK,
-        (info_x, info_y, info_w, info_h),
-        2,
-    )
-
-    app.draw_text(
-        "REGION",
-        info_x + 10,
-        info_y + 10,
-        app.DARK,
         app.small_font,
+        "Visitas",
+        selected_region["visits"],
+        inner.x,
+        inner.y + 104,
     )
 
-    if selected_region is not None:
-
-        app.draw_text(
-            selected_region["name"],
-            info_x + 10,
-            info_y + 40,
-            app.DARK,
-        )
-
-        app.draw_text(
-            f"Estado: {selected_region['state']}",
-            info_x + 10,
-            info_y + 90,
-            app.DARK,
-        )
-
-        app.draw_text(
-            f"Cartografia: {selected_region['cartography_percent']}%",
-            info_x + 10,
-            info_y + 120,
-            app.DARK,
-        )
-
-        app.draw_text(
-            f"Visitas: {selected_region['visits']}",
-            info_x + 10,
-            info_y + 150,
-            app.DARK,
-        )
-
-        button_rect = pygame.Rect(
-            info_x + 20,
-            info_y + 320,
-            200,
-            40,
-        )
-
-        pygame.draw.rect(
-            app.screen,
-            (210, 210, 180),
-            button_rect,
-        )
-
-        pygame.draw.rect(
-            app.screen,
-            app.DARK,
-            button_rect,
-            2,
-        )
-
-        app.cartography_expedition_button = button_rect
-
-    pygame.draw.rect(
+    app.draw_text("Cartografia", inner.x, inner.y + 134, TEXT_DISABLED, app.small_font)
+    draw_progress_bar(
         app.screen,
-        app.DARK,
-        (info_x + 20, info_y + 320, 200, 40),
-        2,
+        pygame.Rect(inner.x, inner.y + 156, inner.width, 12),
+        selected_region["cartography_percent"],
+        100,
+        (119, 146, 88),
+        background_color=(70, 48, 34),
+        border_color=WOOD_DARK,
     )
-
     app.draw_text(
-        "Nueva expedicion",
-        info_x + 35,
-        info_y + 332,
-        app.DARK,
-    )
-
-    app.draw_text(
-        "Puerto actual: Puerto Inicial",
-        panel_x + 20,
-        panel_y + 500,
-        app.DARK,
+        f"{selected_region['cartography_percent']}%",
+        inner.x,
+        inner.y + 174,
+        TEXT_DARK,
         app.small_font,
     )
 
+    button_rect = pygame.Rect(inner.x, inner.bottom - 42, inner.width, 38)
+    draw_button(app.screen, button_rect)
+    draw_button_text(app.screen, app.font, "Nueva expedicion", button_rect)
+    app.cartography_expedition_button = button_rect
+
+
+def draw_cartography_footer(app, window_rect):
+    footer_y = window_rect.bottom - 38
+
+    app.draw_text("Puerto actual: Puerto Inicial", window_rect.x + 22, footer_y, TEXT_DARK, app.small_font)
+    app.draw_text("Cartografia global: 3%", window_rect.x + 300, footer_y, TEXT_DARK, app.small_font)
+    app.draw_text("ESC cerrar", window_rect.right - 110, footer_y, TEXT_DARK, app.small_font)
+
+
+def draw_expedition_modal(app):
+    modal_content = pygame.Rect(250, 170, 460, 276)
+    modal_rect = modal_content.inflate(34, 58)
+
+    draw_panel(app.screen, modal_rect)
+
+    selected_region = REGION_DATABASE[app.selected_region_id]
+    app.draw_text("PREPARAR EXPEDICION", modal_content.x, modal_rect.y + 18, TEXT_DARK, app.font)
+    app.draw_text(f"Destino: {selected_region['name']}", modal_content.x, modal_content.y, TEXT_DARK)
+
+    draw_label_value(
+        app.screen,
+        app.small_font,
+        "Dias",
+        selected_region["travel_days"],
+        modal_content.x,
+        modal_content.y + 36,
+    )
+
+    draw_label_value(
+        app.screen,
+        app.small_font,
+        "Peligro",
+        selected_region["danger"],
+        modal_content.x,
+        modal_content.y + 62,
+    )
+
+    cargo_y = modal_content.y + 106
+    app.draw_text("BODEGA", modal_content.x, cargo_y, TEXT_DARK, app.font)
+    app.draw_text(f"Carga: {len(app.ship_cargo)}/16", modal_content.x + 110, cargo_y + 4, TEXT_DISABLED, app.small_font)
+
+    draw_cargo_grid(app, modal_content.x, cargo_y + 36)
+
     app.draw_text(
-        "Cartografia global: 3%",
-        panel_x + 280,
-        panel_y + 500,
-        app.DARK,
+        "Sistema de carga pendiente",
+        modal_content.x + 196,
+        cargo_y + 46,
+        TEXT_DISABLED,
         app.small_font,
     )
 
-    app.draw_text(
-        "ESC cerrar",
-        panel_x + 730,
-        panel_y + 500,
-        app.DARK,
-        app.small_font,
-    )
+    cancel_rect = pygame.Rect(modal_content.right - 218, modal_content.bottom - 38, 100, 38)
+    launch_rect = pygame.Rect(modal_content.right - 106, modal_content.bottom - 38, 100, 38)
 
-    if app.cartography_modal_open:
+    draw_button(app.screen, cancel_rect)
+    draw_button_text(app.screen, app.font, "Cancelar", cancel_rect)
 
-        modal_w = 500
-        modal_h = 380
+    draw_button(app.screen, launch_rect)
+    draw_button_text(app.screen, app.font, "Zarpar", launch_rect)
 
-        modal_x = app.screen.get_width() // 2 - modal_w // 2
-        modal_y = app.screen.get_height() // 2 - modal_h // 2
+    app.cartography_cancel_button = cancel_rect
+    app.cartography_launch_button = launch_rect
 
-        pygame.draw.rect(
-            app.screen,
-            app.PANEL,
-            (modal_x, modal_y, modal_w, modal_h),
-        )
 
-        pygame.draw.rect(
-            app.screen,
-            app.DARK,
-            (modal_x, modal_y, modal_w, modal_h),
-            2,
-        )
+def draw_cargo_grid(app, x, y):
+    slot_size = 36
+    gap = 6
 
-        selected_region = REGION_DATABASE[
-            app.selected_region_id
-        ]
+    for row in range(4):
+        for col in range(4):
+            slot_rect = pygame.Rect(
+                x + col * (slot_size + gap),
+                y + row * (slot_size + gap),
+                slot_size,
+                slot_size,
+            )
 
-        app.draw_text(
-            "PREPARAR EXPEDICION",
-            modal_x + 20,
-            modal_y + 20,
-            app.DARK,
-        )
-
-        app.draw_text(
-            f"Destino: {selected_region['name']}",
-            modal_x + 20,
-            modal_y + 60,
-            app.DARK,
-        )
-
-        app.draw_text(
-            f"Dias: {selected_region['travel_days']}",
-            modal_x + 20,
-            modal_y + 90,
-            app.DARK,
-        )
-
-        app.draw_text(
-            f"Peligro: {selected_region['danger']}",
-            modal_x + 20,
-            modal_y + 120,
-            app.DARK,
-        )
-
-        app.draw_text(
-            "BODEGA",
-            modal_x + 20,
-            modal_y + 170,
-            app.DARK,
-        )
-
-        grid_x = modal_x + 20
-        grid_y = modal_y + 200
-
-        slot_size = 40
-        gap = 6
-
-        for row in range(4):
-
-            for col in range(4):
-
-                x = grid_x + col * (slot_size + gap)
-                y = grid_y + row * (slot_size + gap)
-
-                pygame.draw.rect(
-                    app.screen,
-                    app.WHITE,
-                    (x, y, slot_size, slot_size),
-                )
-
-                pygame.draw.rect(
-                    app.screen,
-                    app.DARK,
-                    (x, y, slot_size, slot_size),
-                    2,
-                )
-
-        cancel_rect = pygame.Rect(
-            modal_x + 260,
-            modal_y + 300,
-            100,
-            40,
-        )
-
-        launch_rect = pygame.Rect(
-            modal_x + 370,
-            modal_y + 300,
-            100,
-            40,
-        )
-
-        pygame.draw.rect(
-            app.screen,
-            (180, 180, 180),
-            cancel_rect,
-        )
-
-        pygame.draw.rect(
-            app.screen,
-            app.DARK,
-            cancel_rect,
-            2,
-        )
-
-        pygame.draw.rect(
-            app.screen,
-            (180, 220, 180),
-            launch_rect,
-        )
-
-        pygame.draw.rect(
-            app.screen,
-            app.DARK,
-            launch_rect,
-            2,
-        )
-
-        app.draw_text(
-            "Cancelar",
-            cancel_rect.x + 15,
-            cancel_rect.y + 12,
-            app.DARK,
-        )
-
-        app.draw_text(
-            "Zarpar",
-            launch_rect.x + 22,
-            launch_rect.y + 12,
-            app.DARK,
-        )
-
-        app.cartography_cancel_button = cancel_rect
-        app.cartography_launch_button = launch_rect
+            pygame.draw.rect(app.screen, PARCHMENT_LIGHT, slot_rect, border_radius=6)
+            pygame.draw.rect(app.screen, WOOD_DARK, slot_rect, 2, border_radius=6)

@@ -14,8 +14,6 @@ from game.inventory.hotbar_manager import (
     get_active_tool,
     set_active_hotbar_index,
 )
-from assets.bitmaps.bitmap_database import get_bitmap_data
-from assets.bitmap_renderer import render_bitmap
 from game.world.grid_manager import TILE_SIZE, world_to_grid, grid_to_world
 from game.cartography.cartography_manager import CartographyManager
 from game.player_controller import update_player_movement
@@ -28,11 +26,13 @@ from game.world_objects import WORLD_OBJECTS
 from game.collectable_manager import update_collectables
 from game.cartography.ui.cartography_overlay import draw_cartography_overlay
 from game.data.item_database import get_item_data
+from game.ui.sprite_renderer import draw_item_sprite, draw_sprite_centered
 from game.farming.farming_manager import advance_farming_day
 from game.input.input_manager import handle_events
 from game.bestiary.bestiary_manager import BestiaryManager
 from game.combat.combat_manager import CombatManager
 from game.hud.menu_overlay import draw_menu, get_menu_tab_at_position
+from game.ui.ui_theme import create_game_fonts
 from game.world.grid_renderer import (
     draw_world_grid,
     draw_tilled_cells,
@@ -42,6 +42,17 @@ from game.world.grid_renderer import (
     draw_occupied_cells_debug,
     draw_collision_debug,
 )
+
+
+WORLD_OBJECT_SPRITES = {
+    "tree": "assets/world/object_tree.png",
+    "rock": "assets/world/rock.png",
+    "bush": "assets/world/object_bush.png",
+    "fishing_spot": "assets/world/fishing_spot.png",
+    "dock": "assets/world/dock.png",
+    "ship": "assets/world/ship.png",
+    "bed": "assets/world/bed.png",
+}
 
 WIDTH = 960
 HEIGHT = 640
@@ -76,6 +87,8 @@ class PygameApp:
         self.cartography_cancel_button = None
         self.cartography_launch_button = None
 
+        self.ship_cargo = []
+
         self.skill_manager = SkillManager(self.state)
 
         self.bestiary_manager = BestiaryManager(self.state)
@@ -84,9 +97,11 @@ class PygameApp:
         self.placement_mode = False
         self.placement_item_id = None
 
-        self.font = pygame.font.SysFont("consolas", 18)
-        self.big_font = pygame.font.SysFont("consolas", 28, bold=True)
-        self.small_font = pygame.font.SysFont("consolas", 14)
+        fonts = create_game_fonts()
+
+        self.font = fonts["normal"]
+        self.big_font = fonts["title"]
+        self.small_font = fonts["small"]
 
         self.player_sprite = pygame.image.load(
             "assets/player/player_idle.png"
@@ -217,37 +232,26 @@ class PygameApp:
             if selected:
                 radius += 7
 
-            color = PANEL
-            if selected:
-                color = WHITE
+            sprite_path = world_object.get("sprite")
 
-            pygame.draw.circle(self.screen, color, (x, y), radius)
-            pygame.draw.circle(self.screen, DARK, (x, y), radius, 3)
+            if sprite_path is None:
+                sprite_path = WORLD_OBJECT_SPRITES.get(world_object["type"])
 
-            icon = world_object["icon"]
+            if sprite_path is not None:
+                sprite_size = radius * 2 + 18
+                sprite_rect = draw_sprite_centered(
+                    self.screen,
+                    sprite_path,
+                    x,
+                    y,
+                    sprite_size,
+                    sprite_size,
+                )
 
-            if world_object["type"] == "tree" and "hp" in world_object and "max_hp" in world_object:
-                hp_percent = world_object["hp"] / world_object["max_hp"]
-
-                if hp_percent >= 1:
-                    icon = "T"
-                elif hp_percent >= 0.5:
-                    icon = "t"
-                else:
-                    icon = "|"
-
-            bitmap_id = world_object.get("bitmap_id")
-
-            if bitmap_id is not None:
-                bitmap_data = get_bitmap_data(bitmap_id)
-
-                if bitmap_data is not None:
-                    bitmap_surface = render_bitmap(bitmap_data)
-                    self.screen.blit(bitmap_surface, (x - bitmap_surface.get_width() // 2, y - bitmap_surface.get_height()))
-                else:
-                    self.draw_text(icon, x - 6, y - 10, DARK, self.big_font)
+                if selected:
+                    pygame.draw.rect(self.screen, WARN, sprite_rect.inflate(8, 8), 2, border_radius=6)
             else:
-                self.draw_text(icon, x - 6, y - 10, DARK, self.big_font)
+                self.draw_text(world_object["icon"], x - 6, y - 10, DARK, self.big_font)
 
             self.draw_text(world_object["name"], x - 34, y + radius + 8, DARK, self.small_font)
 
@@ -260,11 +264,13 @@ class PygameApp:
 
             item_data = get_item_data(collectable["item_id"])
 
-            pygame.draw.circle(self.screen, WHITE, (x, y), collectable["radius"])
-            pygame.draw.circle(self.screen, DARK, (x, y), collectable["radius"], 2)
-
             if item_data is not None:
-                self.draw_text(item_data["icon"], x - 5, y - 10, DARK, self.small_font)
+                draw_item_sprite(
+                    self.screen,
+                    item_data,
+                    pygame.Rect(x - 14, y - 14, 28, 28),
+                    padding=0,
+                )
         px = int(player["x"] - camera_x)
         py = int(player["y"] - camera_y)
 
@@ -332,13 +338,7 @@ class PygameApp:
                 )
 
                 pygame.draw.rect(self.screen, (240, 220, 80), preview_rect, 2)
-                self.draw_text(
-                    item_data["icon"],
-                    screen_x + 10,
-                    screen_y + 6,
-                    DARK,
-                    self.big_font,
-                )
+                draw_item_sprite(self.screen, item_data, preview_rect, padding=3)
 
         if self.nearby_object is None:
             self.draw_text("WASD/Flechas: moverse | E/Enter: interactuar", 80, 530, DARK)

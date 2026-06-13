@@ -109,6 +109,7 @@ def create_test_combat_state(app):
             "action_buttons": [],
             "target_buttons": [],
             "pending_action": None,
+            "log_scroll_offset": 0,
         },
         "player": create_combat_actor_from_data(
             "player",

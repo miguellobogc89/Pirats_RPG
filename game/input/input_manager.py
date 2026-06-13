@@ -36,10 +36,32 @@ def handle_events(app):
 
                         continue
 
+                    if app.cartography_modal_open:
+
+                        if (
+                            app.cartography_cancel_button is not None
+                            and app.cartography_cancel_button.collidepoint(event.pos)
+                        ):
+                            app.cartography_modal_open = False
+                            continue
+
+                        if (
+                            app.cartography_launch_button is not None
+                            and app.cartography_launch_button.collidepoint(event.pos)
+                        ):
+                            app.pending_expedition_region_id = app.selected_region_id
+
+                            app.add_log(
+                                f"Expedicion enviada a {app.selected_region_id}"
+                            )
+
+                            app.cartography_modal_open = False
+
+                            continue
+
                     for region_id, rect in app.cartography_cells.items():
 
                         if rect.collidepoint(event.pos):
-                            print("CLICK:", region_id)
                             app.selected_region_id = region_id
                             break
 

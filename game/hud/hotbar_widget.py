@@ -6,6 +6,7 @@ from game.inventory.hotbar_manager import (
     get_hotbar_slots,
 )
 from game.data.item_database import get_item_data
+from game.ui.sprite_renderer import draw_item_sprite
 
 
 def draw_hotbar_widget(app):
@@ -42,7 +43,12 @@ def draw_hotbar_widget(app):
         if item_data is None:
             continue
 
-        draw_text(app.screen, app.big_font, item_data["icon"], x + 20, y + 8, DARK)
+        draw_item_sprite(
+            app.screen,
+            item_data,
+            pygame.Rect(x + 8, y + 5, 42, 42),
+            padding=1,
+        )
 
         if amount > 1:
             draw_text(app.screen, app.small_font, str(amount), x + 38, y + 38, DARK)
