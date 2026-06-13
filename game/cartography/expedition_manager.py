@@ -1,5 +1,11 @@
-from game.cartography.region_database import REGION_DATABASE
+from game.cartography.data.region_database import REGION_DATABASE
 from game.cartography.reward_generator import generate_region_rewards
+
+
+SUPPLY_RESOURCE_ID = "supplies"
+SUPPLIES_PER_TRAVEL_DAY = 2
+DEFAULT_EXPEDITION_DAYS = 1
+DEFAULT_EXPEDITION_RISK = 1
 
 
 class ExpeditionManager:
@@ -12,12 +18,17 @@ class ExpeditionManager:
             return None
 
         region_data = REGION_DATABASE[region_id]
-        base_days = region_data.get("base_days", 1)
-        danger = region_data.get("danger", 1)
+        base_days = region_data.get(
+            "base_days",
+            region_data.get("travel_days", DEFAULT_EXPEDITION_DAYS),
+        )
+        danger = region_data.get("danger", DEFAULT_EXPEDITION_RISK)
 
         return {
             "days": base_days,
-            "supplies": base_days * 2,
+            # TODO: sustituir esta regla temporal cuando bodega/inventario
+            # definan provisiones reales por expedicion.
+            "supplies": base_days * SUPPLIES_PER_TRAVEL_DAY,
             "risk": danger,
         }
 
@@ -42,7 +53,7 @@ class ExpeditionManager:
                 "reason": "region_not_found",
             }
 
-        supplies = assigned_resources.get("supplies", 0)
+        supplies = assigned_resources.get(SUPPLY_RESOURCE_ID, 0)
 
         if supplies < cost["supplies"]:
             return {

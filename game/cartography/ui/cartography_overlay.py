@@ -1,7 +1,7 @@
 import pygame
 
 from game.cartography.data.world_map import WORLD_MAP
-from game.cartography.data.region_database import REGION_DATABASE
+from game.cartography.expedition_setup import create_expedition_setup
 from game.ui.ui_components import (
     PARCHMENT_LIGHT,
     TEXT_DARK,
@@ -22,9 +22,15 @@ GRID_ROWS = 4
 WINDOW_PADDING = 20
 MAP_SIZE = (560, 400)
 INFO_WIDTH = 250
+STORAGE_GRID_COLS = 4
+STORAGE_SLOT_SIZE = 36
+STORAGE_SLOT_GAP = 6
 
 
 def draw_cartography_overlay(app):
+    ui_state = app.cartography_ui_state
+    ui_state.clear_hitboxes()
+
     window_rect = pygame.Rect(40, 40, 880, 560)
     draw_window(
         app.screen,
@@ -48,7 +54,7 @@ def draw_cartography_overlay(app):
     draw_region_panel(app, selected_region, info_content_rect)
     draw_cartography_footer(app, window_rect)
 
-    if app.cartography_modal_open:
+    if ui_state.modal_open:
         draw_expedition_modal(app)
 
 
@@ -60,31 +66,29 @@ def draw_map_panel(app, map_rect):
     cell_w = map_inner.width // GRID_COLS
     cell_h = map_inner.height // GRID_ROWS
 
-    if not hasattr(app, "cartography_cells"):
-        app.cartography_cells = {}
+    ui_state = app.cartography_ui_state
 
-    app.cartography_cells.clear()
-
-    if app.selected_region_id is None:
-        app.selected_region_id = "home_port"
+    if ui_state.selected_region_id is None:
+        ui_state.selected_region_id = app.cartography_manager.active_anchor_region_id
 
     selected_region = None
+    map_view = app.cartography_manager.get_map_view_data(WORLD_MAP)
 
-    for row, row_data in enumerate(WORLD_MAP):
-        for col, region_id in enumerate(row_data):
+    for row, row_data in enumerate(map_view):
+        for col, region in enumerate(row_data):
             x = map_inner.x + col * cell_w
             y = map_inner.y + row * cell_h
             cell_rect = pygame.Rect(x, y, cell_w, cell_h)
 
             pygame.draw.rect(app.screen, (102, 90, 68), cell_rect, 1)
 
-            if region_id is None:
+            if region is None:
                 continue
 
-            region = REGION_DATABASE[region_id]
-            app.cartography_cells[region_id] = cell_rect
+            region_id = region["id"]
+            ui_state.region_cells[region_id] = cell_rect
 
-            if region_id == app.selected_region_id:
+            if region_id == ui_state.selected_region_id:
                 selected_region = region
 
             draw_region_cell(app, region_id, region, cell_rect)
@@ -108,7 +112,7 @@ def draw_region_cell(app, region_id, region, cell_rect):
     pygame.draw.rect(app.screen, color, inner_rect)
     pygame.draw.rect(app.screen, WOOD_DARK, inner_rect, 2)
 
-    if region_id == app.selected_region_id:
+    if region_id == app.cartography_ui_state.selected_region_id:
         pygame.draw.rect(app.screen, (255, 220, 100), cell_rect, 3)
 
     app.draw_text(region["name"], inner_rect.x + 8, inner_rect.y + 8, TEXT_DARK, app.small_font)
@@ -116,7 +120,7 @@ def draw_region_cell(app, region_id, region, cell_rect):
 
 def draw_region_panel(app, selected_region, content_rect):
     inner = draw_content_panel(app.screen, content_rect, padding=14)
-    app.cartography_expedition_button = None
+    ui_state = app.cartography_ui_state
 
     app.draw_text("REGION", inner.x, inner.y, TEXT_DISABLED, app.small_font)
 
@@ -165,14 +169,27 @@ def draw_region_panel(app, selected_region, content_rect):
     button_rect = pygame.Rect(inner.x, inner.bottom - 42, inner.width, 38)
     draw_button(app.screen, button_rect)
     draw_button_text(app.screen, app.font, "Nueva expedicion", button_rect)
-    app.cartography_expedition_button = button_rect
+    ui_state.expedition_button = button_rect
 
 
 def draw_cartography_footer(app, window_rect):
     footer_y = window_rect.bottom - 38
+    active_anchor = app.cartography_manager.get_region_view_data(
+        app.cartography_manager.active_anchor_region_id
+    )
+    anchor_name = "Desconocido"
 
-    app.draw_text("Puerto actual: Puerto Inicial", window_rect.x + 22, footer_y, TEXT_DARK, app.small_font)
-    app.draw_text("Cartografia global: 3%", window_rect.x + 300, footer_y, TEXT_DARK, app.small_font)
+    if active_anchor is not None:
+        anchor_name = active_anchor["name"]
+
+    app.draw_text(f"Puerto actual: {anchor_name}", window_rect.x + 22, footer_y, TEXT_DARK, app.small_font)
+    app.draw_text(
+        f"Cartografia global: {app.cartography_manager.get_global_cartography_percent()}%",
+        window_rect.x + 300,
+        footer_y,
+        TEXT_DARK,
+        app.small_font,
+    )
     app.draw_text("ESC cerrar", window_rect.right - 110, footer_y, TEXT_DARK, app.small_font)
 
 
@@ -182,7 +199,25 @@ def draw_expedition_modal(app):
 
     draw_panel(app.screen, modal_rect)
 
-    selected_region = REGION_DATABASE[app.selected_region_id]
+    ui_state = app.cartography_ui_state
+    selected_region = app.cartography_manager.get_region_view_data(ui_state.selected_region_id)
+
+    if selected_region is None:
+        return
+
+    expedition_setup = ui_state.expedition_setup
+
+    if expedition_setup is None or expedition_setup.region_id != selected_region["id"]:
+        expedition_setup = create_expedition_setup(
+            selected_region["id"],
+            app.expedition_manager,
+            app.cartography_manager.ship_storage,
+        )
+        ui_state.expedition_setup = expedition_setup
+
+    if not expedition_setup.cost:
+        return
+
     app.draw_text("PREPARAR EXPEDICION", modal_content.x, modal_rect.y + 18, TEXT_DARK, app.font)
     app.draw_text(f"Destino: {selected_region['name']}", modal_content.x, modal_content.y, TEXT_DARK)
 
@@ -190,7 +225,7 @@ def draw_expedition_modal(app):
         app.screen,
         app.small_font,
         "Dias",
-        selected_region["travel_days"],
+        expedition_setup.cost["days"],
         modal_content.x,
         modal_content.y + 36,
     )
@@ -199,22 +234,45 @@ def draw_expedition_modal(app):
         app.screen,
         app.small_font,
         "Peligro",
-        selected_region["danger"],
+        expedition_setup.cost["risk"],
         modal_content.x,
         modal_content.y + 62,
     )
 
-    cargo_y = modal_content.y + 106
-    app.draw_text("BODEGA", modal_content.x, cargo_y, TEXT_DARK, app.font)
-    app.draw_text(f"Carga: {len(app.ship_cargo)}/16", modal_content.x + 110, cargo_y + 4, TEXT_DISABLED, app.small_font)
+    draw_label_value(
+        app.screen,
+        app.small_font,
+        "Provisiones",
+        f"{expedition_setup.provisions_assigned}/{expedition_setup.provisions_required}",
+        modal_content.x,
+        modal_content.y + 88,
+    )
 
-    draw_cargo_grid(app, modal_content.x, cargo_y + 36)
+    cargo_y = modal_content.y + 122
+    ship_storage = app.cartography_manager.ship_storage
+    app.draw_text("BODEGA", modal_content.x, cargo_y, TEXT_DARK, app.font)
+    app.draw_text(
+        f"Carga: {expedition_setup.capacity_used}/{ship_storage.max_slots}",
+        modal_content.x + 110,
+        cargo_y + 4,
+        TEXT_DISABLED,
+        app.small_font,
+    )
+
+    draw_cargo_grid(app, modal_content.x, cargo_y + 36, ship_storage.max_slots)
 
     app.draw_text(
-        "Sistema de carga pendiente",
+        "Seleccion de carga pendiente",
         modal_content.x + 196,
         cargo_y + 46,
         TEXT_DISABLED,
+        app.small_font,
+    )
+    app.draw_text(
+        get_expedition_setup_status_text(expedition_setup),
+        modal_content.x + 196,
+        cargo_y + 70,
+        TEXT_DARK if expedition_setup.can_launch else TEXT_DISABLED,
         app.small_font,
     )
 
@@ -227,22 +285,30 @@ def draw_expedition_modal(app):
     draw_button(app.screen, launch_rect)
     draw_button_text(app.screen, app.font, "Zarpar", launch_rect)
 
-    app.cartography_cancel_button = cancel_rect
-    app.cartography_launch_button = launch_rect
+    ui_state.cancel_button = cancel_rect
+    ui_state.launch_button = launch_rect
 
 
-def draw_cargo_grid(app, x, y):
-    slot_size = 36
-    gap = 6
+def get_expedition_setup_status_text(expedition_setup):
+    if expedition_setup.can_launch:
+        return "Listo para zarpar"
 
-    for row in range(4):
-        for col in range(4):
-            slot_rect = pygame.Rect(
-                x + col * (slot_size + gap),
-                y + row * (slot_size + gap),
-                slot_size,
-                slot_size,
-            )
+    if not expedition_setup.validation_errors:
+        return "Preparacion incompleta"
 
-            pygame.draw.rect(app.screen, PARCHMENT_LIGHT, slot_rect, border_radius=6)
-            pygame.draw.rect(app.screen, WOOD_DARK, slot_rect, 2, border_radius=6)
+    return "Error: " + expedition_setup.validation_errors[0]
+
+
+def draw_cargo_grid(app, x, y, slot_count):
+    for slot_index in range(slot_count):
+        row = slot_index // STORAGE_GRID_COLS
+        col = slot_index % STORAGE_GRID_COLS
+        slot_rect = pygame.Rect(
+            x + col * (STORAGE_SLOT_SIZE + STORAGE_SLOT_GAP),
+            y + row * (STORAGE_SLOT_SIZE + STORAGE_SLOT_GAP),
+            STORAGE_SLOT_SIZE,
+            STORAGE_SLOT_SIZE,
+        )
+
+        pygame.draw.rect(app.screen, PARCHMENT_LIGHT, slot_rect, border_radius=6)
+        pygame.draw.rect(app.screen, WOOD_DARK, slot_rect, 2, border_radius=6)

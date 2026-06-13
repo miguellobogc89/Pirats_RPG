@@ -1,5 +1,5 @@
-from game.cartography.region_database import REGION_DATABASE
-from game.cartography.port_database import PORT_DATABASE
+from game.cartography.data.region_database import REGION_DATABASE
+from game.cartography.data.port_database import PORT_DATABASE
 
 
 class CartographyConsoleUI:

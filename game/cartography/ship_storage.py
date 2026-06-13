@@ -1,5 +1,8 @@
+DEFAULT_SHIP_STORAGE_SLOTS = 16
+
+
 class ShipStorage:
-    def __init__(self, max_slots=12):
+    def __init__(self, max_slots=DEFAULT_SHIP_STORAGE_SLOTS):
         self.max_slots = max_slots
         self.items = {}
 

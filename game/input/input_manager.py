@@ -1,6 +1,7 @@
 import sys
 import pygame
 
+from game.cartography.ui.cartography_input import handle_cartography_event
 from game.hud.menu_overlay import get_menu_tab_at_position, get_menu_tabs
 from game.inventory.hotbar_manager import (
     get_active_item_data,
@@ -23,50 +24,12 @@ def handle_events(app):
             app.combat_manager.handle_event(event)
             continue
 
+        if app.cartography_menu_open:
+            handle_cartography_event(app, event)
+            continue
+
         if event.type == pygame.MOUSEBUTTONDOWN:
             if event.button == 1:
-                if app.cartography_menu_open:
-
-                    if (
-                        app.cartography_expedition_button is not None
-                        and app.cartography_expedition_button.collidepoint(event.pos)
-                    ):
-                        if app.selected_region_id is not None:
-                            app.cartography_modal_open = True
-
-                        continue
-
-                    if app.cartography_modal_open:
-
-                        if (
-                            app.cartography_cancel_button is not None
-                            and app.cartography_cancel_button.collidepoint(event.pos)
-                        ):
-                            app.cartography_modal_open = False
-                            continue
-
-                        if (
-                            app.cartography_launch_button is not None
-                            and app.cartography_launch_button.collidepoint(event.pos)
-                        ):
-                            app.pending_expedition_region_id = app.selected_region_id
-
-                            app.add_log(
-                                f"Expedicion enviada a {app.selected_region_id}"
-                            )
-
-                            app.cartography_modal_open = False
-
-                            continue
-
-                    for region_id, rect in app.cartography_cells.items():
-
-                        if rect.collidepoint(event.pos):
-                            app.selected_region_id = region_id
-                            break
-
-                    continue
-
                 if app.menu_open:
                     clicked_tab = get_menu_tab_at_position(event.pos[0], event.pos[1])
 
@@ -77,13 +40,7 @@ def handle_events(app):
 
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_ESCAPE:
-                if app.cartography_modal_open:
-                    app.cartography_modal_open = False
-
-                elif app.cartography_menu_open:
-                    app.cartography_menu_open = False
-                else:
-                    app.menu_open = not app.menu_open
+                app.menu_open = not app.menu_open
 
             elif app.menu_open:
                 handle_menu_key(app, event.key)

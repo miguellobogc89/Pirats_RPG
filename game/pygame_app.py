@@ -16,6 +16,11 @@ from game.inventory.hotbar_manager import (
 )
 from game.world.grid_manager import TILE_SIZE, world_to_grid, grid_to_world
 from game.cartography.cartography_manager import CartographyManager
+from game.cartography.expedition_manager import ExpeditionManager
+from game.cartography.cartography_validator import (
+    format_validation_issue,
+    validate_cartography_data,
+)
 from game.player_controller import update_player_movement
 from game.skills.skill_manager import SkillManager
 from game.ui_renderer import draw_log
@@ -25,6 +30,7 @@ from game.world.world_renderer import draw_world_background
 from game.world_objects import WORLD_OBJECTS
 from game.collectable_manager import update_collectables
 from game.cartography.ui.cartography_overlay import draw_cartography_overlay
+from game.cartography.ui.cartography_ui_state import CartographyUIState
 from game.data.item_database import get_item_data
 from game.ui.sprite_renderer import draw_item_sprite, draw_sprite_centered
 from game.farming.farming_manager import advance_farming_day
@@ -78,16 +84,9 @@ class PygameApp:
         self.cartography_manager.load_from_data(
             self.state["cartography"]
         )
-        self.selected_region_id = None
-        self.pending_expedition_region_id = None
-        self.cartography_cells = {}
-        self.cartography_expedition_button = None
-        self.cartography_modal_open = False
-
-        self.cartography_cancel_button = None
-        self.cartography_launch_button = None
-
-        self.ship_cargo = []
+        self.state["cartography"] = self.cartography_manager.get_save_data()
+        self.expedition_manager = ExpeditionManager(self.cartography_manager)
+        self.cartography_ui_state = CartographyUIState()
 
         self.skill_manager = SkillManager(self.state)
 
@@ -118,11 +117,11 @@ class PygameApp:
 
         self.menu_open = False
         self.cartography_menu_open = False
-        self.selected_region_id = None
         self.menu_tab = "inventory"
         self.hud_visible = True
 
         self.log = list(state.get("log", []))[-7:]
+        self.run_cartography_validation_debug()
 
     def run(self):
         while True:
@@ -166,6 +165,17 @@ class PygameApp:
         self.log.append(message)
         self.log = self.log[-7:]
         self.state["log"] = self.log
+
+    def run_cartography_validation_debug(self):
+        config = self.game_data.get("config", {})
+
+        if not self.state.get("debug") and not config.get("debug_cartography_validation"):
+            return
+
+        issues = validate_cartography_data()
+
+        for issue in issues:
+            print("[cartography validation]", format_validation_issue(issue))
 
     def draw(self):
         player = self.state["player"]

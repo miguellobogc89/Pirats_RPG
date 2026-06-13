@@ -1,14 +1,18 @@
 from game.cartography.cartography_states import HIDDEN, SEEN, EXPLORED, SETTLED
-from game.cartography.region_database import REGION_DATABASE
-from game.cartography.port_database import PORT_DATABASE
-from game.cartography.cartography_save import load_cartography_save, save_cartography_data
+from game.cartography.data.region_database import REGION_DATABASE
+from game.cartography.data.port_database import PORT_DATABASE
+from game.cartography.ship_storage import ShipStorage
+
+
+STARTING_REGION_ID = "home_port"
 
 
 class CartographyManager:
     def __init__(self):
         self.regions = {}
-        self.active_anchor_region_id = "home_port"
-        self.unlocked_ports = ["home_port"]
+        self.active_anchor_region_id = STARTING_REGION_ID
+        self.unlocked_ports = [STARTING_REGION_ID]
+        self.ship_storage = ShipStorage()
 
         self._create_default_state()
 
@@ -21,32 +25,33 @@ class CartographyManager:
                 "visits": 0,
             }
 
-        self.regions["home_port"]["state"] = SETTLED
-        self.regions["home_port"]["cartography_percent"] = 100
+        self.regions[STARTING_REGION_ID]["state"] = SETTLED
+        self.regions[STARTING_REGION_ID]["cartography_percent"] = 100
 
-        self.reveal_connected_regions("home_port")
+        self.reveal_connected_regions(STARTING_REGION_ID)
 
     def get_save_data(self):
         return {
             "regions": self.regions,
             "active_anchor_region_id": self.active_anchor_region_id,
             "unlocked_ports": self.unlocked_ports,
+            "ship_storage": self.ship_storage.get_save_data(),
         }
 
     def load_from_data(self, data):
         if not data:
             return
 
-        self.regions = data.get("regions", self.regions)
+        saved_regions = data.get("regions", {})
+        for region_id, region_progress in saved_regions.items():
+            if region_id not in self.regions:
+                continue
+
+            self.regions[region_id].update(region_progress)
+
         self.active_anchor_region_id = data.get("active_anchor_region_id", self.active_anchor_region_id)
         self.unlocked_ports = data.get("unlocked_ports", self.unlocked_ports)
-
-    def save(self):
-        save_cartography_data(self.get_save_data())
-
-    def load(self):
-        data = load_cartography_save()
-        self.load_from_data(data)
+        self.ship_storage.load_from_data(data.get("ship_storage"))
 
     def get_region_state(self, region_id):
         if region_id not in self.regions:
@@ -59,16 +64,52 @@ class CartographyManager:
 
         for region_id, progress_data in self.regions.items():
             if progress_data["state"] != HIDDEN:
-                region_data = REGION_DATABASE[region_id].copy()
-                region_data["state"] = progress_data["state"]
-                region_data["cartography_percent"] = progress_data["cartography_percent"]
-                region_data["visits"] = progress_data["visits"]
+                region_data = self.get_region_view_data(region_id)
                 visible_regions.append(region_data)
 
         return visible_regions
 
+    def get_region_view_data(self, region_id):
+        if region_id not in REGION_DATABASE or region_id not in self.regions:
+            return None
+
+        progress_data = self.regions[region_id]
+        region_data = REGION_DATABASE[region_id].copy()
+        region_data["state"] = progress_data["state"]
+        region_data["cartography_percent"] = progress_data["cartography_percent"]
+        region_data["visits"] = progress_data["visits"]
+        region_data["hidden"] = progress_data["state"] == HIDDEN
+        region_data["visible"] = progress_data["state"] != HIDDEN
+        region_data["can_travel"] = self.can_travel_to_region(region_id)
+        region_data["is_unlocked_port"] = region_id in self.unlocked_ports
+        return region_data
+
+    def get_map_view_data(self, world_map):
+        map_rows = []
+
+        for row in world_map:
+            map_rows.append([
+                self.get_region_view_data(region_id) if region_id is not None else None
+                for region_id in row
+            ])
+
+        return map_rows
+
+    def get_global_cartography_percent(self):
+        if not self.regions:
+            return 0
+
+        total_percent = sum(
+            region_progress["cartography_percent"]
+            for region_progress in self.regions.values()
+        )
+        return int(total_percent / len(self.regions))
+
     def can_travel_to_region(self, region_id):
         if region_id not in self.regions:
+            return False
+
+        if self.active_anchor_region_id not in REGION_DATABASE:
             return False
 
         region_state = self.regions[region_id]["state"]
