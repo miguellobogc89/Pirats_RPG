@@ -1,3 +1,4 @@
+import copy
 import sys
 import pygame
 
@@ -13,6 +14,11 @@ from game.inventory.hotbar_manager import (
     get_active_item_id,
     get_active_tool,
     set_active_hotbar_index,
+)
+from game.inventory.inventory_manager import (
+    add_item,
+    can_add_item,
+    remove_item_quantity,
 )
 from game.world.grid_manager import TILE_SIZE, world_to_grid, grid_to_world
 from game.cartography.cartography_manager import CartographyManager
@@ -30,6 +36,7 @@ from game.world.world_renderer import draw_world_background
 from game.world_objects import WORLD_OBJECTS
 from game.collectable_manager import update_collectables
 from game.cartography.ui.cartography_overlay import draw_cartography_overlay
+from game.scenes.scene_manager import ensure_scene_state
 from game.cartography.ui.cartography_ui_state import CartographyUIState
 from game.data.item_database import get_item_data
 from game.ui.sprite_renderer import draw_item_sprite, draw_sprite_centered
@@ -80,12 +87,14 @@ class PygameApp:
         self.state = state
         self.game_data = game_data
 
+        ensure_scene_state(self.state)
+
         self.cartography_manager = CartographyManager()
         self.cartography_manager.load_from_data(
             self.state["cartography"]
         )
-        self.state["cartography"] = self.cartography_manager.get_save_data()
         self.expedition_manager = ExpeditionManager(self.cartography_manager)
+        self.state["cartography"] = self.cartography_manager.get_save_data()
         self.cartography_ui_state = CartographyUIState()
 
         self.skill_manager = SkillManager(self.state)
@@ -153,6 +162,35 @@ class PygameApp:
     def sleep_day(self):
         messages = advance_day(self.state, self.game_data)
         reset_time_to_wake_up(self.state)
+        expedition_day_result = self.expedition_manager.advance_active_expedition_day()
+
+        if expedition_day_result["success"]:
+            self.state["cartography"] = self.cartography_manager.get_save_data()
+            region = self.cartography_manager.get_region_view_data(
+                expedition_day_result["region_id"]
+            )
+            region_name = expedition_day_result["region_id"]
+
+            if region is not None:
+                region_name = region["name"]
+
+            if expedition_day_result["completed"]:
+                self.resolve_completed_expedition(region_name)
+            else:
+                self.add_log(
+                    f"Expedicion a {region_name}: "
+                    f"{expedition_day_result['remaining_days']} dias restantes."
+                )
+        elif expedition_day_result.get("reason") == "active_expedition_completed":
+            region = self.cartography_manager.get_region_view_data(
+                expedition_day_result["region_id"]
+            )
+            region_name = expedition_day_result["region_id"]
+
+            if region is not None:
+                region_name = region["name"]
+
+            self.resolve_completed_expedition(region_name)
 
         dead_crops = advance_farming_day(self.state)
 
@@ -161,6 +199,80 @@ class PygameApp:
 
         for message in messages:
             self.add_log(message)
+
+    def resolve_completed_expedition(self, region_name):
+        active_expedition_snapshot = copy.deepcopy(
+            self.cartography_manager.active_expedition
+        )
+        regions_snapshot = copy.deepcopy(self.cartography_manager.regions)
+        result = self.expedition_manager.resolve_active_expedition()
+
+        if not result["success"]:
+            self.add_log("No se pudo resolver la expedicion.")
+            return
+
+        delivery_result = self.deliver_expedition_rewards(result["rewards"])
+
+        if not delivery_result["success"]:
+            self.cartography_manager.active_expedition = active_expedition_snapshot
+            self.cartography_manager.regions = regions_snapshot
+            self.state["cartography"] = self.cartography_manager.get_save_data()
+            self.add_log(
+                "La expedicion ha llegado, pero no hay espacio para el botin."
+            )
+            return
+
+        self.state["cartography"] = self.cartography_manager.get_save_data()
+        reward_text = self.format_reward_log(result["rewards"])
+        self.add_log(f"Expedicion a {region_name} resuelta. {reward_text}")
+
+    def deliver_expedition_rewards(self, rewards):
+        delivered_items = []
+
+        for item_id, amount in rewards.items():
+            if can_add_item(self.state, item_id, amount):
+                if add_item(self.state, item_id, amount):
+                    delivered_items.append(("inventory", item_id, amount))
+                    continue
+
+            if self.cartography_manager.ship_storage.has_space_for_item(item_id):
+                if self.cartography_manager.ship_storage.add_item(item_id, amount):
+                    delivered_items.append(("ship_storage", item_id, amount))
+                    continue
+
+            self.rollback_delivered_rewards(delivered_items)
+            return {
+                "success": False,
+                "reason": "reward_storage_full",
+            }
+
+        return {
+            "success": True,
+        }
+
+    def rollback_delivered_rewards(self, delivered_items):
+        for destination, item_id, amount in reversed(delivered_items):
+            if destination == "inventory":
+                remove_item_quantity(self.state, item_id, amount)
+            elif destination == "ship_storage":
+                self.cartography_manager.ship_storage.remove_item(item_id, amount)
+
+    def format_reward_log(self, rewards):
+        if not rewards:
+            return "Sin botin."
+
+        parts = []
+
+        for item_id, amount in rewards.items():
+            item_data = get_item_data(item_id)
+            item_name = item_id
+
+            if item_data is not None:
+                item_name = item_data["name"]
+
+            parts.append(f"{item_name} x{amount}")
+
+        return "Botin: " + ", ".join(parts) + "."
 
     def add_log(self, message):
         self.log.append(message)

@@ -1,5 +1,7 @@
 import random
 
+from core.game_state import normalize_state
+
 WINDS = ["north", "south", "east", "west", "calm"]
 
 
@@ -98,6 +100,7 @@ def start_trip(state, game_data, route_key):
 
 
 def advance_day(state, game_data):
+    normalize_state(state, game_data)
     messages = []
     config = game_data["config"]
 
@@ -122,6 +125,8 @@ def advance_day(state, game_data):
             messages.append(f"El barco llega a {route['name']}. Puedes asegurar botin o arriesgar.")
         else:
             messages.append(f"El barco sigue navegando. Faltan {ship['days_left']} dias.")
+
+    state["time"]["day"] = state["day"]
 
     return messages
 

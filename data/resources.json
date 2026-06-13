@@ -3,6 +3,7 @@
   "wood": {"name": "Madera", "icon": "W", "initial": 35},
   "iron": {"name": "Hierro", "icon": "I", "initial": 10},
   "carbon": {"name": "Carbon", "icon": "C", "initial": 6},
+  "rope": {"name": "Rope", "icon": "N", "initial": 10},
   "gold": {"name": "Oro", "icon": "G", "initial": 450},
   "coral": {"name": "Coral", "icon": "R", "initial": 0},
   "pearls": {"name": "Perlas", "icon": "P", "initial": 0},

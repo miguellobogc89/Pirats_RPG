@@ -13,6 +13,7 @@ class CartographyManager:
         self.active_anchor_region_id = STARTING_REGION_ID
         self.unlocked_ports = [STARTING_REGION_ID]
         self.ship_storage = ShipStorage()
+        self.active_expedition = None
 
         self._create_default_state()
 
@@ -36,6 +37,7 @@ class CartographyManager:
             "active_anchor_region_id": self.active_anchor_region_id,
             "unlocked_ports": self.unlocked_ports,
             "ship_storage": self.ship_storage.get_save_data(),
+            "active_expedition": self.active_expedition,
         }
 
     def load_from_data(self, data):
@@ -52,6 +54,7 @@ class CartographyManager:
         self.active_anchor_region_id = data.get("active_anchor_region_id", self.active_anchor_region_id)
         self.unlocked_ports = data.get("unlocked_ports", self.unlocked_ports)
         self.ship_storage.load_from_data(data.get("ship_storage"))
+        self.active_expedition = data.get("active_expedition")
 
     def get_region_state(self, region_id):
         if region_id not in self.regions:

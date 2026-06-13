@@ -30,6 +30,16 @@ REGION_DATABASE = {
         "danger": 1,
         "travel_days": 1,
         "base_days": 1,
+        "travel_requirements": {
+            "gold": 10,
+            "items": {
+                "wood": 3,
+                "rope": 3,
+            },
+            "crew": {},
+            "ship_upgrades": [],
+            "monsters": {},
+        },
         "connections": ["home_port", "driftwood_coast", "misty_reef"],
         "has_port": False,
         "resources": ["fish", "driftwood"],

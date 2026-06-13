@@ -39,18 +39,18 @@
   },
   "player": {
     "zone": "dock",
-    "x": 120.9328835767044,
-    "y": 503.3908563557251,
+    "x": 93.30568839848469,
+    "y": 569.6952075897926,
     "direction": "down"
   },
   "log": [
-    "Has dormido y la partida se ha guardado.",
-    "Duermes y recuperas energia.",
-    "Has dormido y la partida se ha guardado.",
-    "Duermes y recuperas energia.",
-    "Has dormido y la partida se ha guardado.",
-    "Duermes y recuperas energia.",
-    "Duermes y recuperas energia."
+    "Faltan provisiones para zarpar. Necesitas 2.",
+    "Faltan provisiones para zarpar. Necesitas 2.",
+    "Faltan provisiones para zarpar. Necesitas 2.",
+    "Abres el mapa cartográfico.",
+    "Abres el mapa cartográfico.",
+    "Faltan items requeridos en la bodega.",
+    "Abres el mapa cartográfico."
   ],
   "inventory": {
     "rows": 2,
@@ -67,8 +67,8 @@
           "amount": 1
         },
         {
-          "item_id": "stone",
-          "amount": 11
+          "item_id": "wood",
+          "amount": 2
         },
         {
           "item_id": "hoe",
@@ -82,14 +82,8 @@
           "item_id": "watering_can",
           "amount": 1
         },
-        {
-          "item_id": "iron",
-          "amount": 3
-        },
-        {
-          "item_id": "wood",
-          "amount": 5
-        },
+        null,
+        null,
         {
           "item_id": "campfire",
           "amount": 1
@@ -114,8 +108,9 @@
   },
   "collectables": [],
   "time": {
-    "hour": 6,
-    "minute": 0
+    "hour": 22,
+    "minute": 8.349999999956566,
+    "day": 25
   },
   "placed_objects": [
     {
@@ -267,8 +262,14 @@
     ],
     "ship_storage": {
       "max_slots": 16,
-      "items": {}
-    }
+      "items": {
+        "iron": 3,
+        "stone": 11,
+        "wood": 3
+      }
+    },
+    "active_expedition": null
   },
-  "legacy_hotbar": []
+  "legacy_hotbar": [],
+  "current_scene": "farm"
 }

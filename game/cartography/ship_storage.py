@@ -9,6 +9,18 @@ class ShipStorage:
     def get_used_slots(self):
         return len(self.items.keys())
 
+    def get_item_amount(self, item_id):
+        return self.items.get(item_id, 0)
+
+    def get_items_snapshot(self):
+        return [
+            {
+                "item_id": item_id,
+                "amount": amount,
+            }
+            for item_id, amount in self.items.items()
+        ]
+
     def has_space_for_item(self, item_id):
         if item_id in self.items:
             return True

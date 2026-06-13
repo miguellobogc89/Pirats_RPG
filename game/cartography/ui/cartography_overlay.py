@@ -2,6 +2,9 @@ import pygame
 
 from game.cartography.data.world_map import WORLD_MAP
 from game.cartography.expedition_setup import create_expedition_setup
+from game.cartography.ship_storage_transfer import is_item_allowed_in_ship_storage
+from game.data.item_database import get_item_data
+from game.inventory.inventory_manager import get_inventory_grid
 from game.ui.ui_components import (
     PARCHMENT_LIGHT,
     TEXT_DARK,
@@ -22,9 +25,9 @@ GRID_ROWS = 4
 WINDOW_PADDING = 20
 MAP_SIZE = (560, 400)
 INFO_WIDTH = 250
-STORAGE_GRID_COLS = 4
-STORAGE_SLOT_SIZE = 36
-STORAGE_SLOT_GAP = 6
+TRANSFER_ROW_HEIGHT = 24
+TRANSFER_LIST_WIDTH = 224
+TRANSFER_LIST_ROWS = 6
 
 
 def draw_cartography_overlay(app):
@@ -194,7 +197,7 @@ def draw_cartography_footer(app, window_rect):
 
 
 def draw_expedition_modal(app):
-    modal_content = pygame.Rect(250, 170, 460, 276)
+    modal_content = pygame.Rect(170, 120, 620, 430)
     modal_rect = modal_content.inflate(34, 58)
 
     draw_panel(app.screen, modal_rect)
@@ -205,15 +208,13 @@ def draw_expedition_modal(app):
     if selected_region is None:
         return
 
-    expedition_setup = ui_state.expedition_setup
-
-    if expedition_setup is None or expedition_setup.region_id != selected_region["id"]:
-        expedition_setup = create_expedition_setup(
-            selected_region["id"],
-            app.expedition_manager,
-            app.cartography_manager.ship_storage,
-        )
-        ui_state.expedition_setup = expedition_setup
+    expedition_setup = create_expedition_setup(
+        selected_region["id"],
+        app.expedition_manager,
+        app.cartography_manager.ship_storage,
+        state=app.state,
+    )
+    ui_state.expedition_setup = expedition_setup
 
     if not expedition_setup.cost:
         return
@@ -239,45 +240,32 @@ def draw_expedition_modal(app):
         modal_content.y + 62,
     )
 
-    draw_label_value(
-        app.screen,
-        app.small_font,
-        "Provisiones",
-        f"{expedition_setup.provisions_assigned}/{expedition_setup.provisions_required}",
-        modal_content.x,
-        modal_content.y + 88,
-    )
+    draw_travel_requirements(app, expedition_setup, modal_content.x, modal_content.y + 88)
 
-    cargo_y = modal_content.y + 122
+    cargo_y = modal_content.y + 166
     ship_storage = app.cartography_manager.ship_storage
-    app.draw_text("BODEGA", modal_content.x, cargo_y, TEXT_DARK, app.font)
+    app.draw_text("BODEGA DE PREPARACION", modal_content.x, cargo_y, TEXT_DARK, app.font)
     app.draw_text(
-        f"Carga: {expedition_setup.capacity_used}/{ship_storage.max_slots}",
-        modal_content.x + 110,
+        f"Bodega: {expedition_setup.capacity_used}/{ship_storage.max_slots}",
+        modal_content.x + 178,
         cargo_y + 4,
         TEXT_DISABLED,
         app.small_font,
     )
 
-    draw_cargo_grid(app, modal_content.x, cargo_y + 36, ship_storage.max_slots)
+    transfer_y = cargo_y + 34
+    draw_transfer_lists(app, modal_content.x, transfer_y, expedition_setup.required_items)
 
     app.draw_text(
-        "Seleccion de carga pendiente",
-        modal_content.x + 196,
-        cargo_y + 46,
-        TEXT_DISABLED,
-        app.small_font,
-    )
-    app.draw_text(
         get_expedition_setup_status_text(expedition_setup),
-        modal_content.x + 196,
-        cargo_y + 70,
+        modal_content.x,
+        modal_content.bottom - 76,
         TEXT_DARK if expedition_setup.can_launch else TEXT_DISABLED,
         app.small_font,
     )
 
-    cancel_rect = pygame.Rect(modal_content.right - 218, modal_content.bottom - 38, 100, 38)
-    launch_rect = pygame.Rect(modal_content.right - 106, modal_content.bottom - 38, 100, 38)
+    cancel_rect = pygame.Rect(modal_content.right - 218, modal_content.bottom - 42, 100, 38)
+    launch_rect = pygame.Rect(modal_content.right - 106, modal_content.bottom - 42, 100, 38)
 
     draw_button(app.screen, cancel_rect)
     draw_button_text(app.screen, app.font, "Cancelar", cancel_rect)
@@ -293,22 +281,172 @@ def get_expedition_setup_status_text(expedition_setup):
     if expedition_setup.can_launch:
         return "Listo para zarpar"
 
+    if "not_enough_gold" in expedition_setup.validation_errors:
+        return "No puedes zarpar: falta oro"
+
+    if "not_enough_required_items" in expedition_setup.validation_errors:
+        return "No puedes zarpar: faltan items en bodega"
+
     if not expedition_setup.validation_errors:
         return "Preparacion incompleta"
 
     return "Error: " + expedition_setup.validation_errors[0]
 
 
-def draw_cargo_grid(app, x, y, slot_count):
-    for slot_index in range(slot_count):
-        row = slot_index // STORAGE_GRID_COLS
-        col = slot_index % STORAGE_GRID_COLS
-        slot_rect = pygame.Rect(
-            x + col * (STORAGE_SLOT_SIZE + STORAGE_SLOT_GAP),
-            y + row * (STORAGE_SLOT_SIZE + STORAGE_SLOT_GAP),
-            STORAGE_SLOT_SIZE,
-            STORAGE_SLOT_SIZE,
+def draw_travel_requirements(app, expedition_setup, x, y):
+    app.draw_text("REQUISITOS DEL VIAJE", x, y, TEXT_DISABLED, app.small_font)
+    draw_requirement_line(
+        app,
+        "Oro",
+        expedition_setup.gold_available,
+        expedition_setup.gold_required,
+        x,
+        y + 22,
+    )
+
+    item_y = y + 44
+
+    for index, item_id in enumerate(sorted(expedition_setup.required_items)):
+        required_amount = expedition_setup.required_items[item_id]
+        assigned_amount = expedition_setup.assigned_items.get(item_id, 0)
+        item_data = get_item_data(item_id)
+        item_name = item_id
+
+        if item_data is not None:
+            item_name = item_data["name"]
+
+        draw_requirement_line(
+            app,
+            item_name,
+            assigned_amount,
+            required_amount,
+            x,
+            item_y + index * 22,
         )
 
-        pygame.draw.rect(app.screen, PARCHMENT_LIGHT, slot_rect, border_radius=6)
-        pygame.draw.rect(app.screen, WOOD_DARK, slot_rect, 2, border_radius=6)
+
+def draw_requirement_line(app, label, current_amount, required_amount, x, y):
+    color = TEXT_DARK if current_amount >= required_amount else TEXT_DISABLED
+
+    app.draw_text(
+        f"{label}: {current_amount}/{required_amount}",
+        x,
+        y,
+        color,
+        app.small_font,
+    )
+
+
+def draw_transfer_lists(app, x, y, required_items):
+    storage_x = x + TRANSFER_LIST_WIDTH + 34
+
+    app.draw_text("INVENTARIO TRANSFERIBLE", x, y, TEXT_DISABLED, app.small_font)
+    app.draw_text("BODEGA PARA REQUISITOS", storage_x, y, TEXT_DISABLED, app.small_font)
+
+    draw_inventory_transfer_list(app, x, y + 22, required_items)
+    draw_storage_transfer_list(app, storage_x, y + 22, required_items)
+
+
+def draw_inventory_transfer_list(app, x, y, required_items):
+    items = get_transferable_inventory_items(app.state, required_items)
+    ui_state = app.cartography_ui_state
+
+    if not items:
+        app.draw_text("Sin carga transferible", x, y, TEXT_DISABLED, app.small_font)
+        return
+
+    for index, item in enumerate(items[:TRANSFER_LIST_ROWS]):
+        row_rect = pygame.Rect(
+            x,
+            y + index * TRANSFER_ROW_HEIGHT,
+            TRANSFER_LIST_WIDTH,
+            TRANSFER_ROW_HEIGHT - 3,
+        )
+        draw_transfer_row(app, row_rect, item["item_id"], item["amount"])
+        ui_state.inventory_transfer_buttons.append({
+            "rect": row_rect,
+            "item_id": item["item_id"],
+        })
+
+
+def draw_storage_transfer_list(app, x, y, required_items):
+    items = get_transferable_storage_items(app.cartography_manager.ship_storage, required_items)
+    ui_state = app.cartography_ui_state
+
+    if not items:
+        app.draw_text("Bodega vacia", x, y, TEXT_DISABLED, app.small_font)
+        return
+
+    for index, item in enumerate(items[:TRANSFER_LIST_ROWS]):
+        row_rect = pygame.Rect(
+            x,
+            y + index * TRANSFER_ROW_HEIGHT,
+            TRANSFER_LIST_WIDTH,
+            TRANSFER_ROW_HEIGHT - 3,
+        )
+        draw_transfer_row(app, row_rect, item["item_id"], item["amount"])
+        ui_state.storage_transfer_buttons.append({
+            "rect": row_rect,
+            "item_id": item["item_id"],
+        })
+
+
+def draw_transfer_row(app, row_rect, item_id, amount):
+    item_data = get_item_data(item_id)
+    item_name = item_id
+
+    if item_data is not None:
+        item_name = item_data["name"]
+
+    pygame.draw.rect(app.screen, PARCHMENT_LIGHT, row_rect, border_radius=4)
+    pygame.draw.rect(app.screen, WOOD_DARK, row_rect, 1, border_radius=4)
+    app.draw_text(item_name, row_rect.x + 6, row_rect.y + 3, TEXT_DARK, app.small_font)
+    app.draw_text(f"x{amount}", row_rect.right - 42, row_rect.y + 3, TEXT_DARK, app.small_font)
+
+
+def get_transferable_inventory_items(state, required_items):
+    totals = {}
+    allowed_item_ids = set(required_items)
+
+    for row in get_inventory_grid(state):
+        for slot in row:
+            if slot is None:
+                continue
+
+            item_id = slot["item_id"]
+
+            if item_id not in allowed_item_ids:
+                continue
+
+            if not is_item_allowed_in_ship_storage(item_id):
+                continue
+
+            totals[item_id] = totals.get(item_id, 0) + slot["amount"]
+
+    return get_sorted_item_amounts(totals)
+
+
+def get_transferable_storage_items(ship_storage, required_items):
+    totals = {}
+    allowed_item_ids = set(required_items)
+
+    for item_id, amount in ship_storage.items.items():
+        if item_id not in allowed_item_ids:
+            continue
+
+        if not is_item_allowed_in_ship_storage(item_id):
+            continue
+
+        totals[item_id] = amount
+
+    return get_sorted_item_amounts(totals)
+
+
+def get_sorted_item_amounts(totals):
+    return [
+        {
+            "item_id": item_id,
+            "amount": totals[item_id],
+        }
+        for item_id in sorted(totals)
+    ]

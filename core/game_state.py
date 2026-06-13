@@ -5,25 +5,76 @@ from game.cartography.cartography_manager import CartographyManager
 from game.inventory.inventory_state import ensure_inventory_state
 
 
+DEFAULT_CONFIG = {
+    "initial_day": 1,
+    "initial_season_index": 0,
+    "max_energy": 10,
+    "initial_wind": "calm",
+}
+
+
 def create_default_inventory_state():
     state = {}
     ensure_inventory_state(state)
     return state["inventory"]
 
 
-def create_initial_state(game_data):
+def get_config_value(game_data, key):
+    config = game_data.get("config", {}) if game_data else {}
+    return config.get(key, DEFAULT_CONFIG[key])
+
+
+def create_default_energy_state(game_data):
+    max_energy = get_config_value(game_data, "max_energy")
+
     return {
-        "resources": {},
+        "current": max_energy,
+        "max": max_energy,
+    }
+
+
+def create_default_ship_state():
+    return {
+        "status": "available",
+        "days_left": 0,
+        "route": None,
+        "success_rate": 0,
+        "pending_event": None,
+        "secured_reward": {},
+    }
+
+
+def create_default_upgrades_state(game_data):
+    upgrades = game_data.get("upgrades", {}) if game_data else {}
+    return {
+        upgrade_id: False
+        for upgrade_id in upgrades
+    }
+
+
+def create_initial_state(game_data):
+    initial_day = get_config_value(game_data, "initial_day")
+
+    return {
+        "resources": {
+            "gold": 100,
+        },
         "inventory": create_default_inventory_state(),
         "player": {
             "x": 400,
             "y": 300,
         },
         "time": {
-            "day": 1,
+            "day": initial_day,
             "hour": 6,
             "minute": 0,
         },
+        "day": initial_day,
+        "season_index": get_config_value(game_data, "initial_season_index"),
+        "energy": create_default_energy_state(game_data),
+        "wind": get_config_value(game_data, "initial_wind"),
+        "ship": create_default_ship_state(),
+        "upgrades": create_default_upgrades_state(game_data),
         "farming": {
             "tilled_cells": [],
             "watered_cells": [],
@@ -39,7 +90,7 @@ def create_initial_state(game_data):
     }
 
 
-def normalize_state(state):
+def normalize_state(state, game_data=None):
     if "resources" not in state:
         state["resources"] = {}
 
@@ -59,12 +110,50 @@ def normalize_state(state):
             "y": 300,
         }
 
-    if "time" not in state:
+    if not isinstance(state.get("time"), dict):
         state["time"] = {
-            "day": 1,
+            "day": get_config_value(game_data, "initial_day"),
             "hour": 6,
             "minute": 0,
         }
+
+    if "day" not in state:
+        state["day"] = state["time"].get("day", get_config_value(game_data, "initial_day"))
+
+    state["time"]["day"] = state["day"]
+
+    if "season_index" not in state:
+        state["season_index"] = get_config_value(game_data, "initial_season_index")
+
+    if not isinstance(state.get("energy"), dict):
+        state["energy"] = create_default_energy_state(game_data)
+
+    if "current" not in state["energy"]:
+        state["energy"]["current"] = state["energy"].get("max", get_config_value(game_data, "max_energy"))
+
+    if "max" not in state["energy"]:
+        state["energy"]["max"] = get_config_value(game_data, "max_energy")
+
+    if "wind" not in state:
+        state["wind"] = get_config_value(game_data, "initial_wind")
+
+    if not isinstance(state.get("ship"), dict):
+        state["ship"] = create_default_ship_state()
+
+    default_ship = create_default_ship_state()
+
+    for ship_key, ship_value in default_ship.items():
+        if ship_key not in state["ship"]:
+            state["ship"][ship_key] = ship_value
+
+    if not isinstance(state.get("upgrades"), dict):
+        state["upgrades"] = create_default_upgrades_state(game_data)
+
+    default_upgrades = create_default_upgrades_state(game_data)
+
+    for upgrade_id, default_value in default_upgrades.items():
+        if upgrade_id not in state["upgrades"]:
+            state["upgrades"][upgrade_id] = default_value
 
     if "farming" not in state:
         state["farming"] = {

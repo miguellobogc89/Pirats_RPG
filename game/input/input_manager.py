@@ -13,14 +13,20 @@ from game.data.item_database import get_item_data
 from game.world.camera import get_camera_position
 from game.world.world_config import WORLD_WIDTH, WORLD_HEIGHT
 from game.debug.debug_reload import restart_game_with_current_state
+from game.scenes.scene_manager import change_scene
 
 
 def handle_events(app):
     for event in pygame.event.get():
-        print("[DEBUG EVENT]", event)
+
         if event.type == pygame.QUIT:
             pygame.quit()
             sys.exit()
+
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_F9:
+                restart_game_with_current_state(app.state)
+                return
 
         if app.combat_manager.is_active():
             app.combat_manager.handle_event(event)
@@ -40,13 +46,9 @@ def handle_events(app):
                 else:
                     handle_game_key(app, pygame.K_e)
 
-                if event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_F9:
-                        restart_game_with_current_state(app.state)
-                        return
-
-                    if event.key == pygame.K_ESCAPE:
-                        app.menu_open = not app.menu_open
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_ESCAPE:
+                app.menu_open = not app.menu_open
 
             elif app.menu_open:
                 handle_menu_key(app, event.key)
@@ -70,6 +72,13 @@ def handle_menu_key(app, key):
 
 
 def handle_game_key(app, key):
+    if key == pygame.K_h:
+        change_scene(app.state, "player_house")
+        return
+
+    if key == pygame.K_g:
+        change_scene(app.state, "farm")
+        return
     if key == pygame.K_c:
         app.combat_manager.start_test_combat()
         return
