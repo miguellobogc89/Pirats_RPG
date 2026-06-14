@@ -32,7 +32,12 @@ from scene_editor_serializer import (
     save_scene_for_game,
 )
 
-from tools.paint_tool import paint_at_mouse
+from editor.tools.paint_tool import (
+    erase_at_mouse,
+    erase_rect,
+    paint_at_mouse,
+    paint_rect,
+)
 
 
 def load_scene(scene_id=DEFAULT_SCENE_ID):
@@ -130,6 +135,45 @@ def main():
                     camera.zoom_out()
                     continue
 
+                if event.button == 3:
+                    if is_inside_canvas(screen, event.pos):
+                        erase_at_mouse(
+                            scene_data,
+                            object_definitions,
+                            camera,
+                            event.pos,
+                        )
+                    continue
+
+                ctrl_pressed = pygame.key.get_mods() & pygame.KMOD_CTRL
+
+                if event.button == 1 and ctrl_pressed:
+                    if is_inside_canvas(screen, event.pos):
+                        rect_start_cell = camera.screen_to_cell(event.pos)
+                        rect_end_cell = rect_start_cell
+                        rect_button = 1
+                        is_rect_tool_active = True
+                    continue
+
+                if event.button == 3 and ctrl_pressed:
+                    if is_inside_canvas(screen, event.pos):
+                        rect_start_cell = camera.screen_to_cell(event.pos)
+                        rect_end_cell = rect_start_cell
+                        rect_button = 3
+                        is_rect_tool_active = True
+                    continue
+
+                if event.button == 3:
+                    if is_inside_canvas(screen, event.pos):
+                        erase_at_mouse(
+                            scene_data,
+                            object_definitions,
+                            camera,
+                            event.pos,
+                        )
+                        is_erasing = True
+                    continue
+
                 clicked_action = get_clicked_panel_action(event.pos, buttons)
 
                 if clicked_action:
@@ -159,6 +203,7 @@ def main():
                             scene_data,
                             mode,
                             selected_object_type,
+                            object_definitions,
                             camera,
                             event.pos,
                         )
@@ -168,12 +213,46 @@ def main():
             if event.type == pygame.MOUSEBUTTONUP:
                 if event.button == 2:
                     camera.stop_pan()
+
+                if is_rect_tool_active:
+                    if rect_start_cell is not None and rect_end_cell is not None:
+                        if rect_button == 1:
+                            paint_rect(
+                                scene_data,
+                                mode,
+                                selected_object_type,
+                                object_definitions,
+                                rect_start_cell,
+                                rect_end_cell,
+                            )
+
+                        if rect_button == 3:
+                            erase_rect(
+                                scene_data,
+                                object_definitions,
+                                rect_start_cell,
+                                rect_end_cell,
+                            )
+
+                    is_rect_tool_active = False
+                    rect_start_cell = None
+                    rect_end_cell = None
+                    rect_button = None
+                    is_painting = False
+                    is_erasing = False
+
                 else:
                     is_painting = False
+                    is_erasing = False
 
             if event.type == pygame.MOUSEMOTION:
                 if camera.is_panning:
                     camera.update_pan(event.pos)
+                    continue
+
+                if is_rect_tool_active:
+                    if is_inside_canvas(screen, event.pos):
+                        rect_end_cell = camera.screen_to_cell(event.pos)
                     continue
 
                 if is_painting:
@@ -182,6 +261,16 @@ def main():
                             scene_data,
                             mode,
                             selected_object_type,
+                            object_definitions,
+                            camera,
+                            event.pos,
+                        )
+
+                if is_erasing:
+                    if is_inside_canvas(screen, event.pos):
+                        erase_at_mouse(
+                            scene_data,
+                            object_definitions,
                             camera,
                             event.pos,
                         )
