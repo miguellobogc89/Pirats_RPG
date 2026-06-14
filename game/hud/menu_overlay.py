@@ -1,23 +1,22 @@
 import pygame
 
 from core.rules_engine import build_upgrade, continue_and_risk, secure_return, start_trip
-from game.inventory.hotbar_manager import get_active_item_data
+from game.inventory.hotbar_manager import get_active_hotbar_index
+from game.inventory.inventory_state import INVENTORY_COLUMNS, INVENTORY_ROWS
 from game.data.item_database import get_item_data
 from game.data.recipe_database import get_all_recipes
 from game.crafting.crafting_manager import can_craft, craft_item
 from game.skills.skill_database import SKILL_DATABASE
 from game.ui.ui_components import (
-    PARCHMENT_LIGHT,
     TEXT_DARK,
     TEXT_DISABLED,
-    WOOD_DARK,
     draw_content_panel,
     draw_panel,
     draw_progress_bar,
     draw_tab_bar,
     get_tab_rects,
 )
-from game.ui.sprite_renderer import draw_item_sprite
+from game.ui.slot_renderer import draw_slot
 
 
 MENU_RECT = pygame.Rect(90, 95, 780, 450)
@@ -100,38 +99,143 @@ def draw_menu(app):
 def draw_inventory_tab(app):
     inventory = app.state.get("inventory", {})
     grid = inventory.get("grid", [])
+    mouse_pos = pygame.mouse.get_pos()
+    hovered_slot = None
+    app.inventory_slot_hitboxes = []
 
-    x0 = 140
-    y0 = 188
-    cell_size = 58
-    gap = 10
+    active_hotbar_index = get_active_hotbar_index(app.state)
+    slot_ui_state = app.slot_ui_state
+    rows = INVENTORY_ROWS
+    columns = INVENTORY_COLUMNS
+    cell_size = 50
+    gap = 7
+    grid_width = columns * cell_size + (columns - 1) * gap
+    x0 = MENU_CONTENT_RECT.x + (MENU_CONTENT_RECT.width - grid_width) // 2
+    y0 = 202
 
-    for row_index, row in enumerate(grid):
-        for column_index, slot in enumerate(row):
+    for row_index in range(rows):
+        row = []
+
+        if row_index < len(grid):
+            row = grid[row_index]
+
+        for column_index in range(columns):
+            slot = None
+
+            if column_index < len(row):
+                slot = row[column_index]
+
             x = x0 + column_index * (cell_size + gap)
             y = y0 + row_index * (cell_size + gap)
 
             slot_rect = pygame.Rect(x, y, cell_size, cell_size)
-            pygame.draw.rect(app.screen, PARCHMENT_LIGHT, slot_rect, border_radius=6)
-            pygame.draw.rect(app.screen, WOOD_DARK, slot_rect, 2, border_radius=6)
+            hovered = slot_rect.collidepoint(mouse_pos)
+            slot_index = row_index * columns + column_index
+            slot_hitbox = {
+                "rect": slot_rect,
+                "row": row_index,
+                "column": column_index,
+                "index": slot_index,
+                "slot": slot,
+            }
+            app.inventory_slot_hitboxes.append(slot_hitbox)
 
-            if slot is None:
-                continue
+            if hovered:
+                hovered_slot = slot_hitbox
 
-            item_id = slot["item_id"]
-            amount = slot["amount"]
+            visible_slot = slot
 
-            item = get_item_data(item_id)
+            if (
+                slot_ui_state.is_dragging
+                and slot_ui_state.drag_origin is not None
+                and slot_ui_state.drag_origin.container_id == "inventory"
+                and slot_ui_state.drag_origin.index == slot_index
+            ):
+                visible_slot = None
 
-            if item is None:
-                continue
+            selected = row_index == 0 and column_index == active_hotbar_index
+            hotkey_label = None
 
-            draw_item_sprite(app.screen, item, slot_rect, padding=8)
+            if row_index == 0:
+                hotkey_label = str(column_index + 1)
 
-            if amount > 1:
-                app.draw_text(str(amount), x + 38, y + 38, TEXT_DARK, app.small_font)
+            draw_slot(
+                app.screen,
+                slot_rect,
+                visible_slot,
+                app.font,
+                app.small_font,
+                selected=selected,
+                hovered=hovered,
+                hotkey_label=hotkey_label,
+                text_color=TEXT_DARK,
+                hotkey_position="top",
+            )
 
-    app.draw_text("Fila superior = hotbar", x0, y0 + 150, TEXT_DISABLED, app.small_font)
+    if (
+        not slot_ui_state.is_dragging
+        and hovered_slot is not None
+        and hovered_slot["slot"] is not None
+    ):
+        draw_inventory_tooltip(app, hovered_slot["slot"], mouse_pos)
+
+    if slot_ui_state.is_dragging and slot_ui_state.dragged_stack is not None:
+        draw_dragged_inventory_stack(app, slot_ui_state.dragged_stack, mouse_pos, cell_size)
+
+
+def draw_inventory_tooltip(app, slot, mouse_pos):
+    item_data = get_item_data(slot["item_id"])
+
+    if item_data is None:
+        return
+
+    description = item_data.get("description", "Sin descripcion.")
+    lines = [
+        item_data["name"],
+        description,
+        f"Cantidad: {slot['amount']}",
+        f"Tipo: {item_data.get('type', 'desconocido')}",
+        f"ID: {slot['item_id']}",
+    ]
+    padding = 10
+    line_height = 18
+    width = max(app.small_font.size(line)[0] for line in lines) + padding * 2
+    height = len(lines) * line_height + padding * 2
+    tooltip_x = mouse_pos[0] + 14
+    tooltip_y = mouse_pos[1] + 14
+
+    if tooltip_x + width > app.screen.get_width():
+        tooltip_x = mouse_pos[0] - width - 14
+
+    if tooltip_y + height > app.screen.get_height():
+        tooltip_y = mouse_pos[1] - height - 14
+
+    tooltip_rect = pygame.Rect(tooltip_x, tooltip_y, width, height)
+    draw_panel(app.screen, tooltip_rect)
+
+    text_y = tooltip_rect.y + padding
+
+    for line in lines:
+        app.draw_text(line, tooltip_rect.x + padding, text_y, TEXT_DARK, app.small_font)
+        text_y += line_height
+
+
+def draw_dragged_inventory_stack(app, stack, mouse_pos, cell_size):
+    drag_rect = pygame.Rect(
+        mouse_pos[0] - cell_size // 2,
+        mouse_pos[1] - cell_size // 2,
+        cell_size,
+        cell_size,
+    )
+    draw_slot(
+        app.screen,
+        drag_rect,
+        stack,
+        app.font,
+        app.small_font,
+        selected=True,
+        text_color=TEXT_DARK,
+    )
 
 
 def draw_routes_tab(app):

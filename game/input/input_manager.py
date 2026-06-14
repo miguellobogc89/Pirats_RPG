@@ -7,13 +7,30 @@ from game.inventory.hotbar_manager import (
     get_active_item_data,
     get_active_item_id,
     get_active_tool,
+    get_active_hotbar_index,
     set_active_hotbar_index,
 )
+from game.inventory.inventory_state import INVENTORY_COLUMNS, INVENTORY_ROWS
+from game.inventory.stash_state import STASH_COLUMNS, STASH_ROWS, ensure_stash_state
+from game.inventory.slot_ui_state import SlotReference, copy_stack
+from game.inventory.slot_operations import merge_stacks
 from game.data.item_database import get_item_data
 from game.world.camera import get_camera_position
 from game.world.world_config import WORLD_WIDTH, WORLD_HEIGHT
 from game.debug.debug_reload import restart_game_with_current_state
 from game.scenes.scene_manager import change_scene
+
+
+NUMBER_KEYS = [
+    pygame.K_1,
+    pygame.K_2,
+    pygame.K_3,
+    pygame.K_4,
+    pygame.K_5,
+    pygame.K_6,
+    pygame.K_7,
+    pygame.K_8,
+]
 
 
 def handle_events(app):
@@ -36,9 +53,22 @@ def handle_events(app):
             handle_cartography_event(app, event)
             continue
 
+        if app.stash_open:
+            handle_stash_event(app, event)
+            continue
+
         if event.type == pygame.MOUSEBUTTONDOWN:
             if event.button == 1:
                 if app.menu_open:
+                    if app.menu_tab == "inventory":
+                        if handle_inventory_slot_click(app, event.pos):
+                            continue
+
+                        if app.slot_ui_state.is_dragging:
+                            if not cancel_inventory_drag(app):
+                                app.add_log("Coloca el item en una casilla libre.")
+                            continue
+
                     clicked_tab = get_menu_tab_at_position(event.pos[0], event.pos[1])
 
                     if clicked_tab is not None:
@@ -48,6 +78,11 @@ def handle_events(app):
 
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_ESCAPE:
+                if app.menu_open and app.slot_ui_state.is_dragging:
+                    if not cancel_inventory_drag(app):
+                        app.add_log("Coloca el item antes de cerrar el inventario.")
+                    continue
+
                 app.menu_open = not app.menu_open
 
             elif app.menu_open:
@@ -57,6 +92,17 @@ def handle_events(app):
                 handle_game_key(app, event.key)
 
 def handle_menu_key(app, key):
+    if app.slot_ui_state.is_dragging:
+        return
+
+    if key == pygame.K_TAB:
+        cycle_active_hotbar_slot(app)
+        return
+
+    if key in NUMBER_KEYS:
+        select_active_hotbar_slot(app, NUMBER_KEYS.index(key))
+        return
+
     tabs = get_menu_tabs()
 
     if app.menu_tab not in tabs:
@@ -71,6 +117,311 @@ def handle_menu_key(app, key):
         app.menu_tab = tabs[(current_index - 1) % len(tabs)]
 
 
+def handle_stash_event(app, event):
+    if event.type == pygame.KEYDOWN:
+        if event.key == pygame.K_ESCAPE:
+            if app.slot_ui_state.is_dragging:
+                if not cancel_slot_drag(app):
+                    app.add_log("Coloca el item antes de cerrar el cofre.")
+                return
+
+            app.stash_open = False
+            return
+
+        if event.key == pygame.K_TAB:
+            cycle_active_hotbar_slot(app)
+            return
+
+        if event.key in NUMBER_KEYS:
+            select_active_hotbar_slot(app, NUMBER_KEYS.index(event.key))
+
+        return
+
+    if event.type != pygame.MOUSEBUTTONDOWN or event.button != 1:
+        return
+
+    if handle_stash_slot_click(app, event.pos):
+        return
+
+    if app.slot_ui_state.is_dragging:
+        if not cancel_slot_drag(app):
+            app.add_log("Coloca el item en una casilla libre.")
+
+
+def handle_stash_slot_click(app, position):
+    slot_hitbox = get_slot_hitbox_at_position(app, position)
+
+    if slot_hitbox is None:
+        return False
+
+    return handle_container_slot_click(app, slot_hitbox)
+
+
+def get_slot_hitbox_at_position(app, position):
+    for slot_hitbox in getattr(app, "stash_slot_hitboxes", []):
+        if slot_hitbox["rect"].collidepoint(position):
+            return slot_hitbox
+
+    for slot_hitbox in getattr(app, "inventory_slot_hitboxes", []):
+        if slot_hitbox["rect"].collidepoint(position):
+            return slot_hitbox
+
+    return None
+
+
+def handle_container_slot_click(app, slot_hitbox):
+    slot_ui_state = app.slot_ui_state
+    grid = get_slot_container_grid(app, slot_hitbox["container_id"])
+    columns = get_slot_container_columns(slot_hitbox["container_id"])
+    row = slot_hitbox["row"]
+    column = slot_hitbox["column"]
+    ensure_grid_position(grid, row, column)
+    slot_stack = grid[row][column]
+
+    if not slot_ui_state.is_dragging:
+        if is_inventory_hotbar_slot(slot_hitbox):
+            active_index = get_active_hotbar_index(app.state)
+            select_active_hotbar_slot(app, column)
+
+            if column != active_index:
+                return True
+
+        if slot_stack is None:
+            return True
+
+        slot_ui_state.selected_slot = SlotReference(
+            slot_hitbox["container_id"],
+            slot_hitbox["index"],
+        )
+        slot_ui_state.start_drag(
+            SlotReference(slot_hitbox["container_id"], slot_hitbox["index"]),
+            slot_stack,
+        )
+        grid[row][column] = None
+        return True
+
+    dragged_stack = copy_stack(slot_ui_state.dragged_stack)
+
+    if slot_stack is None:
+        grid[row][column] = dragged_stack
+        select_hotbar_if_target_is_hotbar(app, slot_hitbox)
+        slot_ui_state.selected_slot = SlotReference(
+            slot_hitbox["container_id"],
+            slot_hitbox["index"],
+        )
+        slot_ui_state.cancel_drag()
+        return True
+
+    if dragged_stack["item_id"] == slot_stack["item_id"]:
+        merge_result = merge_stacks(dragged_stack, slot_stack)
+
+        if merge_result["success"]:
+            grid[row][column] = merge_result["target_stack"]
+            select_hotbar_if_target_is_hotbar(app, slot_hitbox)
+            slot_ui_state.selected_slot = SlotReference(
+                slot_hitbox["container_id"],
+                slot_hitbox["index"],
+            )
+
+            if merge_result["source_stack"] is None:
+                slot_ui_state.cancel_drag()
+            else:
+                slot_ui_state.dragged_stack = copy_stack(merge_result["source_stack"])
+                slot_ui_state.is_dragging = True
+
+            return True
+
+    grid[row][column] = dragged_stack
+    select_hotbar_if_target_is_hotbar(app, slot_hitbox)
+    slot_ui_state.dragged_stack = copy_stack(slot_stack)
+    slot_ui_state.selected_slot = SlotReference(
+        slot_hitbox["container_id"],
+        slot_hitbox["index"],
+    )
+    slot_ui_state.is_dragging = True
+    return True
+
+
+def get_slot_container_grid(app, container_id):
+    if container_id == "stash":
+        ensure_stash_state(app.state)
+        return app.state["stash"]["grid"]
+
+    return app.state["inventory"]["grid"]
+
+
+def get_slot_container_columns(container_id):
+    if container_id == "stash":
+        return STASH_COLUMNS
+
+    return INVENTORY_COLUMNS
+
+
+def get_slot_container_rows(container_id):
+    if container_id == "stash":
+        return STASH_ROWS
+
+    return INVENTORY_ROWS
+
+
+def handle_inventory_slot_click(app, position):
+    slot_hitbox = get_inventory_slot_hitbox_at_position(app, position)
+
+    if slot_hitbox is None:
+        return False
+
+    slot_ui_state = app.slot_ui_state
+    grid = app.state["inventory"]["grid"]
+    row = slot_hitbox["row"]
+    column = slot_hitbox["column"]
+    ensure_inventory_grid_position(grid, row, column)
+    slot_stack = grid[row][column]
+
+    if not slot_ui_state.is_dragging:
+        if row == 0:
+            active_index = get_active_hotbar_index(app.state)
+            select_active_hotbar_slot(app, column)
+
+            if column != active_index:
+                return True
+
+        if slot_stack is None:
+            return True
+
+        slot_ui_state.selected_slot = SlotReference("inventory", slot_hitbox["index"])
+        slot_ui_state.start_drag(
+            SlotReference("inventory", slot_hitbox["index"]),
+            slot_stack,
+        )
+        grid[row][column] = None
+        return True
+
+    dragged_stack = copy_stack(slot_ui_state.dragged_stack)
+
+    if slot_stack is None:
+        grid[row][column] = dragged_stack
+        if row == 0:
+            select_active_hotbar_slot(app, column)
+        slot_ui_state.selected_slot = SlotReference("inventory", slot_hitbox["index"])
+        slot_ui_state.cancel_drag()
+        return True
+
+    if dragged_stack["item_id"] == slot_stack["item_id"]:
+        merge_result = merge_stacks(dragged_stack, slot_stack)
+
+        if merge_result["success"]:
+            grid[row][column] = merge_result["target_stack"]
+            if row == 0:
+                select_active_hotbar_slot(app, column)
+            slot_ui_state.selected_slot = SlotReference("inventory", slot_hitbox["index"])
+
+            if merge_result["source_stack"] is None:
+                slot_ui_state.cancel_drag()
+            else:
+                slot_ui_state.dragged_stack = copy_stack(merge_result["source_stack"])
+                slot_ui_state.is_dragging = True
+
+            return True
+
+    grid[row][column] = dragged_stack
+    if row == 0:
+        select_active_hotbar_slot(app, column)
+    slot_ui_state.dragged_stack = copy_stack(slot_stack)
+    slot_ui_state.selected_slot = SlotReference("inventory", slot_hitbox["index"])
+    slot_ui_state.is_dragging = True
+    return True
+
+
+def get_inventory_slot_hitbox_at_position(app, position):
+    for slot_hitbox in getattr(app, "inventory_slot_hitboxes", []):
+        if slot_hitbox["rect"].collidepoint(position):
+            return slot_hitbox
+
+    return None
+
+
+def cancel_inventory_drag(app):
+    return cancel_slot_drag(app)
+
+
+def cancel_slot_drag(app):
+    slot_ui_state = app.slot_ui_state
+
+    if not slot_ui_state.is_dragging or slot_ui_state.dragged_stack is None:
+        slot_ui_state.cancel_drag()
+        return True
+
+    if slot_ui_state.drag_origin is None:
+        return False
+
+    if slot_ui_state.drag_origin.container_id not in ("inventory", "stash"):
+        return False
+
+    container_id = slot_ui_state.drag_origin.container_id
+    grid = get_slot_container_grid(app, container_id)
+    columns = get_slot_container_columns(container_id)
+    rows = get_slot_container_rows(container_id)
+    row = slot_ui_state.drag_origin.index // columns
+    column = slot_ui_state.drag_origin.index % columns
+
+    if row < 0 or row >= rows:
+        return False
+
+    ensure_grid_position(grid, row, column)
+
+    if grid[row][column] is not None:
+        return False
+
+    grid[row][column] = copy_stack(slot_ui_state.dragged_stack)
+    slot_ui_state.cancel_drag()
+    return True
+
+
+def ensure_inventory_grid_position(grid, row, column):
+    ensure_grid_position(grid, row, column)
+
+
+def ensure_grid_position(grid, row, column):
+    while len(grid) <= row:
+        grid.append([])
+
+    while len(grid[row]) <= column:
+        grid[row].append(None)
+
+
+def is_inventory_hotbar_slot(slot_hitbox):
+    return (
+        slot_hitbox["container_id"] == "inventory"
+        and slot_hitbox["row"] == 0
+    )
+
+
+def select_hotbar_if_target_is_hotbar(app, slot_hitbox):
+    if is_inventory_hotbar_slot(slot_hitbox):
+        select_active_hotbar_slot(app, slot_hitbox["column"])
+
+
+def cycle_active_hotbar_slot(app):
+    current_index = get_active_hotbar_index(app.state)
+    select_active_hotbar_slot(app, (current_index + 1) % INVENTORY_COLUMNS)
+
+
+def select_active_hotbar_slot(app, index):
+    if not set_active_hotbar_index(app.state, index):
+        return False
+
+    app.placement_mode = False
+    app.placement_item_id = None
+
+    item = get_active_item_data(app.state)
+
+    if item is not None and item.get("type") == "placeable":
+        app.placement_mode = True
+        app.placement_item_id = get_active_item_id(app.state)
+
+    return True
+
+
 def handle_game_key(app, key):
     if key == pygame.K_h:
         change_scene(app.state, "player_house")
@@ -82,32 +433,13 @@ def handle_game_key(app, key):
     if key == pygame.K_c:
         app.combat_manager.start_test_combat()
         return
-    number_keys = [
-        pygame.K_1,
-        pygame.K_2,
-        pygame.K_3,
-        pygame.K_4,
-        pygame.K_5,
-        pygame.K_6,
-        pygame.K_7,
-        pygame.K_8,
-    ]
+    if key == pygame.K_TAB:
+        cycle_active_hotbar_slot(app)
+        return
 
-    if key in number_keys:
-        index = number_keys.index(key)
-        set_active_hotbar_index(app.state, index)
-
-        app.placement_mode = False
-        app.placement_item_id = None
-
-        item = get_active_item_data(app.state)
-
-        if item is not None and item.get("type") == "placeable":
-            app.placement_mode = True
-            app.placement_item_id = get_active_item_id(app.state)
-        else:
-            app.placement_mode = False
-            app.placement_item_id = None
+    if key in NUMBER_KEYS:
+        index = NUMBER_KEYS.index(key)
+        select_active_hotbar_slot(app, index)
 
         return
 
@@ -163,7 +495,7 @@ def handle_interaction_key(app):
         return
 
     if app.nearby_object is not None:
-        if app.nearby_object["type"] == "bed" or app.nearby_object["type"] == "dock":
+        if app.nearby_object["type"] in ("bed", "dock", "stash"):
             from game.interaction_manager import interact_with_nearby_object
             interact_with_nearby_object(app)
             return

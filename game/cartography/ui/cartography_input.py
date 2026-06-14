@@ -26,8 +26,19 @@ def handle_cartography_event(app, event):
 def handle_cartography_click(app, position):
     ui_state = app.cartography_ui_state
 
+    if ui_state.reward_modal_open:
+        handle_rewards_modal_click(app, position)
+        return
+
     if ui_state.modal_open:
         handle_modal_click(app, position)
+        return
+
+    if (
+        ui_state.rewards_button is not None
+        and ui_state.rewards_button.collidepoint(position)
+    ):
+        ui_state.reward_modal_open = True
         return
 
     if (
@@ -80,8 +91,24 @@ def handle_modal_click(app, position):
         launch_selected_expedition(app)
 
 
+def handle_rewards_modal_click(app, position):
+    ui_state = app.cartography_ui_state
+
+    if (
+        ui_state.rewards_close_button is not None
+        and ui_state.rewards_close_button.collidepoint(position)
+    ):
+        ui_state.reward_modal_open = False
+
+    return
+
+
 def handle_cartography_escape(app):
     ui_state = app.cartography_ui_state
+
+    if ui_state.reward_modal_open:
+        ui_state.reward_modal_open = False
+        return
 
     if ui_state.modal_open:
         ui_state.modal_open = False

@@ -1,6 +1,6 @@
 {
-  "day": 25,
-  "season_index": 3,
+  "day": 22,
+  "season_index": 0,
   "health": {
     "current": 100,
     "max": 100
@@ -14,7 +14,7 @@
     "wood": 35,
     "iron": 10,
     "carbon": 6,
-    "gold": 450,
+    "gold": 390,
     "coral": 0,
     "pearls": 0,
     "map_piece": 0
@@ -28,7 +28,7 @@
     "tree_01",
     "tree_03"
   ],
-  "wind": "south",
+  "wind": "west",
   "ship": {
     "status": "available",
     "days_left": 0,
@@ -39,45 +39,30 @@
   },
   "player": {
     "zone": "dock",
-    "x": 93.30568839848469,
-    "y": 569.6952075897926,
+    "x": 127.67520128197123,
+    "y": 494.2632142037199,
     "direction": "down"
   },
   "log": [
-    "Faltan provisiones para zarpar. Necesitas 2.",
-    "Faltan provisiones para zarpar. Necesitas 2.",
-    "Faltan provisiones para zarpar. Necesitas 2.",
     "Abres el mapa cartográfico.",
-    "Abres el mapa cartográfico.",
-    "Faltan items requeridos en la bodega.",
-    "Abres el mapa cartográfico."
+    "Abres el cofre.",
+    "Abres el cofre.",
+    "Duermes y recuperas energia.",
+    "Has dormido y la partida se ha guardado.",
+    "Abres el cofre.",
+    "Duermes y recuperas energia."
   ],
   "inventory": {
     "rows": 2,
     "columns": 8,
-    "active_hotbar_index": 0,
+    "active_hotbar_index": 1,
     "grid": [
       [
         {
           "item_id": "axe",
           "amount": 1
         },
-        {
-          "item_id": "pickaxe",
-          "amount": 1
-        },
-        {
-          "item_id": "wood",
-          "amount": 2
-        },
-        {
-          "item_id": "hoe",
-          "amount": 1
-        },
-        {
-          "item_id": "corn_seed",
-          "amount": 10
-        },
+        null,
         {
           "item_id": "watering_can",
           "amount": 1
@@ -85,12 +70,24 @@
         null,
         null,
         {
+          "item_id": "driftwood",
+          "amount": 5
+        },
+        null,
+        {
+          "item_id": "sea_fiber",
+          "amount": 2
+        },
+        {
           "item_id": "campfire",
           "amount": 1
         }
       ],
       [
-        null,
+        {
+          "item_id": "wood",
+          "amount": 86
+        },
         null,
         null,
         null,
@@ -108,9 +105,9 @@
   },
   "collectables": [],
   "time": {
-    "hour": 22,
-    "minute": 8.349999999956566,
-    "day": 25
+    "hour": 6,
+    "minute": 0,
+    "day": 22
   },
   "placed_objects": [
     {
@@ -203,20 +200,20 @@
       },
       "calm_waters": {
         "id": "calm_waters",
+        "state": "explored",
+        "cartography_percent": 100,
+        "visits": 6
+      },
+      "driftwood_coast": {
+        "id": "driftwood_coast",
         "state": "seen",
         "cartography_percent": 25,
         "visits": 0
       },
-      "driftwood_coast": {
-        "id": "driftwood_coast",
-        "state": "hidden",
-        "cartography_percent": 0,
-        "visits": 0
-      },
       "misty_reef": {
         "id": "misty_reef",
-        "state": "hidden",
-        "cartography_percent": 0,
+        "state": "seen",
+        "cartography_percent": 25,
         "visits": 0
       },
       "old_lighthouse": {
@@ -264,12 +261,169 @@
       "max_slots": 16,
       "items": {
         "iron": 3,
-        "stone": 11,
-        "wood": 3
+        "stone": 11
       }
     },
-    "active_expedition": null
+    "active_expedition": null,
+    "pending_expedition_result": {
+      "status": "pending_claim",
+      "region_id": "calm_waters",
+      "rewards": {
+        "driftwood": 5,
+        "sea_fiber": 2
+      },
+      "arrival_day": 6,
+      "cartography_progress": {
+        "status": "applied",
+        "explore_result": {
+          "success": true,
+          "region_id": "calm_waters",
+          "cartography_percent": 75,
+          "state": "explored"
+        }
+      }
+    },
+    "pending_expedition_results": [
+      {
+        "status": "pending_claim",
+        "region_id": "calm_waters",
+        "rewards": {
+          "driftwood": 5,
+          "sea_fiber": 2
+        },
+        "arrival_day": 6,
+        "cartography_progress": {
+          "status": "applied",
+          "explore_result": {
+            "success": true,
+            "region_id": "calm_waters",
+            "cartography_percent": 75,
+            "state": "explored"
+          }
+        }
+      },
+      {
+        "status": "pending_claim",
+        "region_id": "calm_waters",
+        "rewards": {
+          "driftwood": 5,
+          "sea_fiber": 2
+        },
+        "arrival_day": 15,
+        "cartography_progress": {
+          "status": "applied",
+          "explore_result": {
+            "success": true,
+            "region_id": "calm_waters",
+            "cartography_percent": 100,
+            "state": "explored"
+          }
+        }
+      },
+      {
+        "status": "pending_claim",
+        "region_id": "calm_waters",
+        "rewards": {
+          "driftwood": 5,
+          "sea_fiber": 2
+        },
+        "arrival_day": 16,
+        "cartography_progress": {
+          "status": "applied",
+          "explore_result": {
+            "success": true,
+            "region_id": "calm_waters",
+            "cartography_percent": 100,
+            "state": "explored"
+          }
+        }
+      },
+      {
+        "status": "pending_claim",
+        "region_id": "calm_waters",
+        "rewards": {
+          "driftwood": 5,
+          "sea_fiber": 2
+        },
+        "arrival_day": 17,
+        "cartography_progress": {
+          "status": "applied",
+          "explore_result": {
+            "success": true,
+            "region_id": "calm_waters",
+            "cartography_percent": 100,
+            "state": "explored"
+          }
+        }
+      },
+      {
+        "status": "pending_claim",
+        "region_id": "calm_waters",
+        "rewards": {
+          "driftwood": 2,
+          "sea_fiber": 3
+        },
+        "arrival_day": 20,
+        "cartography_progress": {
+          "status": "applied",
+          "explore_result": {
+            "success": true,
+            "region_id": "calm_waters",
+            "cartography_percent": 100,
+            "state": "explored"
+          }
+        }
+      }
+    ]
   },
   "legacy_hotbar": [],
-  "current_scene": "farm"
+  "current_scene": "farm",
+  "stash": {
+    "rows": 3,
+    "columns": 8,
+    "grid": [
+      [
+        null,
+        {
+          "item_id": "pickaxe",
+          "amount": 1
+        },
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      [
+        null,
+        {
+          "item_id": "wood",
+          "amount": 99
+        },
+        {
+          "item_id": "hoe",
+          "amount": 1
+        },
+        {
+          "item_id": "rope",
+          "amount": 82
+        },
+        null,
+        null,
+        null,
+        null
+      ]
+    ]
+  }
 }

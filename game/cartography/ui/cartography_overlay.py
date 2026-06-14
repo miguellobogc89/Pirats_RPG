@@ -55,10 +55,14 @@ def draw_cartography_overlay(app):
 
     selected_region = draw_map_panel(app, map_rect)
     draw_region_panel(app, selected_region, info_content_rect)
+    draw_pending_rewards_action(app, window_rect)
     draw_cartography_footer(app, window_rect)
 
     if ui_state.modal_open:
         draw_expedition_modal(app)
+
+    if ui_state.reward_modal_open:
+        draw_rewards_modal(app)
 
 
 def draw_map_panel(app, map_rect):
@@ -169,10 +173,170 @@ def draw_region_panel(app, selected_region, content_rect):
         app.small_font,
     )
 
+    if app.cartography_manager.active_expedition is not None:
+        draw_active_expedition_status(app, inner)
+        return
+
     button_rect = pygame.Rect(inner.x, inner.bottom - 42, inner.width, 38)
     draw_button(app.screen, button_rect)
     draw_button_text(app.screen, app.font, "Nueva expedicion", button_rect)
     ui_state.expedition_button = button_rect
+
+
+def draw_active_expedition_status(app, inner):
+    expedition = app.cartography_manager.active_expedition
+    region = app.cartography_manager.get_region_view_data(expedition.get("region_id"))
+    region_name = expedition.get("region_id")
+
+    if region is not None:
+        region_name = region["name"]
+
+    total_days = expedition.get("total_days", 0)
+    remaining_days = expedition.get("remaining_days", 0)
+    elapsed_days = total_days - remaining_days
+
+    if elapsed_days < 0:
+        elapsed_days = 0
+
+    app.draw_text("EXPEDICION EN CURSO", inner.x, inner.y + 210, TEXT_DISABLED, app.small_font)
+    draw_label_value(
+        app.screen,
+        app.small_font,
+        "Destino",
+        region_name,
+        inner.x,
+        inner.y + 236,
+    )
+    draw_label_value(
+        app.screen,
+        app.small_font,
+        "Dias restantes",
+        remaining_days,
+        inner.x,
+        inner.y + 262,
+    )
+
+    draw_label_value(
+        app.screen,
+        app.small_font,
+        "Progreso",
+        f"{elapsed_days}/{total_days} dias",
+        inner.x,
+        inner.y + 288,
+    )
+
+    draw_progress_bar(
+        app.screen,
+        pygame.Rect(inner.x, inner.y + 314, inner.width, 12),
+        elapsed_days,
+        total_days,
+        (119, 146, 88),
+        background_color=(70, 48, 34),
+        border_color=WOOD_DARK,
+    )
+
+    disabled_rect = pygame.Rect(inner.x, inner.bottom - 42, inner.width, 38)
+    draw_button(app.screen, disabled_rect, enabled=False)
+    draw_button_text(app.screen, app.font, "Expedicion en curso", disabled_rect, enabled=False)
+
+
+def draw_pending_rewards_action(app, window_rect):
+    if not app.cartography_manager.has_pending_expedition_results():
+        return
+
+    rewards_rect = pygame.Rect(window_rect.right - 172, window_rect.bottom - 86, 140, 38)
+    draw_button(app.screen, rewards_rect)
+    draw_button_text(app.screen, app.font, "Reclamar", rewards_rect)
+    app.cartography_ui_state.rewards_button = rewards_rect
+
+
+def draw_reward_line(app, item_id, amount, x, y):
+    item_data = get_item_data(item_id)
+    item_name = item_id
+
+    if item_data is not None:
+        item_name = item_data["name"]
+
+    app.draw_text(f"{item_name}: x{amount}", x, y, TEXT_DARK, app.small_font)
+
+
+def draw_rewards_modal(app):
+    modal_content = pygame.Rect(245, 170, 430, 260)
+    modal_rect = modal_content.inflate(34, 58)
+    pending_results = app.cartography_manager.get_pending_expedition_results()
+
+    draw_panel(app.screen, modal_rect)
+
+    if not pending_results:
+        return
+
+    app.draw_text("RECOMPENSAS", modal_content.x, modal_rect.y + 18, TEXT_DARK, app.font)
+
+    rewards_y = modal_content.y
+    reward_lines = get_pending_reward_lines(app, pending_results)
+
+    if not reward_lines:
+        app.draw_text("No hay recompensas pendientes.", modal_content.x, rewards_y, TEXT_DISABLED, app.small_font)
+    else:
+        for index, line in enumerate(reward_lines[:8]):
+            color = TEXT_DISABLED if line["type"] == "region" else TEXT_DARK
+            app.draw_text(line["text"], modal_content.x, rewards_y + index * 24, color, app.small_font)
+
+    app.draw_text(
+        "Pendiente de reclamacion.",
+        modal_content.x,
+        modal_content.bottom - 76,
+        TEXT_DISABLED,
+        app.small_font,
+    )
+
+    close_rect = pygame.Rect(modal_content.right - 100, modal_content.bottom - 42, 100, 38)
+    draw_button(app.screen, close_rect)
+    draw_button_text(app.screen, app.font, "Cerrar", close_rect)
+    app.cartography_ui_state.rewards_close_button = close_rect
+
+
+def get_pending_reward_lines(app, pending_results):
+    lines = []
+
+    for pending_result in pending_results:
+        region = app.cartography_manager.get_region_view_data(pending_result.get("region_id"))
+        region_name = pending_result.get("region_id")
+
+        if region is not None:
+            region_name = region["name"]
+
+        lines.append({
+            "type": "region",
+            "text": region_name,
+        })
+
+        rewards = pending_result.get("rewards", {})
+
+        if not rewards:
+            lines.append({
+                "type": "reward",
+                "text": "Sin recompensas registradas.",
+            })
+            continue
+
+        for item_id in sorted(rewards):
+            lines.append({
+                "type": "reward",
+                "text": get_reward_text(item_id, rewards[item_id]),
+            })
+
+    return lines
+
+
+def get_reward_text(item_id, amount):
+    item_data = get_item_data(item_id)
+    item_name = item_id
+
+    if item_data is not None:
+        item_name = item_data["name"]
+
+    return f"  {item_name}: x{amount}"
 
 
 def draw_cartography_footer(app, window_rect):

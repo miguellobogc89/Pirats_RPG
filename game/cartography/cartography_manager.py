@@ -14,6 +14,8 @@ class CartographyManager:
         self.unlocked_ports = [STARTING_REGION_ID]
         self.ship_storage = ShipStorage()
         self.active_expedition = None
+        self.pending_expedition_result = None
+        self.pending_expedition_results = []
 
         self._create_default_state()
 
@@ -38,6 +40,8 @@ class CartographyManager:
             "unlocked_ports": self.unlocked_ports,
             "ship_storage": self.ship_storage.get_save_data(),
             "active_expedition": self.active_expedition,
+            "pending_expedition_result": self.pending_expedition_result,
+            "pending_expedition_results": self.pending_expedition_results,
         }
 
     def load_from_data(self, data):
@@ -55,6 +59,41 @@ class CartographyManager:
         self.unlocked_ports = data.get("unlocked_ports", self.unlocked_ports)
         self.ship_storage.load_from_data(data.get("ship_storage"))
         self.active_expedition = data.get("active_expedition")
+        self.pending_expedition_results = self.normalize_pending_expedition_results(data)
+        self.sync_pending_expedition_result()
+
+    def normalize_pending_expedition_results(self, data):
+        pending_results = data.get("pending_expedition_results")
+
+        if isinstance(pending_results, list):
+            return [
+                pending_result
+                for pending_result in pending_results
+                if isinstance(pending_result, dict)
+            ]
+
+        pending_result = data.get("pending_expedition_result")
+
+        if isinstance(pending_result, dict):
+            return [pending_result]
+
+        return []
+
+    def sync_pending_expedition_result(self):
+        self.pending_expedition_result = None
+
+        if self.pending_expedition_results:
+            self.pending_expedition_result = self.pending_expedition_results[0]
+
+    def add_pending_expedition_result(self, pending_result):
+        self.pending_expedition_results.append(pending_result)
+        self.sync_pending_expedition_result()
+
+    def has_pending_expedition_results(self):
+        return bool(self.pending_expedition_results)
+
+    def get_pending_expedition_results(self):
+        return list(self.pending_expedition_results)
 
     def get_region_state(self, region_id):
         if region_id not in self.regions:

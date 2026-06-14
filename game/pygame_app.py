@@ -1,4 +1,3 @@
-import copy
 import sys
 import pygame
 
@@ -14,11 +13,6 @@ from game.inventory.hotbar_manager import (
     get_active_item_id,
     get_active_tool,
     set_active_hotbar_index,
-)
-from game.inventory.inventory_manager import (
-    add_item,
-    can_add_item,
-    remove_item_quantity,
 )
 from game.world.grid_manager import TILE_SIZE, world_to_grid, grid_to_world
 from game.cartography.cartography_manager import CartographyManager
@@ -39,12 +33,15 @@ from game.cartography.ui.cartography_overlay import draw_cartography_overlay
 from game.scenes.scene_manager import ensure_scene_state
 from game.cartography.ui.cartography_ui_state import CartographyUIState
 from game.data.item_database import get_item_data
+from game.inventory.slot_ui_state import SlotUIState
+from game.inventory.stash_state import ensure_stash_state
 from game.ui.sprite_renderer import draw_item_sprite, draw_sprite_centered
 from game.farming.farming_manager import advance_farming_day
 from game.input.input_manager import handle_events
 from game.bestiary.bestiary_manager import BestiaryManager
 from game.combat.combat_manager import CombatManager
 from game.hud.menu_overlay import draw_menu, get_menu_tab_at_position
+from game.hud.stash_overlay import draw_stash_overlay
 from game.ui.ui_theme import create_game_fonts
 from game.world.grid_renderer import (
     draw_world_grid,
@@ -88,6 +85,7 @@ class PygameApp:
         self.game_data = game_data
 
         ensure_scene_state(self.state)
+        ensure_stash_state(self.state)
 
         self.cartography_manager = CartographyManager()
         self.cartography_manager.load_from_data(
@@ -96,6 +94,9 @@ class PygameApp:
         self.expedition_manager = ExpeditionManager(self.cartography_manager)
         self.state["cartography"] = self.cartography_manager.get_save_data()
         self.cartography_ui_state = CartographyUIState()
+        self.slot_ui_state = SlotUIState()
+        self.inventory_slot_hitboxes = []
+        self.stash_slot_hitboxes = []
 
         self.skill_manager = SkillManager(self.state)
 
@@ -125,6 +126,7 @@ class PygameApp:
         self.interaction_range = 45
 
         self.menu_open = False
+        self.stash_open = False
         self.cartography_menu_open = False
         self.menu_tab = "inventory"
         self.hud_visible = True
@@ -147,7 +149,7 @@ class PygameApp:
             return
         update_time(self.state, dt)
 
-        if self.menu_open:
+        if self.menu_open or self.stash_open:
             return
 
         update_player_movement(self.state, self.player_speed, dt)
@@ -201,78 +203,24 @@ class PygameApp:
             self.add_log(message)
 
     def resolve_completed_expedition(self, region_name):
-        active_expedition_snapshot = copy.deepcopy(
-            self.cartography_manager.active_expedition
-        )
-        regions_snapshot = copy.deepcopy(self.cartography_manager.regions)
         result = self.expedition_manager.resolve_active_expedition()
 
         if not result["success"]:
             self.add_log("No se pudo resolver la expedicion.")
             return
 
-        delivery_result = self.deliver_expedition_rewards(result["rewards"])
-
-        if not delivery_result["success"]:
-            self.cartography_manager.active_expedition = active_expedition_snapshot
-            self.cartography_manager.regions = regions_snapshot
-            self.state["cartography"] = self.cartography_manager.get_save_data()
-            self.add_log(
-                "La expedicion ha llegado, pero no hay espacio para el botin."
-            )
-            return
-
+        self.cartography_manager.add_pending_expedition_result({
+            "status": "pending_claim",
+            "region_id": result["region_id"],
+            "rewards": result["rewards"],
+            "arrival_day": self.state["day"],
+            "cartography_progress": {
+                "status": "applied",
+                "explore_result": result["explore_result"],
+            },
+        })
         self.state["cartography"] = self.cartography_manager.get_save_data()
-        reward_text = self.format_reward_log(result["rewards"])
-        self.add_log(f"Expedicion a {region_name} resuelta. {reward_text}")
-
-    def deliver_expedition_rewards(self, rewards):
-        delivered_items = []
-
-        for item_id, amount in rewards.items():
-            if can_add_item(self.state, item_id, amount):
-                if add_item(self.state, item_id, amount):
-                    delivered_items.append(("inventory", item_id, amount))
-                    continue
-
-            if self.cartography_manager.ship_storage.has_space_for_item(item_id):
-                if self.cartography_manager.ship_storage.add_item(item_id, amount):
-                    delivered_items.append(("ship_storage", item_id, amount))
-                    continue
-
-            self.rollback_delivered_rewards(delivered_items)
-            return {
-                "success": False,
-                "reason": "reward_storage_full",
-            }
-
-        return {
-            "success": True,
-        }
-
-    def rollback_delivered_rewards(self, delivered_items):
-        for destination, item_id, amount in reversed(delivered_items):
-            if destination == "inventory":
-                remove_item_quantity(self.state, item_id, amount)
-            elif destination == "ship_storage":
-                self.cartography_manager.ship_storage.remove_item(item_id, amount)
-
-    def format_reward_log(self, rewards):
-        if not rewards:
-            return "Sin botin."
-
-        parts = []
-
-        for item_id, amount in rewards.items():
-            item_data = get_item_data(item_id)
-            item_name = item_id
-
-            if item_data is not None:
-                item_name = item_data["name"]
-
-            parts.append(f"{item_name} x{amount}")
-
-        return "Botin: " + ", ".join(parts) + "."
+        self.add_log(f"El barco ha regresado de {region_name}. Revisa el muelle.")
 
     def add_log(self, message):
         self.log.append(message)
@@ -318,6 +266,9 @@ class PygameApp:
 
         if self.menu_open and self.hud_visible:
             draw_menu(self)
+
+        if self.stash_open:
+            draw_stash_overlay(self)
 
         if self.cartography_menu_open:
             draw_cartography_overlay(self)

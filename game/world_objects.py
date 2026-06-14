@@ -214,4 +214,16 @@ WORLD_OBJECTS = [
         "required_tool": None,
         "energy_cost": 0,
     },
+    {
+        "id": "stash_01",
+        "name": "Cofre",
+        "type": "stash",
+        "x": 115,
+        "y": 320,
+        "radius": 24,
+        "icon": "C",
+        "footprint": [2, 2],
+        "required_tool": None,
+        "energy_cost": 0,
+    },
 ]

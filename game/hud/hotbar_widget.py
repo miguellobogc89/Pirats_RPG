@@ -1,12 +1,11 @@
 import pygame
 
-from game.hud.ui_helpers import DARK, PANEL, WHITE, draw_text
+from game.hud.ui_helpers import DARK, PANEL, WHITE
 from game.inventory.hotbar_manager import (
     get_active_hotbar_index,
     get_hotbar_slots,
 )
-from game.data.item_database import get_item_data
-from game.ui.sprite_renderer import draw_item_sprite
+from game.ui.slot_renderer import draw_slot
 
 
 def draw_hotbar_widget(app):
@@ -23,32 +22,19 @@ def draw_hotbar_widget(app):
     for index, slot in enumerate(slots):
         x = start_x + index * (slot_size + gap)
         selected = active_index == index
+        slot_rect = pygame.Rect(x, y, slot_size, slot_size)
 
-        fill = WHITE if selected else PANEL
-        border_width = 4 if selected else 2
-
-        pygame.draw.rect(app.screen, fill, (x, y, slot_size, slot_size), border_radius=8)
-        pygame.draw.rect(app.screen, DARK, (x, y, slot_size, slot_size), border_width, border_radius=8)
-
-        key_text = str(index + 1)
-        draw_text(app.screen, app.small_font, key_text, x + 5, y + 38, DARK)
-
-        if slot is None:
-            continue
-
-        item_id = slot["item_id"]
-        amount = slot["amount"]
-        item_data = get_item_data(item_id)
-
-        if item_data is None:
-            continue
-
-        draw_item_sprite(
+        draw_slot(
             app.screen,
-            item_data,
-            pygame.Rect(x + 8, y + 5, 42, 42),
-            padding=1,
+            slot_rect,
+            slot,
+            app.font,
+            app.small_font,
+            selected=selected,
+            hotkey_label=str(index + 1),
+            fill_color=PANEL,
+            selected_fill_color=WHITE,
+            border_color=DARK,
+            text_color=DARK,
+            hotkey_position="bottom",
         )
-
-        if amount > 1:
-            draw_text(app.screen, app.small_font, str(amount), x + 38, y + 38, DARK)

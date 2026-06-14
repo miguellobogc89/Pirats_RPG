@@ -28,8 +28,8 @@ REGION_DATABASE = {
         "cartography_percent": 25,
         "visits": 0,
         "danger": 1,
-        "travel_days": 1,
-        "base_days": 1,
+        "travel_days": 3,
+        "base_days": 3,
         "travel_requirements": {
             "gold": 10,
             "items": {

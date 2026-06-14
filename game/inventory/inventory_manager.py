@@ -1,5 +1,6 @@
 from game.inventory.inventory_state import ensure_inventory_state
-from game.data.item_database import get_item_data
+from game.data.item_database import get_item_data, get_item_max_stack
+from game.inventory.slot_model import can_stack, create_stack, get_stack_space
 
 
 def get_inventory_grid(state):
@@ -43,17 +44,30 @@ def can_add_item(state, item_id, amount=1):
         return False
 
     grid = state["inventory"]["grid"]
+    remaining_amount = amount
 
-    if item_data.get("stackable", True):
+    if can_stack(item_id):
         for row in grid:
             for slot in row:
-                if slot is not None and slot["item_id"] == item_id:
+                if slot is None:
+                    continue
+
+                if slot["item_id"] != item_id:
+                    continue
+
+                remaining_amount -= get_stack_space(slot)
+
+                if remaining_amount <= 0:
                     return True
 
+    max_stack = get_item_max_stack(item_id)
     for row in grid:
         for slot in row:
             if slot is None:
-                return True
+                remaining_amount -= max_stack
+
+                if remaining_amount <= 0:
+                    return True
 
     return False
 
@@ -69,26 +83,42 @@ def add_item(state, item_id, amount=1):
     if item_data is None:
         return False
 
-    grid = state["inventory"]["grid"]
+    if not can_add_item(state, item_id, amount):
+        return False
 
-    if item_data.get("stackable", True):
+    grid = state["inventory"]["grid"]
+    remaining_amount = amount
+
+    if can_stack(item_id):
         for row in grid:
             for slot in row:
                 if slot is None:
                     continue
 
-                if slot["item_id"] == item_id:
-                    slot["amount"] += amount
+                if slot["item_id"] != item_id:
+                    continue
+
+                amount_to_add = min(get_stack_space(slot), remaining_amount)
+
+                if amount_to_add <= 0:
+                    continue
+
+                slot["amount"] += amount_to_add
+                remaining_amount -= amount_to_add
+
+                if remaining_amount <= 0:
                     return True
 
+    max_stack = get_item_max_stack(item_id)
     for row in grid:
         for index, slot in enumerate(row):
             if slot is None:
-                row[index] = {
-                    "item_id": item_id,
-                    "amount": amount,
-                }
-                return True
+                amount_to_add = min(max_stack, remaining_amount)
+                row[index] = create_stack(item_id, amount_to_add)
+                remaining_amount -= amount_to_add
+
+                if remaining_amount <= 0:
+                    return True
 
     return False
 

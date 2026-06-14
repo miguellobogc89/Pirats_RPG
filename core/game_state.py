@@ -3,6 +3,7 @@ from game.skills.skill_state import create_default_skills_state
 from game.bestiary.bestiary_state import create_default_bestiary_state
 from game.cartography.cartography_manager import CartographyManager
 from game.inventory.inventory_state import ensure_inventory_state
+from game.inventory.stash_state import create_default_stash_state, ensure_stash_state
 
 
 DEFAULT_CONFIG = {
@@ -17,6 +18,10 @@ def create_default_inventory_state():
     state = {}
     ensure_inventory_state(state)
     return state["inventory"]
+
+
+def create_default_player_stash_state():
+    return create_default_stash_state()
 
 
 def get_config_value(game_data, key):
@@ -60,6 +65,7 @@ def create_initial_state(game_data):
             "gold": 100,
         },
         "inventory": create_default_inventory_state(),
+        "stash": create_default_player_stash_state(),
         "player": {
             "x": 400,
             "y": 300,
@@ -99,6 +105,8 @@ def normalize_state(state, game_data=None):
         state["inventory"] = create_default_inventory_state()
     else:
         ensure_inventory_state(state)
+
+    ensure_stash_state(state)
 
     if "hotbar" in state:
         state["legacy_hotbar"] = state["hotbar"]

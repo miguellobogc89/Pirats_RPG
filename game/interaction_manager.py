@@ -51,6 +51,14 @@ def interact_with_nearby_object(app):
         app.add_log("Has dormido y la partida se ha guardado.")
         return
 
+    if world_object["type"] == "stash":
+        app.slot_ui_state.cancel_drag()
+        app.stash_open = True
+        app.menu_open = False
+        app.cartography_menu_open = False
+        app.add_log("Abres el cofre.")
+        return
+
     interact_with_resource_object(app, world_object)
 
 

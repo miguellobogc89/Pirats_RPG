@@ -1,3 +1,7 @@
+DEFAULT_STACKABLE_MAX_STACK = 99
+DEFAULT_UNSTACKABLE_MAX_STACK = 1
+
+
 ITEM_DATABASE = {
     "axe": {
         "name": "Hacha",
@@ -212,3 +216,24 @@ ITEM_DATABASE = {
 
 def get_item_data(item_id):
     return ITEM_DATABASE.get(item_id)
+
+
+def is_item_stackable(item_id):
+    item_data = get_item_data(item_id)
+
+    if item_data is None:
+        return False
+
+    return item_data.get("stackable", True)
+
+
+def get_item_max_stack(item_id):
+    item_data = get_item_data(item_id)
+
+    if item_data is None:
+        return 0
+
+    if not item_data.get("stackable", True):
+        return DEFAULT_UNSTACKABLE_MAX_STACK
+
+    return item_data.get("max_stack", DEFAULT_STACKABLE_MAX_STACK)
