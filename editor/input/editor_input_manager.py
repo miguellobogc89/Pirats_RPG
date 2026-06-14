@@ -648,17 +648,17 @@ class EditorInputManager:
 
 
     def get_selected_area(self):
-    if self.selected_area_type is None:
-        return None
+        if self.selected_area_type is None:
+            return None
 
-    if self.selected_area_id is None:
-        return None
+        if self.selected_area_id is None:
+            return None
 
-    return get_area_by_id(
-        self.scene_data,
-        self.selected_area_type,
-        self.selected_area_id,
-    )
+        return get_area_by_id(
+            self.scene_data,
+            self.selected_area_type,
+            self.selected_area_id,
+        )
 
 
     def select_area_at_cell(self, cell):

@@ -11,6 +11,8 @@ from game.world.grid_manager import TILE_SIZE
 from editor.dialogs.open_scene_dialog import draw_open_scene_dialog
 from editor.dialogs.save_as_dialog import draw_save_as_dialog
 from editor.dialogs.unsaved_changes_dialog import draw_unsaved_changes_dialog
+from editor.dialogs.area_name_dialog import draw_area_name_dialog
+from editor.dialogs.relations_dialog import draw_relations_dialog
 
 from editor.editor_assets import (
     load_editor_sprites,
@@ -111,6 +113,7 @@ def main():
             input_manager.mode,
             input_manager.selected_object_type,
             object_definitions,
+            input_manager.get_selected_area(),
         )
 
         input_manager.set_buttons(menu_buttons + side_buttons)
@@ -140,6 +143,24 @@ def main():
             dialog_buttons = draw_open_scene_dialog(
                 screen,
                 input_manager.saved_scenes,
+            )
+            input_manager.set_dialog_buttons(dialog_buttons)
+
+        if input_manager.show_area_name_dialog:
+            dialog_buttons = draw_area_name_dialog(
+                screen,
+                "Editar área",
+                input_manager.area_name_text,
+            )
+            input_manager.set_dialog_buttons(dialog_buttons)
+
+        if input_manager.show_relations_dialog:
+            dialog_buttons = draw_relations_dialog(
+                screen,
+                scene_data,
+                input_manager.relation_targets,
+                input_manager.selected_relation_exit_id,
+                input_manager.selected_relation_target_key,
             )
             input_manager.set_dialog_buttons(dialog_buttons)
 

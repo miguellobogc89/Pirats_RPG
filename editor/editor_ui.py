@@ -72,7 +72,13 @@ def draw_section_title(screen, font, text, x, y, width):
     )
 
 
-def draw_editor_side_panel(screen, mode, selected_object_type, object_definitions=None):
+def draw_editor_side_panel(
+    screen,
+    mode,
+    selected_object_type,
+    object_definitions=None,
+    selected_area=None,
+):
     font = pygame.font.SysFont("consolas", 14)
 
     screen_width = screen.get_width()
@@ -122,6 +128,7 @@ def draw_editor_side_panel(screen, mode, selected_object_type, object_definition
         y += ROW_HEIGHT
 
     y += 18
+
     draw_section_title(screen, font, "Colisiones", x, y, width)
     y += 28
 
@@ -140,6 +147,7 @@ def draw_editor_side_panel(screen, mode, selected_object_type, object_definition
     })
 
     y += ROW_HEIGHT + 18
+
     draw_section_title(screen, font, "Navegación", x, y, width)
     y += 28
 
@@ -173,11 +181,96 @@ def draw_editor_side_panel(screen, mode, selected_object_type, object_definition
         "action": "mode_exits",
     })
 
+    y += ROW_HEIGHT
+
+    relations_rect = pygame.Rect(x, y, width, ROW_HEIGHT)
+
+    draw_nav_row(
+        screen,
+        relations_rect,
+        "Relaciones",
+        False,
+    )
+
+    buttons.append({
+        "rect": relations_rect,
+        "action": "open_relations_dialog",
+    })
+
     y += ROW_HEIGHT + 18
+
+    draw_section_title(screen, font, "Área activa", x, y, width)
+    y += 28
+
+    if selected_area is None:
+
+        draw_text(
+            screen,
+            font,
+            "Sin área seleccionada",
+            x,
+            y,
+            COLOR_TEXT_MUTED,
+        )
+
+        y += 24
+
+    else:
+
+        draw_text(
+            screen,
+            font,
+            f"ID: {selected_area.get('id', '-')}",
+            x,
+            y,
+            COLOR_TEXT_MUTED,
+        )
+
+        y += 20
+
+        draw_text(
+            screen,
+            font,
+            f"Nombre: {selected_area.get('name', '-')}",
+            x,
+            y,
+            COLOR_TEXT_MUTED,
+        )
+
+        y += 24
+
+        edit_rect = pygame.Rect(
+            x,
+            y,
+            width,
+            ROW_HEIGHT,
+        )
+
+        draw_nav_row(
+            screen,
+            edit_rect,
+            "Editar nombre",
+            False,
+        )
+
+        buttons.append({
+            "rect": edit_rect,
+            "action": "edit_area_name",
+        })
+
+        y += ROW_HEIGHT
+
+    y += 18
+
     draw_section_title(screen, font, "Terreno", x, y, width)
     y += 28
 
-    terrain_rect = pygame.Rect(x, y, width, ROW_HEIGHT)
+    terrain_rect = pygame.Rect(
+        x,
+        y,
+        width,
+        ROW_HEIGHT,
+    )
 
     draw_nav_row(
         screen,
