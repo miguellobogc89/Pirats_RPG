@@ -66,11 +66,6 @@ def add_object(scene_data, object_type, cell, object_definitions):
     return True
 
 
-def add_collision_cell(scene_data, cell):
-    if cell not in scene_data["collisions"]:
-        scene_data["collisions"].append(cell)
-
-
 def remove_object_at_cell(scene_data, cell, object_definitions):
     for object_data in reversed(scene_data["objects"]):
         object_type = object_data["type"]

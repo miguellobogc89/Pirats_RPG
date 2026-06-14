@@ -374,6 +374,16 @@ class EditorInputManager:
             self.selected_object_type = None
             return None
 
+        if action == "mode_spawns":
+            self.mode = "spawns"
+            self.selected_object_type = None
+            return None
+
+        if action == "mode_exits":
+            self.mode = "exits"
+            self.selected_object_type = None
+            return None
+
         if action == "select_object":
             object_type = clicked_action["object_type"]
 
@@ -417,6 +427,7 @@ class EditorInputManager:
         if self.rect_button == 3:
             erase_rect(
                 self.scene_data,
+                self.mode,
                 self.object_definitions,
                 self.rect_start_cell,
                 self.rect_end_cell,
@@ -459,6 +470,7 @@ class EditorInputManager:
             if self.is_inside_canvas(screen, event.pos):
                 erase_at_mouse(
                     self.scene_data,
+                    self.mode,
                     self.object_definitions,
                     self.camera,
                     event.pos,
@@ -534,6 +546,7 @@ class EditorInputManager:
             if self.is_inside_canvas(screen, event.pos):
                 erase_at_mouse(
                     self.scene_data,
+                    self.mode,
                     self.object_definitions,
                     self.camera,
                     event.pos,

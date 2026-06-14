@@ -102,6 +102,7 @@ def create_empty_scene_data(scene_id="new_scene", scene_name="New Scene"):
         },
         "objects": [],
         "collisions": [],
+        "spawns": [],
         "exits": [],
     }
 
@@ -127,6 +128,7 @@ def normalize_scene(raw_scene, fallback_scene_id):
         "player_spawn": normalize_player_spawn(raw_scene),
         "objects": normalize_list(raw_scene.get("objects")),
         "collisions": normalize_collisions(raw_scene),
+        "spawns": normalize_list(raw_scene.get("spawns")),
         "exits": normalize_list(raw_scene.get("exits")),
     }
 
