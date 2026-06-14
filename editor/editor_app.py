@@ -114,6 +114,7 @@ def main():
             input_manager.selected_object_type,
             object_definitions,
             input_manager.get_selected_area(),
+            input_manager.selected_terrain_id,
         )
 
         input_manager.set_buttons(menu_buttons + side_buttons)

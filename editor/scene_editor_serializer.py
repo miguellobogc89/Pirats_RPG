@@ -105,6 +105,10 @@ def create_empty_scene_data(scene_id="new_scene", scene_name="New Scene"):
         "collisions": [],
         "spawns": [],
         "exits": [],
+        "terrain": {
+            "default": "grass",
+            "tiles": [],
+        },
     }
 
 
@@ -131,6 +135,7 @@ def normalize_scene(raw_scene, fallback_scene_id):
         "collisions": normalize_collisions(raw_scene),
         "spawns": normalize_list(raw_scene.get("spawns")),
         "exits": normalize_list(raw_scene.get("exits")),
+        "terrain": normalize_terrain(raw_scene),
     }
     ensure_area_lists(normalized_scene)
     return normalized_scene
@@ -186,3 +191,17 @@ def normalize_list(value):
         return value
 
     return []
+
+def normalize_terrain(raw_scene):
+    terrain = raw_scene.get("terrain")
+
+    if not isinstance(terrain, dict):
+        return {
+            "default": "grass",
+            "tiles": [],
+        }
+
+    return {
+        "default": terrain.get("default", "grass"),
+        "tiles": normalize_list(terrain.get("tiles")),
+    }

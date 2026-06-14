@@ -66,6 +66,8 @@ class EditorInputManager:
         self.rect_end_cell = None
         self.rect_button = None
 
+        self.selected_terrain_id = "grass"
+
         self.selected_area_type = None
         self.selected_area_id = None
 
@@ -445,6 +447,17 @@ class EditorInputManager:
 
         if action == "open_relations_dialog":
             self.open_relations_dialog()
+            return None
+
+        if action == "mode_terrain":
+            self.mode = "terrain"
+            self.selected_object_type = None
+            return None
+
+        if action == "select_terrain":
+            self.mode = "terrain"
+            self.selected_object_type = None
+            self.selected_terrain_id = clicked_action["terrain_id"]
             return None
 
         return None

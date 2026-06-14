@@ -15,6 +15,11 @@ from editor.scene.scene_operations import (
     remove_object_at_cell,
 )
 
+from editor.terrain.terrain_tool import (
+    paint_terrain_cell,
+    erase_terrain_cell,
+)
+
 
 def get_cell_rect(start_cell, end_cell):
     min_x = min(start_cell[0], end_cell[0])
@@ -25,19 +30,20 @@ def get_cell_rect(start_cell, end_cell):
     return min_x, min_y, max_x, max_y
 
 
-def paint_at_mouse(scene_data, mode, selected_object_type, object_definitions, camera, mouse_pos):
+def paint_at_mouse(scene_data, mode, selected_object_type, selected_terrain_id, object_definitions, camera, mouse_pos):
     cell = camera.screen_to_cell(mouse_pos)
 
     return paint_at_cell(
         scene_data,
         mode,
         selected_object_type,
+        selected_terrain_id,
         object_definitions,
         cell,
     )
 
 
-def paint_at_cell(scene_data, mode, selected_object_type, object_definitions, cell):
+def paint_at_cell(scene_data, mode, selected_object_type, selected_terrain_id, object_definitions, cell):
     if mode == "objects" and selected_object_type:
         return add_object(
             scene_data,
@@ -54,6 +60,9 @@ def paint_at_cell(scene_data, mode, selected_object_type, object_definitions, ce
 
     if mode == "exits":
         return add_exit_cell(scene_data, cell)
+    
+    if mode == "terrain" and selected_terrain_id:
+        return paint_terrain_cell(scene_data, cell, selected_terrain_id)
 
     return False
 
@@ -86,7 +95,7 @@ def erase_at_cell(scene_data, mode, object_definitions, cell):
     )
 
 
-def paint_rect(scene_data, mode, selected_object_type, object_definitions, start_cell, end_cell):
+def paint_rect(scene_data, mode, selected_object_type, selected_terrain_id, object_definitions, start_cell, end_cell):
     changed = False
     min_x, min_y, max_x, max_y = get_cell_rect(start_cell, end_cell)
 
@@ -97,6 +106,7 @@ def paint_rect(scene_data, mode, selected_object_type, object_definitions, start
                 mode,
                 selected_object_type,
                 object_definitions,
+                selected_terrain_id
                 [x, y],
             )
 

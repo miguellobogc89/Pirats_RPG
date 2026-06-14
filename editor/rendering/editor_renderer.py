@@ -1,6 +1,7 @@
 import pygame
 
 from editor.editor_ui import PANEL_WIDTH
+from editor.terrain.terrain_renderer import draw_editor_terrain
 
 
 def get_sprite_draw_position(cell, object_definition, sprite, camera):
@@ -290,6 +291,7 @@ def draw_editor_scene(screen, scene_data, object_definitions, sprites, camera):
     map_width = scene_data["width"]
     map_height = scene_data["height"]
 
+    ddraw_editor_terrain(screen, scene_data, camera)
     draw_grid(screen, map_width, map_height, camera)
     draw_collision_cells(screen, scene_data, camera)
     draw_spawn_cells(screen, scene_data, camera)
