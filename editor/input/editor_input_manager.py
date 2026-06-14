@@ -25,6 +25,11 @@ class EditorInputManager:
         self.mode = "objects"
         self.selected_object_type = None
         self.buttons = []
+        self.dialog_buttons = []
+
+        self.has_unsaved_changes = False
+        self.pending_protected_action = None
+        self.show_unsaved_dialog = False
 
         self.is_painting = False
         self.is_erasing = False
@@ -36,6 +41,19 @@ class EditorInputManager:
 
     def set_buttons(self, buttons):
         self.buttons = buttons
+
+    def set_dialog_buttons(self, buttons):
+        self.dialog_buttons = buttons
+
+    def mark_dirty(self):
+        self.has_unsaved_changes = True
+
+    def mark_saved(self):
+        self.has_unsaved_changes = False
+
+    def save_current_scene(self):
+        self.save_scene_callback(self.scene_data)
+        self.mark_saved()
 
     def is_inside_canvas(self, screen, pos):
         panel_start_x = screen.get_width() - PANEL_WIDTH
@@ -50,6 +68,75 @@ class EditorInputManager:
         self.rect_end_cell = None
         self.rect_button = None
         self.camera.stop_pan()
+
+    def request_protected_action(self, action):
+        self.active_menu = None
+
+        if self.has_unsaved_changes:
+            self.pending_protected_action = action
+            self.show_unsaved_dialog = True
+            return None
+
+        return self.execute_protected_action(action)
+
+    def execute_protected_action(self, action):
+        if action == "exit":
+            return "exit"
+
+        if action == "new_scene":
+            self.create_new_scene()
+            return None
+
+        return None
+
+    def create_new_scene(self):
+        self.scene_data.clear()
+
+        self.scene_data.update({
+            "id": "new_scene",
+            "name": "New Scene",
+            "width": 80,
+            "height": 60,
+            "tile_size": 16,
+            "player_spawn": {
+                "x": 0,
+                "y": 0,
+            },
+            "objects": [],
+            "collisions": [],
+            "exits": [],
+        })
+
+        self.camera.x = 0
+        self.camera.y = 0
+        self.selected_object_type = None
+        self.mode = "objects"
+        self.mark_dirty()
+
+    def handle_dialog_action(self, action):
+        if action == "dialog_cancel":
+            self.show_unsaved_dialog = False
+            self.pending_protected_action = None
+            return None
+
+        if action == "dialog_save":
+            self.save_current_scene()
+
+            action_to_execute = self.pending_protected_action
+            self.show_unsaved_dialog = False
+            self.pending_protected_action = None
+
+            return self.execute_protected_action(action_to_execute)
+
+        if action == "dialog_discard":
+            action_to_execute = self.pending_protected_action
+            self.show_unsaved_dialog = False
+            self.pending_protected_action = None
+            self.mark_saved()
+
+            return self.execute_protected_action(action_to_execute)
+
+        return None
 
     def get_rect_preview_data(self):
         if not self.is_rect_tool_active:
@@ -69,7 +156,7 @@ class EditorInputManager:
 
     def handle_panel_action(self, clicked_action):
         if not clicked_action:
-            return
+            return None
 
         action = clicked_action["action"]
 
@@ -78,46 +165,52 @@ class EditorInputManager:
                 self.active_menu = None
             else:
                 self.active_menu = "file"
-            return
+            return None
 
         if action == "menu_edit":
             self.active_menu = None
-            return
+            return None
 
         if action == "menu_settings":
             self.active_menu = None
-            return
+            return None
 
         if action == "file_save":
-            self.save_scene_callback(self.scene_data)
+            self.save_current_scene()
             self.active_menu = None
-            return
+            return None
 
         if action == "file_exit":
-            self.save_scene_callback(self.scene_data)
-            self.active_menu = None
-            return "exit"
+            return self.request_protected_action("exit")
 
-        if action in ["file_new", "file_save_as"]:
+        if action == "file_new":
+            return self.request_protected_action("new_scene")
+
+        if action == "file_save_as":
             self.active_menu = None
-            return
+            return None
 
         if action == "save":
-            self.save_scene_callback(self.scene_data)
+            self.save_current_scene()
+            return None
 
         if action == "zoom_in":
             self.camera.panel_zoom_in()
+            return None
 
         if action == "zoom_out":
             self.camera.panel_zoom_out()
+            return None
 
         if action == "mode_objects":
             self.mode = "objects"
             self.selected_object_type = None
+            return None
 
         if action == "mode_collisions":
             self.mode = "collisions"
             self.selected_object_type = None
+            return None
 
         if action == "select_object":
             object_type = clicked_action["object_type"]
@@ -125,6 +218,10 @@ class EditorInputManager:
             if object_type in self.object_definitions:
                 self.mode = "objects"
                 self.selected_object_type = object_type
+
+            return None
+
+        return None
 
     def start_rect_tool(self, screen, event):
         if not self.is_inside_canvas(screen, event.pos):
@@ -153,6 +250,7 @@ class EditorInputManager:
                 self.rect_start_cell,
                 self.rect_end_cell,
             )
+            self.mark_dirty()
 
         if self.rect_button == 3:
             erase_rect(
@@ -161,6 +259,7 @@ class EditorInputManager:
                 self.rect_start_cell,
                 self.rect_end_cell,
             )
+            self.mark_dirty()
 
         self.reset_rect_tool()
 
@@ -173,23 +272,31 @@ class EditorInputManager:
         self.is_erasing = False
 
     def handle_mouse_button_down(self, screen, event):
+        if self.show_unsaved_dialog:
+            clicked_action = get_clicked_panel_action(event.pos, self.dialog_buttons)
+
+            if clicked_action:
+                return self.handle_dialog_action(clicked_action["action"])
+
+            return None
+
         if event.button == 2:
             self.camera.start_pan(event.pos)
-            return
+            return None
 
         if event.button == 4:
             self.camera.zoom_in()
-            return
+            return None
 
         if event.button == 5:
             self.camera.zoom_out()
-            return
+            return None
 
         ctrl_pressed = pygame.key.get_mods() & pygame.KMOD_CTRL
 
         if ctrl_pressed and event.button in [1, 3]:
             self.start_rect_tool(screen, event)
-            return
+            return None
 
         if event.button == 3:
             if self.is_inside_canvas(screen, event.pos):
@@ -200,17 +307,13 @@ class EditorInputManager:
                     event.pos,
                 )
                 self.is_erasing = True
-            return
+                self.mark_dirty()
+            return None
 
         clicked_action = get_clicked_panel_action(event.pos, self.buttons)
 
         if clicked_action:
-            panel_result = self.handle_panel_action(clicked_action)
-
-            if panel_result == "exit":
-                return "exit"
-
-            return
+            return self.handle_panel_action(clicked_action)
 
         if self.is_inside_canvas(screen, event.pos):
             paint_at_mouse(
@@ -223,8 +326,14 @@ class EditorInputManager:
             )
 
             self.is_painting = True
+            self.mark_dirty()
+
+        return None
 
     def handle_mouse_button_up(self, event):
+        if self.show_unsaved_dialog:
+            return
+
         if event.button == 2:
             self.camera.stop_pan()
             return
@@ -240,6 +349,9 @@ class EditorInputManager:
             self.is_erasing = False
 
     def handle_mouse_motion(self, screen, event):
+        if self.show_unsaved_dialog:
+            return
+
         if self.camera.is_panning:
             self.camera.update_pan(event.pos)
             return
@@ -259,6 +371,7 @@ class EditorInputManager:
                     self.camera,
                     event.pos,
                 )
+                self.mark_dirty()
 
         if self.is_erasing:
             if self.is_inside_canvas(screen, event.pos):
@@ -268,18 +381,29 @@ class EditorInputManager:
                     self.camera,
                     event.pos,
                 )
+                self.mark_dirty()
 
     def handle_event(self, screen, event):
         if event.type == pygame.QUIT:
-            self.save_scene_callback(self.scene_data)
-            return False
+            result = self.request_protected_action("exit")
+
+            if result == "exit":
+                return False
+
+            return True
 
         if event.type == pygame.KEYDOWN:
+            if self.show_unsaved_dialog:
+                if event.key == pygame.K_ESCAPE:
+                    self.show_unsaved_dialog = False
+                    self.pending_protected_action = None
+                return True
+
             if event.key == pygame.K_ESCAPE:
                 self.cancel_current_action()
 
             if event.key == pygame.K_s:
-                self.save_scene_callback(self.scene_data)
+                self.save_current_scene()
 
         if event.type == pygame.MOUSEBUTTONDOWN:
             result = self.handle_mouse_button_down(screen, event)

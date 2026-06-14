@@ -14,7 +14,7 @@ from editor.editor_assets import (
 )
 
 from editor.editor_camera import EditorCamera
-
+from editor.dialogs.unsaved_changes_dialog import draw_unsaved_changes_dialog
 from editor.editor_ui import draw_editor_side_panel
 
 from editor.input.editor_input_manager import EditorInputManager
@@ -120,6 +120,11 @@ def main():
             input_manager.selected_object_type,
         )
 
+
+        if input_manager.show_unsaved_dialog:
+            dialog_buttons = draw_unsaved_changes_dialog(screen)
+            input_manager.set_dialog_buttons(dialog_buttons)
+            
         pygame.display.flip()
         clock.tick(60)
 
