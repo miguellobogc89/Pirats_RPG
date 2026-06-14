@@ -78,6 +78,7 @@ def draw_editor_side_panel(
     selected_object_type,
     object_definitions=None,
     selected_area=None,
+    selected_terrain_id=None,
 ):
     font = pygame.font.SysFont("consolas", 14)
 
@@ -199,6 +200,29 @@ def draw_editor_side_panel(
 
     y += ROW_HEIGHT + 18
 
+    draw_section_title(screen, font, "Terreno", x, y, width)
+    y += 28
+
+    terrain_rect = pygame.Rect(
+        x,
+        y,
+        width,
+        ROW_HEIGHT,
+    )
+
+    draw_nav_row(
+        screen,
+        terrain_rect,
+        "Grass",
+        False,
+    )
+
+    buttons.append({
+        "rect": terrain_rect,
+        "action": "select_terrain",
+        "terrain_id": "grass",
+    })
+
     draw_section_title(screen, font, "Área activa", x, y, width)
     y += 28
 
@@ -262,28 +286,7 @@ def draw_editor_side_panel(
 
     y += 18
 
-    draw_section_title(screen, font, "Terreno", x, y, width)
-    y += 28
 
-    terrain_rect = pygame.Rect(
-        x,
-        y,
-        width,
-        ROW_HEIGHT,
-    )
-
-    draw_nav_row(
-        screen,
-        terrain_rect,
-        "Grass",
-        False,
-    )
-
-    buttons.append({
-        "rect": terrain_rect,
-        "action": "select_terrain"
-        "action": "terrain_grass",
-    })
 
     return buttons
 

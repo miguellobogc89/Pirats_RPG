@@ -150,7 +150,7 @@ def draw_grid(screen, map_width, map_height, camera):
 
         pygame.draw.line(
             screen,
-            (100, 140, 90),
+            (45, 65, 45),
             (x, 0),
             (x, map_height * tile_size - camera.y),
         )
@@ -160,7 +160,7 @@ def draw_grid(screen, map_width, map_height, camera):
 
         pygame.draw.line(
             screen,
-            (100, 140, 90),
+            (45, 65, 45),
             (0, y),
             (map_width * tile_size - camera.x, y),
         )
@@ -291,7 +291,7 @@ def draw_editor_scene(screen, scene_data, object_definitions, sprites, camera):
     map_width = scene_data["width"]
     map_height = scene_data["height"]
 
-    ddraw_editor_terrain(screen, scene_data, camera)
+    draw_editor_terrain(screen, scene_data, camera)
     draw_grid(screen, map_width, map_height, camera)
     draw_collision_cells(screen, scene_data, camera)
     draw_spawn_cells(screen, scene_data, camera)

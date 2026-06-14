@@ -8,21 +8,7 @@ from editor.terrain.terrain_tool import ensure_terrain_data
 def draw_editor_terrain(screen, scene_data, camera):
     ensure_terrain_data(scene_data)
 
-    tile_size = int(TILE_SIZE * camera.zoom)
-    default_terrain_id = scene_data["terrain"].get("default", DEFAULT_TERRAIN_ID)
-
-    default_color = get_terrain_color(default_terrain_id)
-
-    width = scene_data.get("width", 80)
-    height = scene_data.get("height", 60)
-
-    for y in range(height):
-        for x in range(width):
-            screen_x = int(x * TILE_SIZE * camera.zoom - camera.x)
-            screen_y = int(y * TILE_SIZE * camera.zoom - camera.y)
-
-            rect = pygame.Rect(screen_x, screen_y, tile_size, tile_size)
-            pygame.draw.rect(screen, default_color, rect)
+    tile_size = camera.get_tile_size()
 
     for tile in scene_data["terrain"].get("tiles", []):
         cell = tile.get("cell")
@@ -36,12 +22,14 @@ def draw_editor_terrain(screen, scene_data, camera):
 
         color = get_terrain_color(terrain_id)
 
-        screen_x = int(cell[0] * TILE_SIZE * camera.zoom - camera.x)
-        screen_y = int(cell[1] * TILE_SIZE * camera.zoom - camera.y)
+        rect = pygame.Rect(
+            cell[0] * tile_size - camera.x,
+            cell[1] * tile_size - camera.y,
+            tile_size,
+            tile_size,
+        )
 
-        rect = pygame.Rect(screen_x, screen_y, tile_size, tile_size)
         pygame.draw.rect(screen, color, rect)
-
 
 def get_terrain_color(terrain_id):
     terrain_data = TERRAIN_PALETTE.get(terrain_id)
