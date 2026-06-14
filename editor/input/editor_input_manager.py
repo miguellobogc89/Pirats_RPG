@@ -28,7 +28,7 @@ from editor.areas.exit_tool import (
     get_exit_at_cell,
     get_spawn_at_cell,
     rename_area,
-    set_exit_target,
+    set_exit_targets,
 )
 
 from editor.scene_editor_serializer import (
@@ -80,11 +80,12 @@ class EditorInputManager:
         self.area_name_text = ""
 
         self.show_relations_dialog = False
+        self.relation_exits = []
         self.relation_targets = []
+        self.selected_relation_exit_key = None
+        self.selected_relation_exit_scene_id = None
         self.selected_relation_exit_id = None
-        self.selected_relation_target_key = None
-        self.selected_relation_target_scene_id = None
-        self.selected_relation_target_spawn_id = None
+        self.selected_relation_target_keys = []
 
     def set_buttons(self, buttons):
         self.buttons = buttons
@@ -310,7 +311,7 @@ class EditorInputManager:
             return self.handle_area_name_dialog_action(clicked_action["action"])
 
         if self.show_relations_dialog:
-            return self.handle_relations_dialog_action(clicked_action)
+            return True
 
         return None
 
@@ -731,80 +732,157 @@ class EditorInputManager:
             self.area_name_text += event.unicode
 
 
-    def build_relation_targets(self):
-        targets = []
+def build_relation_exits(self):
+    exits = []
 
-        saved_scenes = list_saved_scenes()
+    saved_scenes = list_saved_scenes()
 
-        for scene_info in saved_scenes:
-            loaded_scene = load_scene_for_editor(scene_info["id"])
+    for scene_info in saved_scenes:
+        loaded_scene = load_scene_for_editor(scene_info["id"])
 
-            for spawn_data in loaded_scene.get("spawns", []):
-                targets.append({
-                    "scene_id": loaded_scene["id"],
-                    "scene_name": loaded_scene["name"],
-                    "spawn_id": spawn_data["id"],
-                    "spawn_name": spawn_data.get("name", spawn_data["id"]),
-                })
+        for exit_data in loaded_scene.get("exits", []):
+            exit_key = f"{loaded_scene['id']}::{exit_data['id']}"
 
-        return targets
+            exits.append({
+                "exit_key": exit_key,
+                "scene_id": loaded_scene["id"],
+                "scene_name": loaded_scene["name"],
+                "exit_id": exit_data["id"],
+                "exit_name": exit_data.get("name", exit_data["id"]),
+                "target_links": exit_data.get("target_links", []),
+            })
+
+    return exits
 
 
-    def open_relations_dialog(self):
-        self.relation_targets = self.build_relation_targets()
-        self.show_relations_dialog = True
+def build_relation_targets(self):
+    targets = []
 
-        if len(self.scene_data.get("exits", [])) > 0:
-            self.selected_relation_exit_id = self.scene_data["exits"][0]["id"]
+    saved_scenes = list_saved_scenes()
 
-        if len(self.relation_targets) > 0:
-            first_target = self.relation_targets[0]
-            self.selected_relation_target_scene_id = first_target["scene_id"]
-            self.selected_relation_target_spawn_id = first_target["spawn_id"]
-            self.selected_relation_target_key = (
-                f"{first_target['scene_id']}::{first_target['spawn_id']}"
+    for scene_info in saved_scenes:
+        loaded_scene = load_scene_for_editor(scene_info["id"])
+
+        for spawn_data in loaded_scene.get("spawns", []):
+            target_key = f"{loaded_scene['id']}::{spawn_data['id']}"
+
+            targets.append({
+                "target_key": target_key,
+                "scene_id": loaded_scene["id"],
+                "scene_name": loaded_scene["name"],
+                "spawn_id": spawn_data["id"],
+                "spawn_name": spawn_data.get("name", spawn_data["id"]),
+            })
+
+    return targets
+
+
+def open_relations_dialog(self):
+    self.relation_exits = self.build_relation_exits()
+    self.relation_targets = self.build_relation_targets()
+
+    self.selected_relation_exit_key = None
+    self.selected_relation_exit_scene_id = None
+    self.selected_relation_exit_id = None
+    self.selected_relation_target_keys = []
+
+    if len(self.relation_exits) > 0:
+        first_exit = self.relation_exits[0]
+
+        self.selected_relation_exit_key = first_exit["exit_key"]
+        self.selected_relation_exit_scene_id = first_exit["scene_id"]
+        self.selected_relation_exit_id = first_exit["exit_id"]
+
+        self.selected_relation_target_keys = []
+
+        for link in first_exit.get("target_links", []):
+            target_key = (
+                f"{link.get('target_scene_id', '')}::"
+                f"{link.get('target_spawn_id', '')}"
             )
 
+            self.selected_relation_target_keys.append(target_key)
 
-    def handle_relations_dialog_action(self, clicked_action):
-        action = clicked_action["action"]
+    self.show_relations_dialog = True
 
-        if action == "relation_cancel":
-            self.show_relations_dialog = False
-            return None
 
-        if action == "relation_select_exit":
-            self.selected_relation_exit_id = clicked_action["exit_id"]
-            return None
+def get_selected_relation_exit_data(self):
+    for exit_data in self.relation_exits:
+        if exit_data["exit_key"] == self.selected_relation_exit_key:
+            return exit_data
 
-        if action == "relation_select_target":
-            self.selected_relation_target_key = clicked_action["target_key"]
-            self.selected_relation_target_scene_id = clicked_action["target_scene_id"]
-            self.selected_relation_target_spawn_id = clicked_action["target_spawn_id"]
-            return None
+    return None
 
-        if action == "relation_confirm":
-            if self.selected_relation_exit_id is None:
-                return None
 
-            if self.selected_relation_target_scene_id is None:
-                return None
+def handle_relations_dialog_action(self, clicked_action):
+    action = clicked_action["action"]
 
-            if self.selected_relation_target_spawn_id is None:
-                return None
+    if action == "relation_cancel":
+        self.show_relations_dialog = False
+        return None
 
-            linked = set_exit_target(
-                self.scene_data,
-                self.selected_relation_exit_id,
-                self.selected_relation_target_scene_id,
-                self.selected_relation_target_spawn_id,
-            )
+    if action == "relation_select_exit":
+        self.selected_relation_exit_key = clicked_action["exit_key"]
+        self.selected_relation_exit_scene_id = clicked_action["scene_id"]
+        self.selected_relation_exit_id = clicked_action["exit_id"]
+        self.selected_relation_target_keys = []
 
-            if linked:
-                self.mark_dirty()
-                self.set_status("Relación de salida actualizada")
+        selected_exit = self.get_selected_relation_exit_data()
 
-            self.show_relations_dialog = False
-            return None
+        if selected_exit is not None:
+            for link in selected_exit.get("target_links", []):
+                target_key = (
+                    f"{link.get('target_scene_id', '')}::"
+                    f"{link.get('target_spawn_id', '')}"
+                )
+
+                self.selected_relation_target_keys.append(target_key)
 
         return None
+
+    if action == "relation_toggle_target":
+        target_key = clicked_action["target_key"]
+
+        if target_key in self.selected_relation_target_keys:
+            self.selected_relation_target_keys.remove(target_key)
+        else:
+            self.selected_relation_target_keys.append(target_key)
+
+        return None
+
+    if action == "relation_confirm":
+        if self.selected_relation_exit_scene_id is None:
+            return None
+
+        if self.selected_relation_exit_id is None:
+            return None
+
+        target_links = []
+
+        for target_key in self.selected_relation_target_keys:
+            parts = target_key.split("::")
+
+            if len(parts) != 2:
+                continue
+
+            target_links.append({
+                "target_scene_id": parts[0],
+                "target_spawn_id": parts[1],
+            })
+
+        loaded_scene = load_scene_for_editor(self.selected_relation_exit_scene_id)
+
+        linked = set_exit_targets(
+            loaded_scene,
+            self.selected_relation_exit_id,
+            target_links,
+        )
+
+        if linked:
+            self.save_scene_callback(loaded_scene)
+            self.set_status("Relaciones guardadas")
+            self.relation_exits = self.build_relation_exits()
+
+        return None
+
+    return None

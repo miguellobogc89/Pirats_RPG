@@ -187,15 +187,11 @@ def rename_area(scene_data, area_type, area_id, new_name):
     return True
 
 
-def set_exit_target(scene_data, exit_id, target_scene_id, target_spawn_id):
+def set_exit_targets(scene_data, exit_id, target_links):
     exit_data = get_area_by_id(scene_data, "exits", exit_id)
 
     if exit_data is None:
         return False
 
-    exit_data["target_links"] = [{
-        "target_scene_id": target_scene_id,
-        "target_spawn_id": target_spawn_id,
-    }]
-
+    exit_data["target_links"] = target_links
     return True

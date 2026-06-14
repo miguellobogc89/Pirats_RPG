@@ -157,10 +157,10 @@ def main():
         if input_manager.show_relations_dialog:
             dialog_buttons = draw_relations_dialog(
                 screen,
-                scene_data,
+                input_manager.relation_exits,
                 input_manager.relation_targets,
-                input_manager.selected_relation_exit_id,
-                input_manager.selected_relation_target_key,
+                input_manager.selected_relation_exit_key,
+                input_manager.selected_relation_target_keys,
             )
             input_manager.set_dialog_buttons(dialog_buttons)
 
