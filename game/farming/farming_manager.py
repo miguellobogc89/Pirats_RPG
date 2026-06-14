@@ -1,4 +1,5 @@
 from game.data.crop_database import get_crop_data
+from game.scenes.scene_state import get_current_scene_state
 from game.world.grid_manager import world_to_grid
 
 
@@ -14,6 +15,23 @@ def ensure_farming_state(state):
 
     if "crops" not in state["farming"]:
         state["farming"]["crops"] = []
+
+    scene_state = get_current_scene_state(state)
+    normalize_scene_crops(scene_state["crops"])
+    state["farming"] = {
+        "tilled_cells": scene_state["tilled_cells"],
+        "watered_cells": scene_state["watered_cells"],
+        "crops": scene_state["crops"],
+    }
+
+
+def normalize_scene_crops(crops):
+    for crop in crops:
+        crop.setdefault("stage", 0)
+        crop.setdefault("days_in_stage", 0)
+        crop.setdefault("dry_days", 0)
+        crop.setdefault("times_watered", 0)
+        crop.setdefault("dead", False)
 
 
 def till_cell(state, world_x, world_y):
@@ -118,7 +136,7 @@ def advance_farming_day(state):
                 crop["dead"] = True
                 dead_crops.append(crop)
 
-    state["farming"]["watered_cells"] = []
+    state["farming"]["watered_cells"].clear()
 
     return dead_crops
 

@@ -2,13 +2,14 @@ import pygame
 
 from game.construction.construction_manager import is_cell_occupied
 from game.world.grid_manager import world_to_grid
+from game.world.world_config import WORLD_WIDTH, WORLD_HEIGHT
 
 PLAYER_FOOT_OFFSET_Y = 6
 PLAYER_COLLISION_WIDTH = 10
 PLAYER_COLLISION_HEIGHT = 6
 
 
-def update_player_movement(state, speed, dt):
+def update_player_movement(state, speed, dt, world_width=WORLD_WIDTH, world_height=WORLD_HEIGHT):
     keys = pygame.key.get_pressed()
     player = state["player"]
 
@@ -66,5 +67,5 @@ def update_player_movement(state, speed, dt):
             player["x"] = next_x
             player["y"] = next_y
 
-    player["x"] = max(20, min(1580, player["x"]))
-    player["y"] = max(20, min(1180, player["y"]))
+    player["x"] = max(20, min(world_width - 20, player["x"]))
+    player["y"] = max(20, min(world_height - 20, player["y"]))

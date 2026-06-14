@@ -1,9 +1,10 @@
 import pygame
 
+from game.scenes.scene_state import get_current_scene_state
 from game.world.grid_manager import TILE_SIZE, grid_to_world
 from game.world.world_config import WORLD_WIDTH, WORLD_HEIGHT
 from game.data.item_database import get_item_data
-from game.world.collision_manager import BLOCKED_CELLS
+from game.world.collision_manager import BLOCKED_CELLS, get_scene_collision_rects
 from game.ui.sprite_renderer import draw_item_sprite
 
 
@@ -15,15 +16,15 @@ SPROUT_COLOR = (80, 170, 70)
 GROWN_COLOR = (210, 175, 45)
 
 
-def draw_world_grid(screen, camera_x, camera_y):
+def draw_world_grid(screen, camera_x, camera_y, world_width=WORLD_WIDTH, world_height=WORLD_HEIGHT):
     width = screen.get_width()
     height = screen.get_height()
 
     start_x = int(camera_x // TILE_SIZE) * TILE_SIZE
-    end_x = min(camera_x + width, WORLD_WIDTH)
+    end_x = min(camera_x + width, world_width)
 
     start_y = int(camera_y // TILE_SIZE) * TILE_SIZE
-    end_y = min(camera_y + height, WORLD_HEIGHT)
+    end_y = min(camera_y + height, world_height)
 
     x = start_x
     while x <= end_x:
@@ -39,7 +40,7 @@ def draw_world_grid(screen, camera_x, camera_y):
 
 
 def draw_tilled_cells(screen, state, camera_x, camera_y):
-    farming = state.get("farming", {})
+    farming = get_current_scene_state(state)
     tilled_cells = farming.get("tilled_cells", [])
 
     for cell in tilled_cells:
@@ -55,7 +56,7 @@ def draw_tilled_cells(screen, state, camera_x, camera_y):
         pygame.draw.rect(screen, TILLED_COLOR, rect)
 
 def draw_crops(screen, state, camera_x, camera_y):
-    crops = state.get("farming", {}).get("crops", [])
+    crops = get_current_scene_state(state).get("crops", [])
 
     for crop in crops:
         world_x, world_y = grid_to_world(crop["grid_x"], crop["grid_y"])
@@ -94,7 +95,7 @@ def draw_crops(screen, state, camera_x, camera_y):
         )
 
 def draw_watered_cells(screen, state, camera_x, camera_y):
-    farming = state.get("farming", {})
+    farming = get_current_scene_state(state)
     watered_cells = farming.get("watered_cells", [])
 
     for cell in watered_cells:
@@ -110,7 +111,7 @@ def draw_watered_cells(screen, state, camera_x, camera_y):
         pygame.draw.rect(screen, WATERED_COLOR, rect)
 
 def draw_placed_objects(screen, state, camera_x, camera_y):
-    placed_objects = state.get("placed_objects", [])
+    placed_objects = get_current_scene_state(state).get("placed_objects", [])
 
     for obj in placed_objects:
         world_x, world_y = grid_to_world(obj["grid_x"], obj["grid_y"])
@@ -130,7 +131,7 @@ def draw_placed_objects(screen, state, camera_x, camera_y):
             draw_item_sprite(screen, item_data, rect, padding=2)
 
 def draw_occupied_cells_debug(screen, state, camera_x, camera_y):
-    placed_objects = state.get("placed_objects", [])
+    placed_objects = get_current_scene_state(state).get("placed_objects", [])
 
     for obj in placed_objects:
         start_x = obj["grid_x"]
@@ -168,3 +169,13 @@ def draw_collision_debug(screen, camera_x, camera_y):
         )
 
         pygame.draw.rect(screen, (255, 0, 0), rect, 1)
+
+    for collision_rect in get_scene_collision_rects():
+        rect = pygame.Rect(
+            int(collision_rect.x - camera_x),
+            int(collision_rect.y - camera_y),
+            collision_rect.width,
+            collision_rect.height,
+        )
+
+        pygame.draw.rect(screen, (255, 80, 80), rect, 2)

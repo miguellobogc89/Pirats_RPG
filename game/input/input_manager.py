@@ -18,7 +18,6 @@ from game.data.item_database import get_item_data
 from game.world.camera import get_camera_position
 from game.world.world_config import WORLD_WIDTH, WORLD_HEIGHT
 from game.debug.debug_reload import restart_game_with_current_state
-from game.scenes.scene_manager import change_scene
 
 
 NUMBER_KEYS = [
@@ -35,61 +34,72 @@ NUMBER_KEYS = [
 
 def handle_events(app):
     for event in pygame.event.get():
+        handle_event(app, event)
 
-        if event.type == pygame.QUIT:
-            pygame.quit()
-            sys.exit()
 
-        if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_F9:
-                restart_game_with_current_state(app.state)
-                return
+def handle_event(app, event):
+    if event.type == pygame.QUIT:
+        pygame.quit()
+        sys.exit()
 
-        if app.combat_manager.is_active():
-            app.combat_manager.handle_event(event)
-            continue
+    if event.type == pygame.KEYDOWN:
+        if event.key == pygame.K_F9:
+            if not prepare_slot_drag_for_persistent_action(app, "reiniciar"):
+                return True
 
-        if app.cartography_menu_open:
-            handle_cartography_event(app, event)
-            continue
+            restart_game_with_current_state(app.state)
+            return True
 
-        if app.stash_open:
-            handle_stash_event(app, event)
-            continue
+    if app.combat_manager.is_active():
+        app.combat_manager.handle_event(event)
+        return True
 
-        if event.type == pygame.MOUSEBUTTONDOWN:
-            if event.button == 1:
-                if app.menu_open:
-                    if app.menu_tab == "inventory":
-                        if handle_inventory_slot_click(app, event.pos):
-                            continue
+    if app.cartography_menu_open:
+        return handle_cartography_event(app, event)
 
-                        if app.slot_ui_state.is_dragging:
-                            if not cancel_inventory_drag(app):
-                                app.add_log("Coloca el item en una casilla libre.")
-                            continue
+    if app.stash_open:
+        handle_stash_event(app, event)
+        return True
 
-                    clicked_tab = get_menu_tab_at_position(event.pos[0], event.pos[1])
+    if event.type == pygame.MOUSEBUTTONDOWN:
+        if event.button == 1:
+            if app.menu_open:
+                if app.menu_tab == "inventory":
+                    if handle_inventory_slot_click(app, event.pos):
+                        return True
 
-                    if clicked_tab is not None:
-                        app.menu_tab = clicked_tab
-                else:
-                    handle_game_key(app, pygame.K_e)
+                    if app.slot_ui_state.is_dragging:
+                        if not cancel_inventory_drag(app):
+                            app.add_log("Coloca el item en una casilla libre.")
+                        return True
 
-        if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_ESCAPE:
-                if app.menu_open and app.slot_ui_state.is_dragging:
-                    if not cancel_inventory_drag(app):
-                        app.add_log("Coloca el item antes de cerrar el inventario.")
-                    continue
+                clicked_tab = get_menu_tab_at_position(event.pos[0], event.pos[1])
 
-                app.menu_open = not app.menu_open
-
-            elif app.menu_open:
-                handle_menu_key(app, event.key)
-
+                if clicked_tab is not None:
+                    app.menu_tab = clicked_tab
+                    return True
             else:
-                handle_game_key(app, event.key)
+                handle_game_key(app, pygame.K_e)
+                return True
+
+    if event.type == pygame.KEYDOWN:
+        if event.key == pygame.K_ESCAPE:
+            if app.menu_open and app.slot_ui_state.is_dragging:
+                if not cancel_inventory_drag(app):
+                    app.add_log("Coloca el item antes de cerrar el inventario.")
+                return True
+
+            app.menu_open = not app.menu_open
+            return True
+
+        if app.menu_open:
+            handle_menu_key(app, event.key)
+            return True
+
+        handle_game_key(app, event.key)
+        return True
+
+    return False
 
 def handle_menu_key(app, key):
     if app.slot_ui_state.is_dragging:
@@ -377,6 +387,19 @@ def cancel_slot_drag(app):
     return True
 
 
+def prepare_slot_drag_for_persistent_action(app, action_name):
+    if not app.slot_ui_state.is_dragging:
+        return True
+
+    if cancel_slot_drag(app):
+        return True
+
+    app.add_log(
+        f"No se puede {action_name}: coloca el item en una casilla libre primero."
+    )
+    return False
+
+
 def ensure_inventory_grid_position(grid, row, column):
     ensure_grid_position(grid, row, column)
 
@@ -424,11 +447,11 @@ def select_active_hotbar_slot(app, index):
 
 def handle_game_key(app, key):
     if key == pygame.K_h:
-        change_scene(app.state, "player_house")
+        change_app_scene(app, "player_house")
         return
 
     if key == pygame.K_g:
-        change_scene(app.state, "farm")
+        change_app_scene(app, "farm")
         return
     if key == pygame.K_c:
         app.combat_manager.start_test_combat()
@@ -464,8 +487,8 @@ def handle_interaction_key(app):
             player["y"],
             app.screen.get_width(),
             app.screen.get_height(),
-            WORLD_WIDTH,
-            WORLD_HEIGHT,
+            app.get_scene_world_width() if hasattr(app, "get_scene_world_width") else WORLD_WIDTH,
+            app.get_scene_world_height() if hasattr(app, "get_scene_world_height") else WORLD_HEIGHT,
         )
 
         world_mouse_x = mouse_x + camera_x
@@ -575,3 +598,15 @@ def handle_interaction_key(app):
 
     from game.interaction_manager import interact_with_nearby_object
     interact_with_nearby_object(app)
+
+
+def change_app_scene(app, scene_id, payload=None):
+    scene_manager = getattr(app, "scene_manager", None)
+
+    if scene_manager is not None:
+        scene_manager.change_scene(scene_id, payload=payload)
+        return
+
+    from game.scenes.scene_manager import change_scene
+
+    change_scene(app.state, scene_id, payload=payload)

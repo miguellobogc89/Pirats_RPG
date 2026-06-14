@@ -1,0 +1,28 @@
+{
+  "id": "player_house",
+  "name": "Casa",
+  "width": 20,
+  "height": 15,
+  "player_spawn": {
+    "x": 160,
+    "y": 220
+  },
+  "objects": [],
+  "collisions": [],
+  "exits": [
+    {
+      "id": "exit_to_farm",
+      "target_scene": "farm",
+      "target_spawn": {
+        "x": 160,
+        "y": 160
+      },
+      "rect": {
+        "x": 140,
+        "y": 230,
+        "w": 40,
+        "h": 20
+      }
+    }
+  ]
+}

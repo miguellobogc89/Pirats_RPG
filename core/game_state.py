@@ -4,6 +4,8 @@ from game.bestiary.bestiary_state import create_default_bestiary_state
 from game.cartography.cartography_manager import CartographyManager
 from game.inventory.inventory_state import ensure_inventory_state
 from game.inventory.stash_state import create_default_stash_state, ensure_stash_state
+from game.scenes.scene_loader import load_scene_data
+from game.scenes.scene_state import create_default_scene_state, ensure_scene_states
 
 
 DEFAULT_CONFIG = {
@@ -59,6 +61,12 @@ def create_default_upgrades_state(game_data):
 
 def create_initial_state(game_data):
     initial_day = get_config_value(game_data, "initial_day")
+    initial_scene_id = "farm"
+    initial_scene = load_scene_data(initial_scene_id)
+    player_spawn = {"x": 400, "y": 300}
+
+    if initial_scene is not None:
+        player_spawn = initial_scene["player_spawn"]
 
     return {
         "resources": {
@@ -67,8 +75,8 @@ def create_initial_state(game_data):
         "inventory": create_default_inventory_state(),
         "stash": create_default_player_stash_state(),
         "player": {
-            "x": 400,
-            "y": 300,
+            "x": player_spawn["x"],
+            "y": player_spawn["y"],
         },
         "time": {
             "day": initial_day,
@@ -90,9 +98,13 @@ def create_initial_state(game_data):
             "placed_objects": [],
         },
         "destroyed_objects": [],
+        "scene_states": {
+            initial_scene_id: create_default_scene_state(),
+        },
         "skills": create_default_skills_state(SKILL_DATABASE),
         "cartography": CartographyManager().get_save_data(),
         "bestiary": create_default_bestiary_state(),
+        "current_scene": initial_scene_id,
     }
 
 
@@ -189,6 +201,11 @@ def normalize_state(state, game_data=None):
 
     if "destroyed_objects" not in state:
         state["destroyed_objects"] = []
+
+    if "current_scene" not in state:
+        state["current_scene"] = "farm"
+
+    ensure_scene_states(state)
 
     if "skills" not in state:
         state["skills"] = create_default_skills_state(SKILL_DATABASE)

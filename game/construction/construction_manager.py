@@ -2,10 +2,16 @@ from game.world.collision_manager import (
     is_map_cell_blocked,
     is_world_object_cell_blocked,
 )
+from game.scenes.scene_state import get_current_scene_state
 
 def ensure_construction_state(state):
-    if "placed_objects" not in state:
-        state["placed_objects"] = []
+    scene_state = get_current_scene_state(state)
+    state["placed_objects"] = scene_state["placed_objects"]
+
+    if "construction" not in state:
+        state["construction"] = {}
+
+    state["construction"]["placed_objects"] = scene_state["placed_objects"]
 
 
 def is_cell_occupied(state, grid_x, grid_y):

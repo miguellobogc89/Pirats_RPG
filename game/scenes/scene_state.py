@@ -1,0 +1,96 @@
+DEFAULT_SCENE_STATE = {
+    "removed_objects": [],
+    "placed_objects": [],
+    "modified_objects": {},
+    "tilled_cells": [],
+    "watered_cells": [],
+    "crops": [],
+}
+
+
+def create_default_scene_state():
+    return {
+        "removed_objects": [],
+        "placed_objects": [],
+        "modified_objects": {},
+        "tilled_cells": [],
+        "watered_cells": [],
+        "crops": [],
+    }
+
+
+def ensure_scene_states(state):
+    if "scene_states" not in state or not isinstance(state.get("scene_states"), dict):
+        state["scene_states"] = {}
+
+    current_scene = state.get("current_scene", "farm")
+    ensure_scene_state_entry(state, current_scene)
+    migrate_legacy_world_state_to_scene(state, current_scene)
+
+
+def ensure_scene_state_entry(state, scene_id):
+    scene_states = state.setdefault("scene_states", {})
+
+    if scene_id not in scene_states or not isinstance(scene_states.get(scene_id), dict):
+        scene_states[scene_id] = create_default_scene_state()
+
+    scene_state = scene_states[scene_id]
+
+    for key, value in DEFAULT_SCENE_STATE.items():
+        if key not in scene_state:
+            scene_state[key] = value.copy() if isinstance(value, (list, dict)) else value
+
+    return scene_state
+
+
+def get_current_scene_state(state):
+    scene_id = state.get("current_scene", "farm")
+    return ensure_scene_state_entry(state, scene_id)
+
+
+def migrate_legacy_world_state_to_scene(state, scene_id):
+    scene_state = ensure_scene_state_entry(state, scene_id)
+
+    if scene_state.get("_legacy_migrated"):
+        return
+
+    farming = state.get("farming")
+
+    if isinstance(farming, dict):
+        copy_list_if_empty(scene_state, "tilled_cells", farming.get("tilled_cells"))
+        copy_list_if_empty(scene_state, "watered_cells", farming.get("watered_cells"))
+        copy_list_if_empty(scene_state, "crops", farming.get("crops"))
+
+    construction = state.get("construction")
+
+    if isinstance(construction, dict):
+        copy_list_if_empty(scene_state, "placed_objects", construction.get("placed_objects"))
+
+    if not scene_state["placed_objects"]:
+        copy_list_if_empty(scene_state, "placed_objects", state.get("placed_objects"))
+
+    removed_objects = state.get("destroyed_world_objects", state.get("destroyed_objects"))
+    copy_list_if_empty(scene_state, "removed_objects", removed_objects)
+
+    scene_state["_legacy_migrated"] = True
+
+
+def copy_list_if_empty(scene_state, key, value):
+    if scene_state.get(key):
+        return
+
+    if isinstance(value, list):
+        scene_state[key] = [copy_scene_value(item) for item in value]
+
+
+def copy_scene_value(value):
+    if isinstance(value, dict):
+        return value.copy()
+
+    if isinstance(value, list):
+        return list(value)
+
+    if isinstance(value, tuple):
+        return list(value)
+
+    return value

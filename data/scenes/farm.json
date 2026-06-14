@@ -1,15 +1,13 @@
 {
   "id": "farm",
   "name": "Farm",
-  "map_size": [
-    100,
-    100
-  ],
-  "tile_size": 16,
-  "spawn": [
-    10,
-    10
-  ],
+  "width": 100,
+  "height": 100,
+  "tile_size": 32,
+  "player_spawn": {
+    "x": 320,
+    "y": 320
+  },
   "objects": [
     {
       "id": "tree_001",
@@ -2810,9 +2808,41 @@
         32,
         13
       ]
+    },
+    {
+      "id": "dock_01",
+      "type": "dock",
+      "cell": [
+        23,
+        5
+      ]
+    },
+    {
+      "id": "ship_01",
+      "type": "ship",
+      "cell": [
+        3,
+        18
+      ]
+    },
+    {
+      "id": "bed_01",
+      "type": "bed",
+      "cell": [
+        3,
+        16
+      ]
+    },
+    {
+      "id": "stash_01",
+      "type": "stash",
+      "cell": [
+        6,
+        16
+      ]
     }
   ],
-  "collision_cells": [
+  "collisions": [
     [
       9,
       14
@@ -2889,5 +2919,6 @@
       20,
       21
     ]
-  ]
+  ],
+  "exits": []
 }

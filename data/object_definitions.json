@@ -1,6 +1,6 @@
 {
   "player": {
-    "sprite": "assets/player/player.png",
+    "sprite": "assets/player/player_idle.png",
     "visual_size": [1, 1],
     "footprint": [1, 1],
     "solid": true
@@ -12,13 +12,13 @@
     "solid": true
   },
   "small_rock": {
-    "sprite": "assets/world/small_rock.png",
+    "sprite": "assets/world/rock.png",
     "visual_size": [1, 1],
     "footprint": [1, 1],
     "solid": true
   },
   "big_rock": {
-    "sprite": "assets/world/big_rock.png",
+    "sprite": "assets/world/rock.png",
     "visual_size": [2, 2],
     "footprint": [2, 2],
     "solid": true
@@ -36,5 +36,29 @@
     "footprint": [7, 4],
     "solid": true,
     "target_scene": "house_inside"
+  },
+  "dock": {
+    "sprite": "assets/world/dock.png",
+    "visual_size": [2, 2],
+    "footprint": [2, 2],
+    "solid": false
+  },
+  "ship": {
+    "sprite": "assets/world/ship.png",
+    "visual_size": [3, 2],
+    "footprint": [3, 2],
+    "solid": false
+  },
+  "bed": {
+    "sprite": "assets/world/bed.png",
+    "visual_size": [2, 2],
+    "footprint": [2, 2],
+    "solid": false
+  },
+  "stash": {
+    "sprite": "assets/world/house.png",
+    "visual_size": [2, 2],
+    "footprint": [2, 2],
+    "solid": false
   }
 }

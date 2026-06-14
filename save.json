@@ -1,5 +1,5 @@
 {
-  "day": 22,
+  "day": 23,
   "season_index": 0,
   "health": {
     "current": 100,
@@ -26,7 +26,12 @@
     "rock_01",
     "tree_02",
     "tree_01",
-    "tree_03"
+    "tree_03",
+    "tree_001",
+    "bush_166",
+    "bush_165",
+    "bush_164",
+    "bush_170"
   ],
   "wind": "west",
   "ship": {
@@ -39,35 +44,41 @@
   },
   "player": {
     "zone": "dock",
-    "x": 127.67520128197123,
-    "y": 494.2632142037199,
+    "x": 112.93976628610837,
+    "y": 527.4267792333656,
     "direction": "down"
   },
   "log": [
-    "Abres el mapa cartográfico.",
-    "Abres el cofre.",
-    "Abres el cofre.",
-    "Duermes y recuperas energia.",
-    "Has dormido y la partida se ha guardado.",
-    "Abres el cofre.",
+    "Arbusto destruido.",
+    "Golpeas Arbusto. Energía -1.",
+    "Arbusto destruido.",
+    "No tienes energía suficiente.",
+    "Recoges Comida x3.",
+    "Recoges Comida x5.",
     "Duermes y recuperas energia."
   ],
   "inventory": {
     "rows": 2,
     "columns": 8,
-    "active_hotbar_index": 1,
+    "active_hotbar_index": 0,
     "grid": [
       [
         {
           "item_id": "axe",
           "amount": 1
         },
-        null,
+        {
+          "item_id": "campfire",
+          "amount": 1
+        },
         {
           "item_id": "watering_can",
           "amount": 1
         },
-        null,
+        {
+          "item_id": "food",
+          "amount": 12
+        },
         null,
         {
           "item_id": "driftwood",
@@ -77,16 +88,12 @@
         {
           "item_id": "sea_fiber",
           "amount": 2
-        },
-        {
-          "item_id": "campfire",
-          "amount": 1
         }
       ],
       [
         {
           "item_id": "wood",
-          "amount": 86
+          "amount": 91
         },
         null,
         null,
@@ -103,11 +110,20 @@
     "watered_cells": [],
     "crops": []
   },
-  "collectables": [],
+  "collectables": [
+    {
+      "id": "collectable_1_3638",
+      "item_id": "food",
+      "amount": 5,
+      "x": 505.0,
+      "y": 546.0,
+      "radius": 10
+    }
+  ],
   "time": {
     "hour": 6,
     "minute": 0,
-    "day": 22
+    "day": 23
   },
   "placed_objects": [
     {
@@ -119,7 +135,15 @@
     }
   ],
   "construction": {
-    "placed_objects": []
+    "placed_objects": [
+      {
+        "item_id": "campfire",
+        "grid_x": 8,
+        "grid_y": 15,
+        "width": 2,
+        "height": 2
+      }
+    ]
   },
   "destroyed_objects": [],
   "skills": {
@@ -129,7 +153,8 @@
     },
     "gathering": {
       "level": 1,
-      "xp": 0
+      "xp": 35,
+      "total_xp": 35
     },
     "mining": {
       "level": 1,
@@ -425,5 +450,35 @@
         null
       ]
     ]
-  }
+  },
+  "scene_states": {
+    "farm": {
+      "removed_objects": [
+        "rock_01",
+        "tree_02",
+        "tree_01",
+        "tree_03",
+        "tree_001",
+        "bush_166",
+        "bush_165",
+        "bush_164",
+        "bush_170"
+      ],
+      "placed_objects": [
+        {
+          "item_id": "campfire",
+          "grid_x": 8,
+          "grid_y": 15,
+          "width": 2,
+          "height": 2
+        }
+      ],
+      "modified_objects": {},
+      "tilled_cells": [],
+      "watered_cells": [],
+      "crops": [],
+      "_legacy_migrated": true
+    }
+  },
+  "_use_legacy_world_objects": false
 }

@@ -1,15 +1,29 @@
 import pygame
+from pathlib import Path
 
 
 _sprite_cache = {}
 _scaled_sprite_cache = {}
+_missing_sprites = set()
 
 
 def get_sprite(sprite_path):
     if sprite_path in _sprite_cache:
         return _sprite_cache[sprite_path]
 
-    sprite = pygame.image.load(sprite_path).convert_alpha()
+    if sprite_path in _missing_sprites:
+        return None
+
+    if not Path(sprite_path).exists():
+        _missing_sprites.add(sprite_path)
+        return None
+
+    try:
+        sprite = pygame.image.load(sprite_path).convert_alpha()
+    except pygame.error:
+        _missing_sprites.add(sprite_path)
+        return None
+
     _sprite_cache[sprite_path] = sprite
 
     return sprite
@@ -22,6 +36,10 @@ def get_scaled_sprite(sprite_path, max_width, max_height):
         return _scaled_sprite_cache[cache_key]
 
     sprite = get_sprite(sprite_path)
+
+    if sprite is None:
+        return None
+
     scale = min(max_width / sprite.get_width(), max_height / sprite.get_height())
     width = max(1, int(sprite.get_width() * scale))
     height = max(1, int(sprite.get_height() * scale))
@@ -33,6 +51,10 @@ def get_scaled_sprite(sprite_path, max_width, max_height):
 
 def draw_sprite_centered(screen, sprite_path, center_x, center_y, max_width, max_height):
     sprite = get_scaled_sprite(sprite_path, max_width, max_height)
+
+    if sprite is None:
+        return None
+
     rect = sprite.get_rect(center=(center_x, center_y))
     screen.blit(sprite, rect)
 

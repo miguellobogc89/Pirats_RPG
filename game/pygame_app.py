@@ -30,14 +30,19 @@ from game.world.world_renderer import draw_world_background
 from game.world_objects import WORLD_OBJECTS
 from game.collectable_manager import update_collectables
 from game.cartography.ui.cartography_overlay import draw_cartography_overlay
-from game.scenes.scene_manager import ensure_scene_state
+from game.scenes.scene_loader import load_scene_data
+from game.scenes.scene_manager import SceneManager, ensure_scene_state
+from game.scenes.scene_runtime import (
+    build_scene_collision_rects,
+    build_scene_world_objects,
+)
+from game.scenes.scene_state import get_current_scene_state
 from game.cartography.ui.cartography_ui_state import CartographyUIState
 from game.data.item_database import get_item_data
 from game.inventory.slot_ui_state import SlotUIState
 from game.inventory.stash_state import ensure_stash_state
 from game.ui.sprite_renderer import draw_item_sprite, draw_sprite_centered
 from game.farming.farming_manager import advance_farming_day
-from game.input.input_manager import handle_events
 from game.bestiary.bestiary_manager import BestiaryManager
 from game.combat.combat_manager import CombatManager
 from game.hud.menu_overlay import draw_menu, get_menu_tab_at_position
@@ -52,6 +57,7 @@ from game.world.grid_renderer import (
     draw_occupied_cells_debug,
     draw_collision_debug,
 )
+from game.world.collision_manager import set_scene_collision_rects
 
 
 WORLD_OBJECT_SPRITES = {
@@ -122,6 +128,8 @@ class PygameApp:
         self.WHITE = WHITE
 
         self.nearby_object = None
+        self.scene_data = None
+        self.scene_world_objects = []
         self.player_speed = 180
         self.interaction_range = 45
 
@@ -132,18 +140,75 @@ class PygameApp:
         self.hud_visible = True
 
         self.log = list(state.get("log", []))[-7:]
+        self.scene_manager = SceneManager(self)
+        self.scene_manager.load_from_state()
         self.run_cartography_validation_debug()
+
+    def load_scene_runtime(self, scene_id):
+        self.scene_data = load_scene_data(scene_id)
+        self.scene_world_objects = []
+
+        if self.scene_data is None:
+            self.state["_use_legacy_world_objects"] = True
+            set_scene_collision_rects([])
+            return
+
+        scene_state = get_current_scene_state(self.state)
+        removed_objects = set(scene_state.get("removed_objects", []))
+        modified_objects = scene_state.get("modified_objects", {})
+        scene_world_objects = build_scene_world_objects(self.scene_data)
+        self.scene_world_objects = []
+
+        for scene_object in scene_world_objects:
+            object_id = scene_object["id"]
+
+            if object_id in removed_objects:
+                continue
+
+            if object_id in modified_objects:
+                scene_object.update(modified_objects[object_id])
+
+            self.scene_world_objects.append(scene_object)
+
+        self.state["_use_legacy_world_objects"] = not bool(self.scene_world_objects)
+        set_scene_collision_rects(
+            build_scene_collision_rects(
+                self.scene_data,
+                self.scene_world_objects,
+            )
+        )
+
+    def get_active_world_objects(self):
+        if not self.scene_world_objects:
+            return WORLD_OBJECTS
+
+        return self.scene_world_objects
+
+    def get_scene_world_width(self):
+        if self.scene_data is None:
+            return WORLD_WIDTH
+
+        return self.scene_data["width"] * self.scene_data.get("tile_size", TILE_SIZE)
+
+    def get_scene_world_height(self):
+        if self.scene_data is None:
+            return WORLD_HEIGHT
+
+        return self.scene_data["height"] * self.scene_data.get("tile_size", TILE_SIZE)
 
     def run(self):
         while True:
             dt = self.clock.tick(FPS) / 1000.0
-            handle_events(self)
+            self.scene_manager.handle_events()
             self.update(dt)
             self.draw()
 
 
 
     def update(self, dt):
+        self.scene_manager.update(dt)
+
+    def update_farm_scene(self, dt):
         if self.combat_manager.is_active():
             self.combat_manager.update(dt)
             return
@@ -152,13 +217,20 @@ class PygameApp:
         if self.menu_open or self.stash_open:
             return
 
-        update_player_movement(self.state, self.player_speed, dt)
+        update_player_movement(
+            self.state,
+            self.player_speed,
+            dt,
+            self.get_scene_world_width(),
+            self.get_scene_world_height(),
+        )
         update_collectables(self)
 
         self.nearby_object = get_nearby_object(
             self.state,
             self.game_data,
             self.interaction_range,
+            self.get_active_world_objects(),
         )
 
     def sleep_day(self):
@@ -239,6 +311,10 @@ class PygameApp:
             print("[cartography validation]", format_validation_issue(issue))
 
     def draw(self):
+        self.scene_manager.draw()
+        pygame.display.flip()
+
+    def draw_farm_scene(self):
         player = self.state["player"]
 
         camera_x, camera_y = get_camera_position(
@@ -246,15 +322,21 @@ class PygameApp:
             player["y"],
             WIDTH,
             HEIGHT,
-            WORLD_WIDTH,
-            WORLD_HEIGHT,
+            self.get_scene_world_width(),
+            self.get_scene_world_height(),
         )
 
         draw_world_background(self.screen, camera_x, camera_y)
         draw_tilled_cells(self.screen, self.state, camera_x, camera_y)
         draw_watered_cells(self.screen, self.state, camera_x, camera_y)
         draw_crops(self.screen, self.state, camera_x, camera_y)
-        draw_world_grid(self.screen, camera_x, camera_y)
+        draw_world_grid(
+            self.screen,
+            camera_x,
+            camera_y,
+            self.get_scene_world_width(),
+            self.get_scene_world_height(),
+        )
         draw_placed_objects(self.screen,self.state,camera_x,camera_y)
         draw_occupied_cells_debug(self.screen,self.state,camera_x,camera_y)
         draw_collision_debug(self.screen, camera_x, camera_y)
@@ -275,8 +357,6 @@ class PygameApp:
 
         if self.combat_manager.is_active():
             self.combat_manager.draw()
-        
-        pygame.display.flip()
 
     def draw_map(self):
         player = self.state["player"]
@@ -286,16 +366,22 @@ class PygameApp:
             player["y"],
             WIDTH,
             HEIGHT,
-            WORLD_WIDTH,
-            WORLD_HEIGHT,
+            self.get_scene_world_width(),
+            self.get_scene_world_height(),
         )
-        draw_world_grid(self.screen, camera_x, camera_y)
+        draw_world_grid(
+            self.screen,
+            camera_x,
+            camera_y,
+            self.get_scene_world_width(),
+            self.get_scene_world_height(),
+        )
 
-        destroyed_objects = self.state.get("destroyed_world_objects", [])
+        removed_objects = set(get_current_scene_state(self.state).get("removed_objects", []))
 
-        for world_object in WORLD_OBJECTS:
+        for world_object in self.get_active_world_objects():
 
-            if world_object["id"] in destroyed_objects:
+            if world_object["id"] in removed_objects:
                 continue
 
             x = int(world_object["x"] - camera_x)
@@ -322,8 +408,11 @@ class PygameApp:
                     sprite_size,
                 )
 
-                if selected:
+                if sprite_rect is not None and selected:
                     pygame.draw.rect(self.screen, WARN, sprite_rect.inflate(8, 8), 2, border_radius=6)
+
+                if sprite_rect is None:
+                    self.draw_text(world_object["icon"], x - 6, y - 10, DARK, self.big_font)
             else:
                 self.draw_text(world_object["icon"], x - 6, y - 10, DARK, self.big_font)
 

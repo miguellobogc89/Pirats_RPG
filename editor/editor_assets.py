@@ -19,7 +19,10 @@ def load_object_sprite(object_definition, tile_size):
     visual_width = object_definition["visual_size"][0] * tile_size
     visual_height = object_definition["visual_size"][1] * tile_size
 
-    image = pygame.image.load(sprite_path).convert_alpha()
+    try:
+        image = pygame.image.load(sprite_path).convert_alpha()
+    except pygame.error:
+        return None
 
     original_width = image.get_width()
     original_height = image.get_height()
@@ -46,9 +49,12 @@ def load_editor_sprites(object_definitions, tile_size):
         if not sprite_path.exists():
             continue
 
-        sprites[object_type] = load_object_sprite(
+        sprite = load_object_sprite(
             object_definition,
             tile_size,
         )
+
+        if sprite is not None:
+            sprites[object_type] = sprite
 
     return sprites

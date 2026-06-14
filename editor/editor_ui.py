@@ -27,6 +27,7 @@ OBJECT_BUTTONS = [
     ("tree", "Tree"),
     ("house", "House"),
 ]
+NON_PLACEABLE_OBJECT_TYPES = {"player"}
 
 
 def draw_text(screen, font, text, x, y, color=COLOR_TEXT):
@@ -112,7 +113,18 @@ def draw_top_toolbar(screen, mode, zoom):
     return buttons
 
 
-def draw_right_panel(screen, mode, selected_object_type, zoom):
+def get_object_buttons(object_definitions=None):
+    if not object_definitions:
+        return OBJECT_BUTTONS
+
+    return [
+        (object_type, object_type.replace("_", " ").title())
+        for object_type in sorted(object_definitions)
+        if object_type not in NON_PLACEABLE_OBJECT_TYPES
+    ]
+
+
+def draw_right_panel(screen, mode, selected_object_type, zoom, object_definitions=None):
     font = pygame.font.SysFont("consolas", 15)
     title_font = pygame.font.SysFont("consolas", 18, bold=True)
 
@@ -157,7 +169,7 @@ def draw_right_panel(screen, mode, selected_object_type, zoom):
     draw_text(screen, font, "Object Library", x, y, COLOR_TEXT_MUTED)
     y += 24
 
-    for object_type, label in OBJECT_BUTTONS:
+    for object_type, label in get_object_buttons(object_definitions):
         rect = pygame.Rect(
             x,
             y,
@@ -224,11 +236,11 @@ def draw_status_bar(screen, cell=None, mode=None, selected_object_type=None, zoo
     draw_text(screen, font, text, 10, y + 5, COLOR_TEXT_MUTED)
 
 
-def draw_editor_panel(screen, mode, selected_object_type, zoom):
+def draw_editor_panel(screen, mode, selected_object_type, zoom, object_definitions=None):
     buttons = []
 
     buttons.extend(draw_top_toolbar(screen, mode, zoom))
-    buttons.extend(draw_right_panel(screen, mode, selected_object_type, zoom))
+    buttons.extend(draw_right_panel(screen, mode, selected_object_type, zoom, object_definitions))
 
     return buttons
 
