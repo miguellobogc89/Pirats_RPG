@@ -460,7 +460,29 @@ class EditorInputManager:
             return None
 
         if action == "object_load_png":
-            self.set_status("Importar PNG pendiente")
+            from tkinter import Tk, filedialog
+
+            root = Tk()
+            root.withdraw()
+
+            source_path = filedialog.askopenfilename(
+                title="Seleccionar PNG",
+                filetypes=[("PNG files", "*.png")],
+            )
+
+            root.destroy()
+
+            if source_path == "":
+                self.set_status("Carga de PNG cancelada")
+                return None
+
+            try:
+                self.object_editor_sprite = pygame.image.load(source_path).convert_alpha()
+                self.object_editor_state.sprite = source_path
+                self.set_status(f"PNG cargado: {source_path}")
+            except pygame.error:
+                self.set_status("No se pudo cargar el PNG")
+
             return None
 
         if action == "object_open":

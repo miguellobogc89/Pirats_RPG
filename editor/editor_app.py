@@ -176,12 +176,14 @@ def main():
             input_manager.set_dialog_buttons(dialog_buttons)
 
         if input_manager.show_object_editor:
-            object_editor_buttons = draw_object_editor_dialog(
+            object_editor_result = draw_object_editor_dialog(
                 screen,
                 input_manager.object_editor_state,
                 input_manager.object_editor_sprite,
             )
-            input_manager.set_dialog_buttons(object_editor_buttons)
+
+            input_manager.object_editor_preview_layout = object_editor_result["preview_layout"]
+            input_manager.set_dialog_buttons(object_editor_result["buttons"])
 
         pygame.display.flip()
         clock.tick(60)
