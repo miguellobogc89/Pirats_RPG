@@ -61,12 +61,17 @@ class EditorInputManager:
         self.is_painting = False
         self.is_erasing = False
 
+        self.object_editor_preview_layout = None
+        self.is_dragging_object_sprite = False
+        self.object_sprite_drag_offset = [0, 0]
+
         self.is_rect_tool_active = False
         self.rect_start_cell = None
         self.rect_end_cell = None
         self.rect_button = None
 
         self.selected_terrain_id = "grass"
+        self.side_panel_scroll_y = 0
 
         self.selected_area_type = None
         self.selected_area_id = None
@@ -78,6 +83,10 @@ class EditorInputManager:
         self.relation_name_edit_area_id = None
 
         self.show_relations_dialog = False
+        self.show_object_editor = False
+        self.object_editor_buttons = []
+        self.object_editor_state = None
+        self.object_editor_sprite = None
         self.relation_exits = []
         self.relation_targets = []
         self.selected_relation_exit_key = None
@@ -159,6 +168,8 @@ class EditorInputManager:
         subprocess.Popen(["xdg-open", str(SCENES_DIR)])
 
     def is_dialog_open(self):
+        if self.show_object_editor:
+            return True
         if self.show_unsaved_dialog:
             return True
 
@@ -179,6 +190,26 @@ class EditorInputManager:
     def is_inside_canvas(self, screen, pos):
         panel_start_x = screen.get_width() - PANEL_WIDTH
         return pos[0] < panel_start_x
+
+    def is_inside_side_panel(self, screen, pos):
+        panel_start_x = screen.get_width() - PANEL_WIDTH
+
+        if pos[0] < panel_start_x:
+            return False
+
+        return True
+
+
+    def scroll_side_panel(self, amount):
+        self.side_panel_scroll_y += amount
+
+        if self.side_panel_scroll_y < 0:
+            self.side_panel_scroll_y = 0
+
+        max_scroll = 1000
+
+        if self.side_panel_scroll_y > max_scroll:
+            self.side_panel_scroll_y = max_scroll
 
     def cancel_current_action(self):
         self.selected_object_type = None
@@ -404,6 +435,42 @@ class EditorInputManager:
         if action == "file_exit":
             return self.request_protected_action("exit")
 
+        if action == "object_new":
+            from editor.object_editor.object_editor_state import ObjectEditorState
+
+            self.active_menu = None
+            self.show_object_editor = True
+            self.object_editor_state = ObjectEditorState()
+            self.object_editor_sprite = None
+
+            return None
+        if action == "object_cancel":
+            self.show_object_editor = False
+            return None
+
+        if action == "object_confirm_save":
+            self.set_status("Guardar objeto pendiente")
+            return None
+
+        if action == "object_load_png":
+            self.set_status("Importar PNG pendiente")
+            return None
+
+        if action == "object_open":
+            self.active_menu = None
+            self.set_status("Abrir objeto")
+            return None
+
+        if action == "object_save":
+            self.active_menu = None
+            self.set_status("Guardar objeto")
+            return None
+
+        if action == "object_save_as":
+            self.active_menu = None
+            self.set_status("Guardar objeto como")
+            return None
+
         if action == "zoom_in":
             self.camera.panel_zoom_in()
             return None
@@ -460,6 +527,13 @@ class EditorInputManager:
             self.selected_terrain_id = clicked_action["terrain_id"]
             return None
 
+        if action == "menu_objects":
+            if self.active_menu == "objects":
+                self.active_menu = None
+            else:
+                self.active_menu = "objects"
+            return None
+
         return None
 
     def start_rect_tool(self, screen, event):
@@ -487,6 +561,7 @@ class EditorInputManager:
                 self.scene_data,
                 self.mode,
                 self.selected_object_type,
+                self.selected_terrain_id,
                 self.object_definitions,
                 self.rect_start_cell,
                 self.rect_end_cell,
@@ -515,7 +590,62 @@ class EditorInputManager:
         self.is_painting = False
         self.is_erasing = False
 
+    def start_object_sprite_drag(self, event):
+        if self.object_editor_preview_layout is None:
+            return False
+
+        sprite_rect = self.object_editor_preview_layout.get("sprite_rect")
+
+        if sprite_rect is None:
+            return False
+
+        if not sprite_rect.collidepoint(event.pos):
+            return False
+
+        self.is_dragging_object_sprite = True
+
+        self.object_sprite_drag_offset = [
+            event.pos[0] - sprite_rect.x,
+            event.pos[1] - sprite_rect.y,
+        ]
+
+        return True
+
+
+    def update_object_sprite_drag(self, event):
+        if not self.is_dragging_object_sprite:
+            return
+
+        if self.object_editor_preview_layout is None:
+            return
+
+        anchor_pos = self.object_editor_preview_layout.get("anchor_pos")
+
+        if anchor_pos is None:
+            return
+
+        new_sprite_x = event.pos[0] - self.object_sprite_drag_offset[0]
+        new_sprite_y = event.pos[1] - self.object_sprite_drag_offset[1]
+
+        self.object_editor_state.sprite_offset = [
+            new_sprite_x - anchor_pos[0],
+            new_sprite_y - anchor_pos[1],
+        ]
+
+
+    def stop_object_sprite_drag(self):
+        self.is_dragging_object_sprite = False
+
+
     def handle_mouse_button_down(self, screen, event):
+
+        if self.show_object_editor:
+            if event.button == 1:
+                if self.start_object_sprite_drag(event):
+                    return None
+
+            return self.handle_dialog_click(event)
+
         if self.is_dialog_open():
             return self.handle_dialog_click(event)
 
@@ -524,10 +654,18 @@ class EditorInputManager:
             return None
 
         if event.button == 4:
+            if self.is_inside_side_panel(screen, event.pos):
+                self.scroll_side_panel(-40)
+                return None
+
             self.camera.zoom_in()
             return None
 
         if event.button == 5:
+            if self.is_inside_side_panel(screen, event.pos):
+                self.scroll_side_panel(40)
+                return None
+
             self.camera.zoom_out()
             return None
 
@@ -572,7 +710,6 @@ class EditorInputManager:
                 self.camera,
                 event.pos,
             )
-
             self.is_painting = True
 
             if changed:
@@ -582,6 +719,10 @@ class EditorInputManager:
         return None
 
     def handle_mouse_button_up(self, event):
+        if self.show_object_editor:
+            self.stop_object_sprite_drag()
+            return
+
         if self.is_dialog_open():
             return
 
@@ -600,6 +741,9 @@ class EditorInputManager:
             self.is_erasing = False
 
     def handle_mouse_motion(self, screen, event):
+        if self.show_object_editor:
+            self.update_object_sprite_drag(event)
+            return
         if self.is_dialog_open():
             return
 
@@ -618,6 +762,7 @@ class EditorInputManager:
                     self.scene_data,
                     self.mode,
                     self.selected_object_type,
+                    self.selected_terrain_id,
                     self.object_definitions,
                     self.camera,
                     event.pos,

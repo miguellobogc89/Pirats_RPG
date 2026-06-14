@@ -45,20 +45,10 @@ def draw_dropdown_item(screen, rect, label):
     )
 
 
-def draw_file_dropdown(screen):
-    x = 8
+def draw_dropdown(screen, x, items):
     y = MENU_BAR_HEIGHT
     width = 190
     item_height = 28
-
-    items = [
-        ("Nuevo", "file_new"),
-        ("Abrir...", "file_open"),
-        ("Guardar", "file_save"),
-        ("Guardar como...", "file_save_as"),
-        ("Abrir carpeta", "file_open_folder"),
-        ("Salir", "file_exit"),
-    ]
 
     dropdown_rect = pygame.Rect(
         x,
@@ -101,6 +91,30 @@ def draw_file_dropdown(screen):
     return buttons
 
 
+def draw_file_dropdown(screen):
+    items = [
+        ("Nuevo", "file_new"),
+        ("Abrir...", "file_open"),
+        ("Guardar", "file_save"),
+        ("Guardar como...", "file_save_as"),
+        ("Abrir carpeta", "file_open_folder"),
+        ("Salir", "file_exit"),
+    ]
+
+    return draw_dropdown(screen, 8, items)
+
+
+def draw_objects_dropdown(screen):
+    items = [
+        ("Nuevo objeto", "object_new"),
+        ("Abrir objeto...", "object_open"),
+        ("Guardar objeto", "object_save"),
+        ("Guardar objeto como...", "object_save_as"),
+    ]
+
+    return draw_dropdown(screen, 164, items)
+
+
 def draw_editor_menu_bar(screen, active_menu=None):
     pygame.draw.rect(
         screen,
@@ -124,6 +138,7 @@ def draw_editor_menu_bar(screen, active_menu=None):
     menu_items = [
         ("Archivo", "menu_file", 82),
         ("Editar", "menu_edit", 74),
+        ("Objetos", "menu_objects", 82),
         ("Ajustes", "menu_settings", 86),
     ]
 
@@ -150,5 +165,8 @@ def draw_editor_menu_bar(screen, active_menu=None):
 
     if active_menu == "file":
         buttons.extend(draw_file_dropdown(screen))
+
+    if active_menu == "objects":
+        buttons.extend(draw_objects_dropdown(screen))
 
     return buttons

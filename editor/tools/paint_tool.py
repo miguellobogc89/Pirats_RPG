@@ -30,7 +30,15 @@ def get_cell_rect(start_cell, end_cell):
     return min_x, min_y, max_x, max_y
 
 
-def paint_at_mouse(scene_data, mode, selected_object_type, selected_terrain_id, object_definitions, camera, mouse_pos):
+def paint_at_mouse(
+    scene_data,
+    mode,
+    selected_object_type,
+    selected_terrain_id,
+    object_definitions,
+    camera,
+    mouse_pos,
+):
     cell = camera.screen_to_cell(mouse_pos)
 
     return paint_at_cell(
@@ -43,7 +51,14 @@ def paint_at_mouse(scene_data, mode, selected_object_type, selected_terrain_id, 
     )
 
 
-def paint_at_cell(scene_data, mode, selected_object_type, selected_terrain_id, object_definitions, cell):
+def paint_at_cell(
+    scene_data,
+    mode,
+    selected_object_type,
+    selected_terrain_id,
+    object_definitions,
+    cell,
+):
     if mode == "objects" and selected_object_type:
         return add_object(
             scene_data,
@@ -60,7 +75,7 @@ def paint_at_cell(scene_data, mode, selected_object_type, selected_terrain_id, o
 
     if mode == "exits":
         return add_exit_cell(scene_data, cell)
-    
+
     if mode == "terrain" and selected_terrain_id:
         return paint_terrain_cell(scene_data, cell, selected_terrain_id)
 
@@ -88,6 +103,9 @@ def erase_at_cell(scene_data, mode, object_definitions, cell):
     if mode == "exits":
         return remove_exit_cell(scene_data, cell)
 
+    if mode == "terrain":
+        return erase_terrain_cell(scene_data, cell)
+
     return remove_object_at_cell(
         scene_data,
         cell,
@@ -95,7 +113,15 @@ def erase_at_cell(scene_data, mode, object_definitions, cell):
     )
 
 
-def paint_rect(scene_data, mode, selected_object_type, selected_terrain_id, object_definitions, start_cell, end_cell):
+def paint_rect(
+    scene_data,
+    mode,
+    selected_object_type,
+    selected_terrain_id,
+    object_definitions,
+    start_cell,
+    end_cell,
+):
     changed = False
     min_x, min_y, max_x, max_y = get_cell_rect(start_cell, end_cell)
 

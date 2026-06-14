@@ -13,6 +13,7 @@ from editor.dialogs.save_as_dialog import draw_save_as_dialog
 from editor.dialogs.unsaved_changes_dialog import draw_unsaved_changes_dialog
 from editor.dialogs.area_name_dialog import draw_area_name_dialog
 from editor.dialogs.relations_dialog import draw_relations_dialog
+from editor.object_editor.object_editor_dialog import draw_object_editor_dialog
 
 from editor.editor_assets import (
     load_editor_sprites,
@@ -115,6 +116,7 @@ def main():
             object_definitions,
             input_manager.get_selected_area(),
             input_manager.selected_terrain_id,
+            input_manager.side_panel_scroll_y,
         )
 
         input_manager.set_buttons(menu_buttons + side_buttons)
@@ -172,6 +174,14 @@ def main():
                 input_manager.area_name_text,
             )
             input_manager.set_dialog_buttons(dialog_buttons)
+
+        if input_manager.show_object_editor:
+            object_editor_buttons = draw_object_editor_dialog(
+                screen,
+                input_manager.object_editor_state,
+                input_manager.object_editor_sprite,
+            )
+            input_manager.set_dialog_buttons(object_editor_buttons)
 
         pygame.display.flip()
         clock.tick(60)
