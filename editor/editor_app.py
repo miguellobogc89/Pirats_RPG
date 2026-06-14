@@ -164,6 +164,14 @@ def main():
             )
             input_manager.set_dialog_buttons(dialog_buttons)
 
+        if input_manager.show_area_name_dialog and input_manager.show_relations_dialog:
+            dialog_buttons = draw_area_name_dialog(
+                screen,
+                "Editar area",
+                input_manager.area_name_text,
+            )
+            input_manager.set_dialog_buttons(dialog_buttons)
+
         pygame.display.flip()
         clock.tick(60)
 

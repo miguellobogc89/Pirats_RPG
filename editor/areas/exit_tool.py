@@ -1,5 +1,34 @@
 def generate_area_id(prefix, items):
-    return f"{prefix}_{len(items) + 1:03d}"
+    used_ids = {
+        item.get("id")
+        for item in items
+        if isinstance(item, dict)
+    }
+    highest_index = 0
+
+    for area_id in used_ids:
+        if not isinstance(area_id, str):
+            continue
+
+        marker = f"{prefix}_"
+
+        if not area_id.startswith(marker):
+            continue
+
+        try:
+            highest_index = max(highest_index, int(area_id[len(marker):]))
+        except ValueError:
+            continue
+
+    next_index = highest_index + 1
+
+    while True:
+        candidate = f"{prefix}_{next_index:03d}"
+
+        if candidate not in used_ids:
+            return candidate
+
+        next_index += 1
 
 
 def ensure_area_lists(scene_data):
@@ -22,6 +51,8 @@ def normalize_area_list(items, prefix):
             else:
                 area_data["cells"] = []
 
+        area_data["cells"] = normalize_cells(area_data.get("cells"))
+
         if "id" not in area_data:
             area_data["id"] = generate_area_id(prefix, items)
 
@@ -35,9 +66,80 @@ def normalize_area_list(items, prefix):
                 else:
                     area_data["spawn_cell"] = None
 
+            if area_data["spawn_cell"] not in area_data["cells"]:
+                if len(area_data["cells"]) > 0:
+                    area_data["spawn_cell"] = area_data["cells"][0]
+                else:
+                    area_data["spawn_cell"] = None
+
         if prefix == "exit":
-            if "target_links" not in area_data:
-                area_data["target_links"] = []
+            area_data["target_links"] = normalize_target_links(area_data)
+            area_data.pop("target_scene_id", None)
+            area_data.pop("target_spawn_id", None)
+
+
+def normalize_cells(cells):
+    if not isinstance(cells, list):
+        return []
+
+    normalized_cells = []
+
+    for cell in cells:
+        if not isinstance(cell, list) or len(cell) < 2:
+            continue
+
+        normalized_cell = [cell[0], cell[1]]
+
+        if normalized_cell not in normalized_cells:
+            normalized_cells.append(normalized_cell)
+
+    return normalized_cells
+
+
+def normalize_target_links(exit_data):
+    links = []
+
+    if isinstance(exit_data.get("target_links"), list):
+        links.extend(exit_data["target_links"])
+
+    legacy_scene_id = exit_data.get("target_scene_id")
+    legacy_spawn_id = exit_data.get("target_spawn_id")
+
+    if legacy_scene_id and legacy_spawn_id:
+        links.append({
+            "target_scene_id": legacy_scene_id,
+            "target_spawn_id": legacy_spawn_id,
+        })
+
+    return dedupe_target_links(links)
+
+
+def dedupe_target_links(links):
+    normalized_links = []
+    seen = set()
+
+    for link in links:
+        if not isinstance(link, dict):
+            continue
+
+        target_scene_id = link.get("target_scene_id")
+        target_spawn_id = link.get("target_spawn_id")
+
+        if not target_scene_id or not target_spawn_id:
+            continue
+
+        key = (target_scene_id, target_spawn_id)
+
+        if key in seen:
+            continue
+
+        seen.add(key)
+        normalized_links.append({
+            "target_scene_id": target_scene_id,
+            "target_spawn_id": target_spawn_id,
+        })
+
+    return normalized_links
 
 
 def cells_are_adjacent(cell_a, cell_b):
@@ -87,6 +189,12 @@ def merge_areas(items, target_area, source_area):
     for cell in source_area.get("cells", []):
         if cell not in target_area["cells"]:
             target_area["cells"].append(cell)
+
+    if "target_links" in target_area or "target_links" in source_area:
+        target_area["target_links"] = dedupe_target_links(
+            target_area.get("target_links", [])
+            + source_area.get("target_links", [])
+        )
 
     items.remove(source_area)
 
@@ -193,5 +301,5 @@ def set_exit_targets(scene_data, exit_id, target_links):
     if exit_data is None:
         return False
 
-    exit_data["target_links"] = target_links
+    exit_data["target_links"] = dedupe_target_links(target_links)
     return True

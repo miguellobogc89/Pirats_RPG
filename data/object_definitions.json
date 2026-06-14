@@ -60,5 +60,14 @@
     "visual_size": [2, 2],
     "footprint": [2, 2],
     "solid": false
+  },
+  "old_man": {
+    "type": "npc",
+    "dialogue_id": "old_man_intro",
+    "visual_size": [2, 2],
+    "name": "Anciano",
+    "sprite": "assets/world/NPC.png",
+    "footprint": [1, 1],
+    "solid": true
   }
 }

@@ -148,6 +148,7 @@
       3
     ]
   ],
+  "spawns": [],
   "exits": [
     {
       "id": "exit_to_farm",
@@ -161,7 +162,15 @@
         "y": 230,
         "w": 40,
         "h": 20
-      }
+      },
+      "cells": [],
+      "name": "exit_to_farm",
+      "target_links": [
+        {
+          "target_scene_id": "farm",
+          "target_spawn_id": "spawn_002"
+        }
+      ]
     }
   ]
 }

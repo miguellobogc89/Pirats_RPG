@@ -50,7 +50,8 @@ def normalize_scene_data(raw_scene, fallback_scene_id=None):
         "player_spawn": normalize_player_spawn(raw_scene, tile_size),
         "objects": normalize_list_field(raw_scene, "objects"),
         "collisions": normalize_collisions(raw_scene),
-        "exits": normalize_list_field(raw_scene, "exits"),
+        "spawns": normalize_spawns(raw_scene),
+        "exits": normalize_exits(raw_scene),
     }
 
 
@@ -110,3 +111,113 @@ def normalize_collisions(raw_scene):
         return legacy_collision_cells
 
     return []
+
+
+def normalize_spawns(raw_scene):
+    spawns = []
+
+    for spawn_data in normalize_list_field(raw_scene, "spawns"):
+        if not isinstance(spawn_data, dict):
+            continue
+
+        cells = normalize_cells(spawn_data)
+        spawn_cell = spawn_data.get("spawn_cell")
+
+        if spawn_cell not in cells:
+            if cells:
+                spawn_cell = cells[0]
+            else:
+                spawn_cell = None
+
+        spawns.append({
+            "id": spawn_data.get("id", "spawn"),
+            "name": spawn_data.get("name", spawn_data.get("id", "spawn")),
+            "cells": cells,
+            "spawn_cell": spawn_cell,
+        })
+
+    return spawns
+
+
+def normalize_exits(raw_scene):
+    exits = []
+
+    for exit_data in normalize_list_field(raw_scene, "exits"):
+        if not isinstance(exit_data, dict):
+            continue
+
+        exits.append({
+            "id": exit_data.get("id", "exit"),
+            "name": exit_data.get("name", exit_data.get("id", "exit")),
+            "cells": normalize_cells(exit_data),
+            "target_links": normalize_target_links(exit_data),
+        })
+
+    return exits
+
+
+def normalize_cells(area_data):
+    cells = area_data.get("cells")
+
+    if not isinstance(cells, list):
+        legacy_cell = area_data.get("cell")
+
+        if isinstance(legacy_cell, list) and len(legacy_cell) >= 2:
+            cells = [legacy_cell]
+        else:
+            cells = []
+
+    normalized_cells = []
+
+    for cell in cells:
+        if not isinstance(cell, list) or len(cell) < 2:
+            continue
+
+        normalized_cell = [cell[0], cell[1]]
+
+        if normalized_cell not in normalized_cells:
+            normalized_cells.append(normalized_cell)
+
+    return normalized_cells
+
+
+def normalize_target_links(exit_data):
+    links = []
+
+    if isinstance(exit_data.get("target_links"), list):
+        links.extend(exit_data["target_links"])
+
+    legacy_scene_id = exit_data.get("target_scene_id")
+    legacy_spawn_id = exit_data.get("target_spawn_id")
+
+    if legacy_scene_id and legacy_spawn_id:
+        links.append({
+            "target_scene_id": legacy_scene_id,
+            "target_spawn_id": legacy_spawn_id,
+        })
+
+    normalized_links = []
+    seen = set()
+
+    for link in links:
+        if not isinstance(link, dict):
+            continue
+
+        target_scene_id = link.get("target_scene_id")
+        target_spawn_id = link.get("target_spawn_id")
+
+        if not target_scene_id or not target_spawn_id:
+            continue
+
+        key = (target_scene_id, target_spawn_id)
+
+        if key in seen:
+            continue
+
+        seen.add(key)
+        normalized_links.append({
+            "target_scene_id": target_scene_id,
+            "target_spawn_id": target_spawn_id,
+        })
+
+    return normalized_links

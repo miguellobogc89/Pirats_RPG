@@ -5,6 +5,8 @@ from game.inventory.hotbar_manager import get_active_tool
 from game.scenes.scene_state import get_current_scene_state
 from game.world_objects import WORLD_OBJECTS
 from game.collectable_manager import spawn_collectables_from_drops
+from game.npcs import interact_with_npc
+from game.story_events import dispatch_story_event
 
 
 def get_nearby_object(state, game_data, interaction_range, world_objects=None):
@@ -33,6 +35,18 @@ def get_nearby_object(state, game_data, interaction_range, world_objects=None):
 
 
 def interact_with_nearby_object(app):
+    if getattr(app, "nearby_npc", None) is not None:
+        interact_with_npc(app, app.nearby_npc)
+        dispatch_story_event(
+            app,
+            "npc_talked",
+            {
+                "npc_id": app.nearby_npc.get("id"),
+                "scene_id": app.state.get("current_scene"),
+            },
+        )
+        return
+
     if app.nearby_object is None:
         app.add_log("No hay nada cerca con lo que interactuar.")
         return

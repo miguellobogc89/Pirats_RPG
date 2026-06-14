@@ -71,6 +71,9 @@ class EditorInputManager:
 
         self.show_area_name_dialog = False
         self.area_name_text = ""
+        self.relation_name_edit_scene_id = None
+        self.relation_name_edit_area_type = None
+        self.relation_name_edit_area_id = None
 
         self.show_relations_dialog = False
         self.relation_exits = []
@@ -707,15 +710,20 @@ class EditorInputManager:
         if selected_area is None:
             return
 
+        self.clear_relation_name_edit()
         self.area_name_text = selected_area.get("name", "")
         self.show_area_name_dialog = True
 
     def handle_area_name_dialog_action(self, action):
         if action == "area_name_cancel":
             self.show_area_name_dialog = False
+            self.clear_relation_name_edit()
             return None
 
         if action == "area_name_confirm":
+            if self.relation_name_edit_scene_id is not None:
+                return self.confirm_relation_name_edit()
+
             renamed = rename_area(
                 self.scene_data,
                 self.selected_area_type,
@@ -730,6 +738,49 @@ class EditorInputManager:
             self.show_area_name_dialog = False
             return None
 
+        return None
+
+    def clear_relation_name_edit(self):
+        self.relation_name_edit_scene_id = None
+        self.relation_name_edit_area_type = None
+        self.relation_name_edit_area_id = None
+
+    def open_relation_name_dialog(self, scene_id, area_type, area_id):
+        scene_data = self.get_scene_for_relation_edit(scene_id)
+        area_data = get_area_by_id(scene_data, area_type, area_id)
+
+        if area_data is None:
+            return
+
+        self.relation_name_edit_scene_id = scene_id
+        self.relation_name_edit_area_type = area_type
+        self.relation_name_edit_area_id = area_id
+        self.area_name_text = area_data.get("name", area_data.get("id", ""))
+        self.show_area_name_dialog = True
+
+    def confirm_relation_name_edit(self):
+        scene_data = self.get_scene_for_relation_edit(
+            self.relation_name_edit_scene_id
+        )
+        renamed = rename_area(
+            scene_data,
+            self.relation_name_edit_area_type,
+            self.relation_name_edit_area_id,
+            self.area_name_text,
+        )
+
+        if renamed:
+            self.save_scene_callback(scene_data)
+
+            if scene_data is self.scene_data:
+                self.mark_saved()
+
+            self.relation_exits = self.build_relation_exits()
+            self.relation_targets = self.build_relation_targets()
+            self.set_status("Nombre de relacion actualizado")
+
+        self.show_area_name_dialog = False
+        self.clear_relation_name_edit()
         return None
 
     def handle_area_name_text_input(self, event):
@@ -754,7 +805,7 @@ class EditorInputManager:
         saved_scenes = list_saved_scenes()
 
         for scene_info in saved_scenes:
-            loaded_scene = load_scene_for_editor(scene_info["id"])
+            loaded_scene = self.get_scene_for_relation_edit(scene_info["id"])
 
             for exit_data in loaded_scene.get("exits", []):
                 exit_key = f"{loaded_scene['id']}::{exit_data['id']}"
@@ -776,7 +827,7 @@ class EditorInputManager:
         saved_scenes = list_saved_scenes()
 
         for scene_info in saved_scenes:
-            loaded_scene = load_scene_for_editor(scene_info["id"])
+            loaded_scene = self.get_scene_for_relation_edit(scene_info["id"])
 
             for spawn_data in loaded_scene.get("spawns", []):
                 target_key = f"{loaded_scene['id']}::{spawn_data['id']}"
@@ -790,6 +841,12 @@ class EditorInputManager:
                 })
 
         return targets
+
+    def get_scene_for_relation_edit(self, scene_id):
+        if self.scene_data.get("id") == scene_id:
+            return self.scene_data
+
+        return load_scene_for_editor(scene_id)
 
     def open_relations_dialog(self):
         self.relation_exits = self.build_relation_exits()
@@ -860,6 +917,22 @@ class EditorInputManager:
 
             return None
 
+        if action == "relation_rename_exit":
+            self.open_relation_name_dialog(
+                clicked_action["scene_id"],
+                "exits",
+                clicked_action["area_id"],
+            )
+            return None
+
+        if action == "relation_rename_spawn":
+            self.open_relation_name_dialog(
+                clicked_action["scene_id"],
+                "spawns",
+                clicked_action["area_id"],
+            )
+            return None
+
         if action == "relation_confirm":
             if self.selected_relation_exit_scene_id is None:
                 return None
@@ -880,7 +953,9 @@ class EditorInputManager:
                     "target_spawn_id": parts[1],
                 })
 
-            loaded_scene = load_scene_for_editor(self.selected_relation_exit_scene_id)
+            loaded_scene = self.get_scene_for_relation_edit(
+                self.selected_relation_exit_scene_id
+            )
 
             linked = set_exit_targets(
                 loaded_scene,
@@ -890,8 +965,13 @@ class EditorInputManager:
 
             if linked:
                 self.save_scene_callback(loaded_scene)
+
+                if loaded_scene is self.scene_data:
+                    self.mark_saved()
+
                 self.set_status("Relaciones guardadas")
                 self.relation_exits = self.build_relation_exits()
+                self.show_relations_dialog = False
 
             return None
 

@@ -2,6 +2,7 @@ import json
 import re
 from pathlib import Path
 
+from editor.areas.exit_tool import ensure_area_lists
 from game.world.grid_manager import TILE_SIZE
 
 
@@ -119,7 +120,7 @@ def normalize_scene(raw_scene, fallback_scene_id):
     scene_id = raw_scene.get("id", fallback_scene_id)
     width, height = normalize_scene_size(raw_scene)
 
-    return {
+    normalized_scene = {
         "id": scene_id,
         "name": raw_scene.get("name", scene_id),
         "width": width,
@@ -131,6 +132,8 @@ def normalize_scene(raw_scene, fallback_scene_id):
         "spawns": normalize_list(raw_scene.get("spawns")),
         "exits": normalize_list(raw_scene.get("exits")),
     }
+    ensure_area_lists(normalized_scene)
+    return normalized_scene
 
 
 def normalize_scene_size(raw_scene):

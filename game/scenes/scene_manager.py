@@ -32,7 +32,7 @@ def change_scene(state, scene_id, payload=None):
 
 def apply_scene_state(state, scene_id, payload=None):
     scene_data = load_scene_data(scene_id)
-    spawn = scene_data["player_spawn"]
+    spawn = resolve_scene_spawn(scene_data, payload)
 
     state["current_scene"] = scene_id
     state["player"]["x"] = spawn["x"]
@@ -40,6 +40,34 @@ def apply_scene_state(state, scene_id, payload=None):
 
     if payload:
         state["last_scene_payload"] = payload
+
+
+def resolve_scene_spawn(scene_data, payload=None):
+    if payload is None:
+        return scene_data["player_spawn"]
+
+    target_spawn_id = payload.get("target_spawn_id")
+
+    if target_spawn_id is None:
+        return scene_data["player_spawn"]
+
+    for spawn_data in scene_data.get("spawns", []):
+        if spawn_data.get("id") != target_spawn_id:
+            continue
+
+        spawn_cell = spawn_data.get("spawn_cell")
+
+        if not isinstance(spawn_cell, list) or len(spawn_cell) < 2:
+            return scene_data["player_spawn"]
+
+        tile_size = scene_data.get("tile_size", 32)
+
+        return {
+            "x": spawn_cell[0] * tile_size + tile_size // 2,
+            "y": spawn_cell[1] * tile_size + tile_size // 2,
+        }
+
+    return scene_data["player_spawn"]
 
 
 class SceneManager:

@@ -187,22 +187,23 @@
   "spawns": [
     {
       "id": "spawn_001",
-      "cell": [
+      "name": "Entrada Norte",
+      "cells": [
+        [
+          12,
+          9
+        ],
+        [
+          13,
+          9
+        ],
+        [
+          14,
+          9
+        ]
+      ],
+      "spawn_cell": [
         12,
-        9
-      ]
-    },
-    {
-      "id": "spawn_002",
-      "cell": [
-        13,
-        9
-      ]
-    },
-    {
-      "id": "spawn_003",
-      "cell": [
-        14,
         9
       ]
     }
@@ -210,30 +211,35 @@
   "exits": [
     {
       "id": "exit_001",
-      "cell": [
-        12,
-        7
+      "name": "Salida Norte",
+      "cells": [
+        [
+          11,
+          7
+        ],
+        [
+          12,
+          7
+        ],
+        [
+          13,
+          7
+        ],
+        [
+          14,
+          7
+        ],
+        [
+          15,
+          7
+        ]
       ],
-      "target_scene_id": "",
-      "target_spawn_id": ""
-    },
-    {
-      "id": "exit_002",
-      "cell": [
-        13,
-        7
-      ],
-      "target_scene_id": "",
-      "target_spawn_id": ""
-    },
-    {
-      "id": "exit_003",
-      "cell": [
-        14,
-        7
-      ],
-      "target_scene_id": "",
-      "target_spawn_id": ""
+      "target_links": [
+        {
+          "target_scene_id": "farm",
+          "target_spawn_id": "spawn_001"
+        }
+      ]
     }
   ]
 }

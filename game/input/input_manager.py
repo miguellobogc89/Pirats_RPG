@@ -2,6 +2,7 @@ import sys
 import pygame
 
 from game.cartography.ui.cartography_input import handle_cartography_event
+from game.dialogue import handle_dialogue_event, is_dialogue_active
 from game.hud.menu_overlay import get_menu_tab_at_position, get_menu_tabs
 from game.inventory.hotbar_manager import (
     get_active_item_data,
@@ -50,6 +51,9 @@ def handle_event(app, event):
             restart_game_with_current_state(app.state)
             return True
 
+    if is_dialogue_active(app):
+        return handle_dialogue_event(app, event)
+
     if app.combat_manager.is_active():
         app.combat_manager.handle_event(event)
         return True
@@ -64,6 +68,9 @@ def handle_event(app, event):
     if event.type == pygame.MOUSEBUTTONDOWN:
         if event.button == 1:
             if app.menu_open:
+                if handle_menu_action_click(app, event.pos):
+                    return True
+
                 if app.menu_tab == "inventory":
                     if handle_inventory_slot_click(app, event.pos):
                         return True
@@ -100,6 +107,21 @@ def handle_event(app, event):
         return True
 
     return False
+
+
+def handle_menu_action_click(app, pos):
+    for hitbox in getattr(app, "menu_action_hitboxes", []):
+        if not hitbox["rect"].collidepoint(pos):
+            continue
+
+        action = hitbox.get("action")
+
+        if action == "return_to_main_menu":
+            app.return_to_main_menu()
+            return True
+
+    return False
+
 
 def handle_menu_key(app, key):
     if app.slot_ui_state.is_dragging:

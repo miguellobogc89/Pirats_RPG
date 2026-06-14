@@ -128,7 +128,9 @@ def build_scene_world_objects(scene_data):
     for object_data in scene_data.get("objects", []):
         object_type = object_data.get("type")
         object_definition = object_definitions.get(object_type, {})
-        cell = object_data.get("cell", [0, 0])
+
+        if object_type == "npc" or object_definition.get("type") == "npc":
+            continue
 
         scene_object = build_scene_world_object(
             object_data,

@@ -238,6 +238,54 @@ def draw_exit_cells(screen, scene_data, camera):
             pygame.draw.rect(screen, (240, 190, 70), rect, 3)
 
 
+def get_area_at_mouse(screen, scene_data, camera):
+    mouse_pos = pygame.mouse.get_pos()
+
+    if mouse_pos[0] >= screen.get_width() - PANEL_WIDTH:
+        return None
+
+    cell = camera.screen_to_cell(mouse_pos)
+
+    for spawn_data in scene_data.get("spawns", []):
+        if cell in spawn_data.get("cells", []):
+            return spawn_data
+
+    for exit_data in scene_data.get("exits", []):
+        if cell in exit_data.get("cells", []):
+            return exit_data
+
+    return None
+
+
+def draw_area_tooltip(screen, scene_data, camera):
+    area_data = get_area_at_mouse(screen, scene_data, camera)
+
+    if area_data is None:
+        return
+
+    label = area_data.get("name", area_data.get("id", "area"))
+    font = pygame.font.SysFont("consolas", 14)
+    text = font.render(label, True, (245, 245, 235))
+    mouse_x, mouse_y = pygame.mouse.get_pos()
+    padding = 6
+    rect = pygame.Rect(
+        mouse_x + 14,
+        mouse_y + 14,
+        text.get_width() + padding * 2,
+        text.get_height() + padding * 2,
+    )
+
+    if rect.right > screen.get_width():
+        rect.x = mouse_x - rect.width - 14
+
+    if rect.bottom > screen.get_height():
+        rect.y = mouse_y - rect.height - 14
+
+    pygame.draw.rect(screen, (28, 30, 34), rect)
+    pygame.draw.rect(screen, (110, 116, 126), rect, 1)
+    screen.blit(text, (rect.x + padding, rect.y + padding))
+
+
 def draw_editor_scene(screen, scene_data, object_definitions, sprites, camera):
     map_width = scene_data["width"]
     map_height = scene_data["height"]
@@ -254,3 +302,4 @@ def draw_editor_scene(screen, scene_data, object_definitions, sprites, camera):
         sprites,
         camera,
     )
+    draw_area_tooltip(screen, scene_data, camera)

@@ -32,11 +32,34 @@ from game.collectable_manager import update_collectables
 from game.cartography.ui.cartography_overlay import draw_cartography_overlay
 from game.scenes.scene_loader import load_scene_data
 from game.scenes.scene_manager import SceneManager, ensure_scene_state
+from game.scenes.scene_exit_resolver import get_exit_transition_for_player
 from game.scenes.scene_runtime import (
     build_scene_collision_rects,
     build_scene_world_objects,
 )
 from game.scenes.scene_state import get_current_scene_state
+from game.notifications import (
+    draw_notifications,
+    notify,
+    update_notifications,
+)
+from game.story_events import dispatch_story_event
+from game.dialogue import (
+    draw_dialogue,
+    is_dialogue_active,
+    update_dialogue,
+)
+from game.character_creation import (
+    create_character_creation_state,
+    draw_character_creation,
+    handle_character_creation_event,
+)
+from game.main_menu import (
+    create_main_menu_state,
+    draw_main_menu,
+    handle_main_menu_event,
+)
+from game.npcs import draw_npcs, get_nearby_npc, load_npcs_from_scene
 from game.cartography.ui.cartography_ui_state import CartographyUIState
 from game.data.item_database import get_item_data
 from game.inventory.slot_ui_state import SlotUIState
@@ -89,25 +112,15 @@ class PygameApp:
 
         self.state = state
         self.game_data = game_data
+        self.mode = "main_menu"
+        self.main_menu_state = create_main_menu_state()
+        self.character_creation_state = create_character_creation_state()
 
-        ensure_scene_state(self.state)
-        ensure_stash_state(self.state)
-
-        self.cartography_manager = CartographyManager()
-        self.cartography_manager.load_from_data(
-            self.state["cartography"]
-        )
-        self.expedition_manager = ExpeditionManager(self.cartography_manager)
-        self.state["cartography"] = self.cartography_manager.get_save_data()
         self.cartography_ui_state = CartographyUIState()
         self.slot_ui_state = SlotUIState()
         self.inventory_slot_hitboxes = []
         self.stash_slot_hitboxes = []
-
-        self.skill_manager = SkillManager(self.state)
-
-        self.bestiary_manager = BestiaryManager(self.state)
-        self.combat_manager = CombatManager(self)
+        self.menu_action_hitboxes = []
 
         self.placement_mode = False
         self.placement_item_id = None
@@ -128,8 +141,11 @@ class PygameApp:
         self.WHITE = WHITE
 
         self.nearby_object = None
+        self.nearby_npc = None
         self.scene_data = None
         self.scene_world_objects = []
+        self.scene_npcs = []
+        self.scene_exit_cooldown = 0
         self.player_speed = 180
         self.interaction_range = 45
 
@@ -140,19 +156,82 @@ class PygameApp:
         self.hud_visible = True
 
         self.log = list(state.get("log", []))[-7:]
+        self._notifications = []
+        self._dialogue = {
+            "active": False,
+            "dialogue_id": None,
+            "speaker_name": None,
+            "portrait_path": None,
+            "lines": [],
+            "line_index": 0,
+        }
+        self.load_game_state(state)
+        self.run_cartography_validation_debug()
+
+    def load_game_state(self, state, scene_payload=None, dispatch_scene_entered=False):
+        self.state = state
+        ensure_scene_state(self.state)
+        ensure_stash_state(self.state)
+
+        self.cartography_manager = CartographyManager()
+        self.cartography_manager.load_from_data(
+            self.state["cartography"]
+        )
+        self.expedition_manager = ExpeditionManager(self.cartography_manager)
+        self.state["cartography"] = self.cartography_manager.get_save_data()
+        self.skill_manager = SkillManager(self.state)
+        self.bestiary_manager = BestiaryManager(self.state)
+        self.combat_manager = CombatManager(self)
+        self.log = list(self.state.get("log", []))[-7:]
+        self.nearby_object = None
+        self.nearby_npc = None
+        self.scene_data = None
+        self.scene_world_objects = []
+        self.scene_npcs = []
         self.scene_manager = SceneManager(self)
         self.scene_manager.load_from_state()
-        self.run_cartography_validation_debug()
+
+        if scene_payload:
+            self.scene_manager.change_scene(
+                self.state.get("current_scene", "farm"),
+                payload=scene_payload,
+            )
+
+        if dispatch_scene_entered:
+            self.dispatch_scene_entered_event()
+
+    def open_character_creation(self):
+        self.character_creation_state = create_character_creation_state()
+        self.mode = "character_creation"
+
+    def return_to_main_menu(self):
+        self.mode = "main_menu"
+        self.main_menu_state = create_main_menu_state()
+        self.menu_open = False
+        self.stash_open = False
+        self.cartography_menu_open = False
+        self.combat_manager.end_combat()
+        self.menu_action_hitboxes = []
+        self._dialogue = {
+            "active": False,
+            "dialogue_id": None,
+            "speaker_name": None,
+            "portrait_path": None,
+            "lines": [],
+            "line_index": 0,
+        }
 
     def load_scene_runtime(self, scene_id):
         self.scene_data = load_scene_data(scene_id)
         self.scene_world_objects = []
+        self.scene_npcs = []
 
         if self.scene_data is None:
             self.state["_use_legacy_world_objects"] = True
             set_scene_collision_rects([])
             return
 
+        self.scene_npcs = load_npcs_from_scene(self.scene_data)
         scene_state = get_current_scene_state(self.state)
         removed_objects = set(scene_state.get("removed_objects", []))
         modified_objects = scene_state.get("modified_objects", {})
@@ -170,7 +249,7 @@ class PygameApp:
 
             self.scene_world_objects.append(scene_object)
 
-        self.state["_use_legacy_world_objects"] = not bool(self.scene_world_objects)
+        self.state["_use_legacy_world_objects"] = self.scene_data is None
         set_scene_collision_rects(
             build_scene_collision_rects(
                 self.scene_data,
@@ -179,7 +258,7 @@ class PygameApp:
         )
 
     def get_active_world_objects(self):
-        if not self.scene_world_objects:
+        if self.scene_data is None:
             return WORLD_OBJECTS
 
         return self.scene_world_objects
@@ -199,19 +278,36 @@ class PygameApp:
     def run(self):
         while True:
             dt = self.clock.tick(FPS) / 1000.0
-            self.scene_manager.handle_events()
+            self.handle_events()
             self.update(dt)
             self.draw()
+
+    def handle_events(self):
+        for event in pygame.event.get():
+            if self.mode == "main_menu":
+                handle_main_menu_event(self, event)
+            elif self.mode == "character_creation":
+                handle_character_creation_event(self, event)
+            else:
+                self.scene_manager.handle_event(event)
 
 
 
     def update(self, dt):
-        self.scene_manager.update(dt)
+        if self.mode == "game":
+            update_dialogue(self, dt)
+            self.scene_manager.update(dt)
+
+        update_notifications(self, dt)
 
     def update_farm_scene(self, dt):
         if self.combat_manager.is_active():
             self.combat_manager.update(dt)
             return
+
+        if is_dialogue_active(self):
+            return
+
         update_time(self.state, dt)
 
         if self.menu_open or self.stash_open:
@@ -224,6 +320,7 @@ class PygameApp:
             self.get_scene_world_width(),
             self.get_scene_world_height(),
         )
+        self.update_scene_exit_transition(dt)
         update_collectables(self)
 
         self.nearby_object = get_nearby_object(
@@ -232,10 +329,61 @@ class PygameApp:
             self.interaction_range,
             self.get_active_world_objects(),
         )
+        self.nearby_npc = get_nearby_npc(
+            self.state["player"],
+            self.scene_npcs,
+            self.interaction_range,
+        )
+
+    def update_scene_exit_transition(self, dt):
+        if self.scene_exit_cooldown > 0:
+            self.scene_exit_cooldown = max(0, self.scene_exit_cooldown - dt)
+            return
+
+        transition = get_exit_transition_for_player(
+            self.scene_data,
+            self.state["player"],
+        )
+
+        if transition is None:
+            return
+
+        dispatch_story_event(
+            self,
+            "area_entered",
+            {
+                "scene_id": self.state.get("current_scene"),
+                "area_id": transition["exit_id"],
+                "area_type": "exit",
+            },
+        )
+
+        changed = self.scene_manager.change_scene(
+            transition["target_scene_id"],
+            payload={
+                "source_scene_id": self.state.get("current_scene"),
+                "source_exit_id": transition["exit_id"],
+                "target_spawn_id": transition.get("target_spawn_id"),
+            },
+        )
+
+        if changed:
+            self.scene_exit_cooldown = 0.5
+            self.dispatch_scene_entered_event()
+
+    def dispatch_scene_entered_event(self):
+        dispatch_story_event(
+            self,
+            "scene_entered",
+            {
+                "scene_id": self.state.get("current_scene"),
+            },
+        )
 
     def sleep_day(self):
         messages = advance_day(self.state, self.game_data)
         reset_time_to_wake_up(self.state)
+        notify(self, "Amanece un nuevo dia", notification_type="center")
         expedition_day_result = self.expedition_manager.advance_active_expedition_day()
 
         if expedition_day_result["success"]:
@@ -298,6 +446,7 @@ class PygameApp:
         self.log.append(message)
         self.log = self.log[-7:]
         self.state["log"] = self.log
+        notify(self, message, notification_type="corner")
 
     def run_cartography_validation_debug(self):
         config = self.game_data.get("config", {})
@@ -311,7 +460,15 @@ class PygameApp:
             print("[cartography validation]", format_validation_issue(issue))
 
     def draw(self):
-        self.scene_manager.draw()
+        if self.mode == "main_menu":
+            draw_main_menu(self)
+            draw_notifications(self)
+        elif self.mode == "character_creation":
+            draw_character_creation(self)
+            draw_notifications(self)
+        else:
+            self.scene_manager.draw()
+
         pygame.display.flip()
 
     def draw_farm_scene(self):
@@ -354,6 +511,9 @@ class PygameApp:
 
         if self.cartography_menu_open:
             draw_cartography_overlay(self)
+
+        draw_dialogue(self)
+        draw_notifications(self)
 
         if self.combat_manager.is_active():
             self.combat_manager.draw()
@@ -420,6 +580,8 @@ class PygameApp:
 
             if selected:
                 self.draw_text("E", x - 5, y - radius - 28, WARN, self.big_font)
+
+        draw_npcs(self, camera_x, camera_y)
 
         for collectable in self.state.get("collectables", []):
             x = int(collectable["x"] - camera_x)
@@ -503,7 +665,9 @@ class PygameApp:
                 pygame.draw.rect(self.screen, (240, 220, 80), preview_rect, 2)
                 draw_item_sprite(self.screen, item_data, preview_rect, padding=3)
 
-        if self.nearby_object is None:
+        if self.nearby_npc is not None:
+            self.draw_text(f"Cerca: {self.nearby_npc['name']} | E/Enter interactuar", 80, 530, DARK)
+        elif self.nearby_object is None:
             self.draw_text("WASD/Flechas: moverse | E/Enter: interactuar", 80, 530, DARK)
         else:
             self.draw_text(f"Cerca: {self.nearby_object['name']} | E/Enter interactuar", 80, 530, DARK)

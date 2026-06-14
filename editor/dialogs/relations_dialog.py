@@ -7,6 +7,8 @@ COLOR_BORDER = (95, 100, 110)
 COLOR_ROW_HOVER = (55, 59, 66)
 COLOR_ROW_ACTIVE = (86, 120, 92)
 COLOR_BUTTON = (55, 59, 66)
+COLOR_BUTTON_SAVE = (70, 130, 86)
+COLOR_BUTTON_SAVE_HOVER = (88, 154, 104)
 COLOR_TEXT = (230, 230, 230)
 COLOR_TEXT_MUTED = (165, 170, 178)
 
@@ -32,12 +34,43 @@ def draw_row(screen, rect, label, active):
     screen.blit(text, (rect.x + 8, rect.y + 7))
 
 
-def draw_button(screen, rect, label):
+def draw_edit_button(screen, rect, visible):
+    mouse_pos = pygame.mouse.get_pos()
+
+    if not visible:
+        return
+
+    color = COLOR_BUTTON
+
+    if rect.collidepoint(mouse_pos):
+        color = COLOR_ROW_HOVER
+
+    pygame.draw.rect(screen, color, rect)
+    pygame.draw.rect(screen, COLOR_BORDER, rect, 1)
+
+    font = pygame.font.SysFont("segoe ui symbol", 15)
+    text = font.render("✎", True, COLOR_TEXT)
+    screen.blit(
+        text,
+        (
+            rect.x + (rect.width - text.get_width()) // 2,
+            rect.y + (rect.height - text.get_height()) // 2,
+        ),
+    )
+
+
+def draw_button(screen, rect, label, variant=None):
     mouse_pos = pygame.mouse.get_pos()
 
     color = COLOR_BUTTON
+    hover_color = COLOR_ROW_HOVER
+
+    if variant == "save":
+        color = COLOR_BUTTON_SAVE
+        hover_color = COLOR_BUTTON_SAVE_HOVER
+
     if rect.collidepoint(mouse_pos):
-        color = COLOR_ROW_HOVER
+        color = hover_color
 
     pygame.draw.rect(screen, color, rect)
     pygame.draw.rect(screen, COLOR_BORDER, rect, 1)
@@ -130,6 +163,15 @@ def draw_relations_dialog(
         )
 
         draw_row(screen, rect, label, active)
+        edit_rect = pygame.Rect(rect.right - 28, rect.y + 4, 22, 22)
+        draw_edit_button(screen, edit_rect, rect.collidepoint(pygame.mouse.get_pos()))
+
+        buttons.append({
+            "rect": edit_rect,
+            "action": "relation_rename_exit",
+            "scene_id": exit_data["scene_id"],
+            "area_id": exit_data["exit_id"],
+        })
 
         buttons.append({
             "rect": rect,
@@ -153,6 +195,15 @@ def draw_relations_dialog(
         )
 
         draw_row(screen, rect, label, active)
+        edit_rect = pygame.Rect(rect.right - 28, rect.y + 4, 22, 22)
+        draw_edit_button(screen, edit_rect, rect.collidepoint(pygame.mouse.get_pos()))
+
+        buttons.append({
+            "rect": edit_rect,
+            "action": "relation_rename_spawn",
+            "scene_id": target_data["scene_id"],
+            "area_id": target_data["spawn_id"],
+        })
 
         buttons.append({
             "rect": rect,
@@ -176,7 +227,7 @@ def draw_relations_dialog(
         30,
     )
 
-    draw_button(screen, confirm_rect, "Guardar")
+    draw_button(screen, confirm_rect, "Guardar", variant="save")
     draw_button(screen, cancel_rect, "Cerrar")
 
     buttons.append({

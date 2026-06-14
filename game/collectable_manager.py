@@ -2,6 +2,8 @@ import random
 
 from game.inventory.inventory_manager import add_item
 from game.data.item_database import get_item_data
+from game.notifications import notify
+from game.story_events import dispatch_story_event
 
 
 COLLECT_RADIUS = 28
@@ -62,7 +64,16 @@ def update_collectables(app):
             item_name = item_data["name"]
 
         app.add_log(f"Recoges {item_name} x{collectable['amount']}.")
+        notify(app, f"+{collectable['amount']} {item_name}", "loot")
         app.skill_manager.register_action("collectable_picked")
+        dispatch_story_event(
+            app,
+            "item_collected",
+            {
+                "item_id": collectable["item_id"],
+                "amount": collectable["amount"],
+            },
+        )
         collected.append(collectable)
 
     for collectable in collected:

@@ -10,6 +10,7 @@ from game.skills.skill_database import SKILL_DATABASE
 from game.ui.ui_components import (
     TEXT_DARK,
     TEXT_DISABLED,
+    draw_button_text,
     draw_content_panel,
     draw_panel,
     draw_progress_bar,
@@ -74,6 +75,7 @@ def draw_menu(app):
         TAB_Y,
     )
     draw_content_panel(app.screen, MENU_CONTENT_RECT, padding=12)
+    app.menu_action_hitboxes = []
 
     if app.menu_tab == "inventory":
         draw_inventory_tab(app)
@@ -89,6 +91,9 @@ def draw_menu(app):
 
     elif app.menu_tab == "skills":
         draw_skills_tab(app)
+
+    elif app.menu_tab == "options":
+        draw_options_tab(app)
 
     else:
         app.draw_text("Pendiente de prototipar.", 140, 190, TEXT_DARK)
@@ -422,3 +427,17 @@ def draw_skills_tab(app):
         )
 
         y += 48
+
+
+def draw_options_tab(app):
+    app.draw_text("Opciones", 140, 186, TEXT_DARK, app.big_font)
+    app.draw_text("Ajustes proximamente.", 140, 226, TEXT_DARK, app.small_font)
+
+    button_rect = pygame.Rect(140, 278, 230, 42)
+    draw_panel(app.screen, button_rect)
+    draw_button_text(app.screen, app.font, "Salir al menu principal", button_rect, enabled=True)
+
+    app.menu_action_hitboxes.append({
+        "rect": button_rect,
+        "action": "return_to_main_menu",
+    })

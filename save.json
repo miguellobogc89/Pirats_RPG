@@ -1,64 +1,9 @@
 {
-  "day": 23,
-  "season_index": 0,
-  "health": {
-    "current": 100,
-    "max": 100
-  },
-  "energy": {
-    "current": 10,
-    "max": 10
-  },
   "resources": {
-    "food": 14,
-    "wood": 35,
-    "iron": 10,
-    "carbon": 6,
-    "gold": 390,
-    "coral": 0,
-    "pearls": 0,
-    "map_piece": 0
+    "gold": 100
   },
-  "upgrades": {
-    "steel_keel": false
-  },
-  "destroyed_world_objects": [
-    "rock_01",
-    "tree_02",
-    "tree_01",
-    "tree_03",
-    "tree_001",
-    "bush_166",
-    "bush_165",
-    "bush_164",
-    "bush_170"
-  ],
-  "wind": "west",
-  "ship": {
-    "status": "available",
-    "days_left": 0,
-    "route": null,
-    "success_rate": 0,
-    "pending_event": null,
-    "secured_reward": {}
-  },
-  "player": {
-    "zone": "dock",
-    "x": 112.93976628610837,
-    "y": 527.4267792333656,
-    "direction": "down"
-  },
-  "log": [
-    "Arbusto destruido.",
-    "Golpeas Arbusto. Energía -1.",
-    "Arbusto destruido.",
-    "No tienes energía suficiente.",
-    "Recoges Comida x3.",
-    "Recoges Comida x5.",
-    "Duermes y recuperas energia."
-  ],
   "inventory": {
-    "rows": 3,
+    "rows": 2,
     "columns": 8,
     "active_hotbar_index": 0,
     "grid": [
@@ -72,19 +17,11 @@
           "amount": 1
         },
         {
+          "item_id": "campfire",
+          "amount": 1
+        },
+        {
           "item_id": "hoe",
-          "amount": 1
-        },
-        {
-          "item_id": "watering_can",
-          "amount": 1
-        },
-        {
-          "item_id": "fishing_rod",
-          "amount": 1
-        },
-        {
-          "item_id": "wooden_sword",
           "amount": 1
         },
         {
@@ -92,186 +29,181 @@
           "amount": 10
         },
         {
-          "item_id": "small_health_potion",
-          "amount": 3
+          "item_id": "watering_can",
+          "amount": 1
+        },
+        {
+          "item_id": "rope",
+          "amount": 99
+        },
+        {
+          "item_id": "rope",
+          "amount": 1
         }
       ],
       [
         {
           "item_id": "wood",
-          "amount": 50
+          "amount": 99
         },
         {
-          "item_id": "stone",
-          "amount": 40
+          "item_id": "rope",
+          "amount": 99
         },
         {
-          "item_id": "log",
-          "amount": 12
-        },
-        {
-          "item_id": "plank",
-          "amount": 20
-        },
-        {
-          "item_id": "coal",
-          "amount": 15
-        },
-        {
-          "item_id": "iron_ore",
-          "amount": 10
-        },
-        {
-          "item_id": "copper_ore",
-          "amount": 10
-        },
-        {
-          "item_id": "campfire",
-          "amount": 1
-        }
-      ],
-      [
-        {
-          "item_id": "apple",
-          "amount": 5
-        },
-        {
-          "item_id": "carrot",
-          "amount": 5
-        },
-        {
-          "item_id": "corn",
-          "amount": 5
-        },
-        {
-          "item_id": "arrow",
-          "amount": 20
-        },
-        {
-          "item_id": "round_shield",
+          "item_id": "wood",
           "amount": 1
         },
         {
-          "item_id": "amethyst",
-          "amount": 2
-        },
-        {
-          "item_id": "copper_key",
+          "item_id": "rope",
           "amount": 1
         },
+        null,
+        null,
+        null,
         null
       ]
     ]
+  },
+  "stash": {
+    "rows": 3,
+    "columns": 8,
+    "grid": [
+      [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ]
+    ]
+  },
+  "player": {
+    "x": 139.45867545122593,
+    "y": 537.612973926921,
+    "name": "aaaa",
+    "gender": "male",
+    "direction": "left"
+  },
+  "time": {
+    "day": 2,
+    "hour": 6,
+    "minute": 0
+  },
+  "day": 2,
+  "season_index": 1,
+  "health": {
+    "current": 100,
+    "max": 100
+  },
+  "energy": {
+    "current": 10,
+    "max": 10
+  },
+  "magic": {
+    "current": 0,
+    "max": 0
+  },
+  "wind": "south",
+  "ship": {
+    "status": "available",
+    "days_left": 0,
+    "route": null,
+    "success_rate": 0,
+    "pending_event": null,
+    "secured_reward": {}
+  },
+  "upgrades": {
+    "steel_keel": false
   },
   "farming": {
     "tilled_cells": [],
     "watered_cells": [],
     "crops": []
   },
-  "collectables": [
-    {
-      "id": "collectable_1_3638",
-      "item_id": "food",
-      "amount": 5,
-      "x": 505.0,
-      "y": 546.0,
-      "radius": 10
-    }
-  ],
-  "time": {
-    "hour": 15,
-    "minute": 37.48999999999555,
-    "day": 23
-  },
-  "placed_objects": [
-    {
-      "item_id": "campfire",
-      "grid_x": 8,
-      "grid_y": 15,
-      "width": 2,
-      "height": 2
-    }
-  ],
   "construction": {
-    "placed_objects": [
-      {
-        "item_id": "campfire",
-        "grid_x": 8,
-        "grid_y": 15,
-        "width": 2,
-        "height": 2
-      }
-    ]
+    "placed_objects": []
   },
   "destroyed_objects": [],
+  "collectables": [],
+  "log": [
+    "Duermes y recuperas energia."
+  ],
+  "scene_states": {
+    "farm": {
+      "removed_objects": [],
+      "placed_objects": [],
+      "modified_objects": {},
+      "tilled_cells": [],
+      "watered_cells": [],
+      "crops": [],
+      "_legacy_migrated": true
+    }
+  },
   "skills": {
     "farming": {
       "level": 1,
-      "xp": 0
+      "xp": 0,
+      "total_xp": 0
     },
     "gathering": {
       "level": 1,
-      "xp": 35,
-      "total_xp": 35
+      "xp": 0,
+      "total_xp": 0
     },
     "mining": {
       "level": 1,
-      "xp": 0
+      "xp": 0,
+      "total_xp": 0
     },
     "crafting": {
       "level": 1,
-      "xp": 10,
-      "total_xp": 10
+      "xp": 0,
+      "total_xp": 0
     },
     "construction": {
       "level": 1,
-      "xp": 0
+      "xp": 0,
+      "total_xp": 0
     },
     "navigation": {
       "level": 1,
-      "xp": 0
+      "xp": 0,
+      "total_xp": 0
     },
     "cartography": {
       "level": 1,
-      "xp": 0
+      "xp": 0,
+      "total_xp": 0
     },
     "combat": {
       "level": 1,
       "xp": 0,
       "total_xp": 0
     }
-  },
-  "bestiary": {
-    "known_creatures": [
-      "rock_turtle",
-      "fire_worm"
-    ],
-    "owned_creatures": [
-      {
-        "creature_id": "rock_turtle",
-        "level": 1,
-        "xp": 0,
-        "nickname": "Roca",
-        "equipped_abilities": [
-          "stone_guard",
-          "shell_bash"
-        ]
-      },
-      {
-        "creature_id": "fire_worm",
-        "level": 1,
-        "xp": 0,
-        "nickname": "Brasa",
-        "equipped_abilities": [
-          "ember_bite",
-          "burning_spit"
-        ]
-      }
-    ],
-    "active_party": [
-      0,
-      1
-    ]
   },
   "cartography": {
     "regions": {
@@ -283,20 +215,20 @@
       },
       "calm_waters": {
         "id": "calm_waters",
-        "state": "explored",
-        "cartography_percent": 100,
-        "visits": 6
-      },
-      "driftwood_coast": {
-        "id": "driftwood_coast",
         "state": "seen",
         "cartography_percent": 25,
         "visits": 0
       },
+      "driftwood_coast": {
+        "id": "driftwood_coast",
+        "state": "hidden",
+        "cartography_percent": 0,
+        "visits": 0
+      },
       "misty_reef": {
         "id": "misty_reef",
-        "state": "seen",
-        "cartography_percent": 25,
+        "state": "hidden",
+        "cartography_percent": 0,
         "visits": 0
       },
       "old_lighthouse": {
@@ -342,234 +274,48 @@
     ],
     "ship_storage": {
       "max_slots": 16,
-      "items": {
-        "iron": 3,
-        "stone": 11
-      }
+      "items": {}
     },
     "active_expedition": null,
-    "pending_expedition_result": {
-      "status": "pending_claim",
-      "region_id": "calm_waters",
-      "rewards": {
-        "driftwood": 5,
-        "sea_fiber": 2
+    "pending_expedition_result": null,
+    "pending_expedition_results": []
+  },
+  "bestiary": {
+    "known_creatures": [
+      "rock_turtle",
+      "fire_worm"
+    ],
+    "owned_creatures": [
+      {
+        "creature_id": "rock_turtle",
+        "level": 1,
+        "xp": 0,
+        "nickname": "Roca",
+        "equipped_abilities": [
+          "stone_guard",
+          "shell_bash"
+        ]
       },
-      "arrival_day": 6,
-      "cartography_progress": {
-        "status": "applied",
-        "explore_result": {
-          "success": true,
-          "region_id": "calm_waters",
-          "cartography_percent": 75,
-          "state": "explored"
-        }
+      {
+        "creature_id": "fire_worm",
+        "level": 1,
+        "xp": 0,
+        "nickname": "Brasa",
+        "equipped_abilities": [
+          "ember_bite",
+          "burning_spit"
+        ]
       }
-    },
-    "pending_expedition_results": [
-      {
-        "status": "pending_claim",
-        "region_id": "calm_waters",
-        "rewards": {
-          "driftwood": 5,
-          "sea_fiber": 2
-        },
-        "arrival_day": 6,
-        "cartography_progress": {
-          "status": "applied",
-          "explore_result": {
-            "success": true,
-            "region_id": "calm_waters",
-            "cartography_percent": 75,
-            "state": "explored"
-          }
-        }
-      },
-      {
-        "status": "pending_claim",
-        "region_id": "calm_waters",
-        "rewards": {
-          "driftwood": 5,
-          "sea_fiber": 2
-        },
-        "arrival_day": 15,
-        "cartography_progress": {
-          "status": "applied",
-          "explore_result": {
-            "success": true,
-            "region_id": "calm_waters",
-            "cartography_percent": 100,
-            "state": "explored"
-          }
-        }
-      },
-      {
-        "status": "pending_claim",
-        "region_id": "calm_waters",
-        "rewards": {
-          "driftwood": 5,
-          "sea_fiber": 2
-        },
-        "arrival_day": 16,
-        "cartography_progress": {
-          "status": "applied",
-          "explore_result": {
-            "success": true,
-            "region_id": "calm_waters",
-            "cartography_percent": 100,
-            "state": "explored"
-          }
-        }
-      },
-      {
-        "status": "pending_claim",
-        "region_id": "calm_waters",
-        "rewards": {
-          "driftwood": 5,
-          "sea_fiber": 2
-        },
-        "arrival_day": 17,
-        "cartography_progress": {
-          "status": "applied",
-          "explore_result": {
-            "success": true,
-            "region_id": "calm_waters",
-            "cartography_percent": 100,
-            "state": "explored"
-          }
-        }
-      },
-      {
-        "status": "pending_claim",
-        "region_id": "calm_waters",
-        "rewards": {
-          "driftwood": 2,
-          "sea_fiber": 3
-        },
-        "arrival_day": 20,
-        "cartography_progress": {
-          "status": "applied",
-          "explore_result": {
-            "success": true,
-            "region_id": "calm_waters",
-            "cartography_percent": 100,
-            "state": "explored"
-          }
-        }
-      }
+    ],
+    "active_party": [
+      0,
+      1
     ]
   },
-  "legacy_hotbar": [
-    {
-      "item_id": "axe",
-      "amount": 1
-    },
-    {
-      "item_id": "pickaxe",
-      "amount": 1
-    },
-    {
-      "item_id": "hoe",
-      "amount": 1
-    },
-    {
-      "item_id": "watering_can",
-      "amount": 1
-    },
-    {
-      "item_id": "fishing_rod",
-      "amount": 1
-    },
-    {
-      "item_id": "wooden_sword",
-      "amount": 1
-    },
-    {
-      "item_id": "corn_seed",
-      "amount": 10
-    },
-    {
-      "item_id": "small_health_potion",
-      "amount": 3
-    }
-  ],
   "current_scene": "farm",
-  "stash": {
-    "rows": 3,
-    "columns": 8,
-    "grid": [
-      [
-        null,
-        {
-          "item_id": "pickaxe",
-          "amount": 1
-        },
-        null,
-        null,
-        null,
-        null,
-        null,
-        null
-      ],
-      [
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null
-      ],
-      [
-        null,
-        {
-          "item_id": "wood",
-          "amount": 99
-        },
-        {
-          "item_id": "hoe",
-          "amount": 1
-        },
-        {
-          "item_id": "rope",
-          "amount": 82
-        },
-        null,
-        null,
-        null,
-        null
-      ]
-    ]
+  "_use_legacy_world_objects": false,
+  "last_scene_payload": {
+    "target_spawn_id": "spawn_001"
   },
-  "scene_states": {
-    "farm": {
-      "removed_objects": [
-        "rock_01",
-        "tree_02",
-        "tree_01",
-        "tree_03",
-        "tree_001",
-        "bush_166",
-        "bush_165",
-        "bush_164",
-        "bush_170"
-      ],
-      "placed_objects": [
-        {
-          "item_id": "campfire",
-          "grid_x": 8,
-          "grid_y": 15,
-          "width": 2,
-          "height": 2
-        }
-      ],
-      "modified_objects": {},
-      "tilled_cells": [],
-      "watered_cells": [],
-      "crops": [],
-      "_legacy_migrated": true
-    }
-  },
-  "_use_legacy_world_objects": false
+  "placed_objects": []
 }

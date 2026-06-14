@@ -6,12 +6,19 @@ from game.inventory.inventory_state import ensure_inventory_state
 from game.inventory.stash_state import create_default_stash_state, ensure_stash_state
 from game.scenes.scene_loader import load_scene_data
 from game.scenes.scene_state import create_default_scene_state, ensure_scene_states
+from game.story.story_state import create_default_story_state, ensure_story_state
+from game.story_events.story_event_state import (
+    create_default_story_event_state,
+    ensure_story_event_state,
+)
 
 
 DEFAULT_CONFIG = {
     "initial_day": 1,
     "initial_season_index": 0,
     "max_energy": 10,
+    "max_health": 10,
+    "max_magic": 0,
     "initial_wind": "calm",
 }
 
@@ -37,6 +44,24 @@ def create_default_energy_state(game_data):
     return {
         "current": max_energy,
         "max": max_energy,
+    }
+
+
+def create_default_health_state(game_data):
+    max_health = get_config_value(game_data, "max_health")
+
+    return {
+        "current": max_health,
+        "max": max_health,
+    }
+
+
+def create_default_magic_state(game_data):
+    max_magic = get_config_value(game_data, "max_magic")
+
+    return {
+        "current": max_magic,
+        "max": max_magic,
     }
 
 
@@ -77,6 +102,8 @@ def create_initial_state(game_data):
         "player": {
             "x": player_spawn["x"],
             "y": player_spawn["y"],
+            "name": "",
+            "gender": "neutral",
         },
         "time": {
             "day": initial_day,
@@ -85,7 +112,9 @@ def create_initial_state(game_data):
         },
         "day": initial_day,
         "season_index": get_config_value(game_data, "initial_season_index"),
+        "health": create_default_health_state(game_data),
         "energy": create_default_energy_state(game_data),
+        "magic": create_default_magic_state(game_data),
         "wind": get_config_value(game_data, "initial_wind"),
         "ship": create_default_ship_state(),
         "upgrades": create_default_upgrades_state(game_data),
@@ -98,14 +127,25 @@ def create_initial_state(game_data):
             "placed_objects": [],
         },
         "destroyed_objects": [],
+        "collectables": [],
+        "log": [],
         "scene_states": {
             initial_scene_id: create_default_scene_state(),
         },
         "skills": create_default_skills_state(SKILL_DATABASE),
         "cartography": CartographyManager().get_save_data(),
         "bestiary": create_default_bestiary_state(),
+        "story": create_default_story_state(),
+        "story_events": create_default_story_event_state(),
         "current_scene": initial_scene_id,
     }
+
+
+def create_new_game_state(player_name, player_gender, game_data):
+    state = create_initial_state(game_data)
+    state["player"]["name"] = player_name
+    state["player"]["gender"] = player_gender
+    return state
 
 
 def normalize_state(state, game_data=None):
@@ -130,6 +170,12 @@ def normalize_state(state, game_data=None):
             "y": 300,
         }
 
+    if "name" not in state["player"]:
+        state["player"]["name"] = ""
+
+    if "gender" not in state["player"]:
+        state["player"]["gender"] = "neutral"
+
     if not isinstance(state.get("time"), dict):
         state["time"] = {
             "day": get_config_value(game_data, "initial_day"),
@@ -145,6 +191,15 @@ def normalize_state(state, game_data=None):
     if "season_index" not in state:
         state["season_index"] = get_config_value(game_data, "initial_season_index")
 
+    if not isinstance(state.get("health"), dict):
+        state["health"] = create_default_health_state(game_data)
+
+    if "current" not in state["health"]:
+        state["health"]["current"] = state["health"].get("max", get_config_value(game_data, "max_health"))
+
+    if "max" not in state["health"]:
+        state["health"]["max"] = get_config_value(game_data, "max_health")
+
     if not isinstance(state.get("energy"), dict):
         state["energy"] = create_default_energy_state(game_data)
 
@@ -153,6 +208,15 @@ def normalize_state(state, game_data=None):
 
     if "max" not in state["energy"]:
         state["energy"]["max"] = get_config_value(game_data, "max_energy")
+
+    if not isinstance(state.get("magic"), dict):
+        state["magic"] = create_default_magic_state(game_data)
+
+    if "current" not in state["magic"]:
+        state["magic"]["current"] = state["magic"].get("max", get_config_value(game_data, "max_magic"))
+
+    if "max" not in state["magic"]:
+        state["magic"]["max"] = get_config_value(game_data, "max_magic")
 
     if "wind" not in state:
         state["wind"] = get_config_value(game_data, "initial_wind")
@@ -202,6 +266,12 @@ def normalize_state(state, game_data=None):
     if "destroyed_objects" not in state:
         state["destroyed_objects"] = []
 
+    if "collectables" not in state:
+        state["collectables"] = []
+
+    if "log" not in state:
+        state["log"] = []
+
     if "current_scene" not in state:
         state["current_scene"] = "farm"
 
@@ -215,6 +285,9 @@ def normalize_state(state, game_data=None):
 
     if "bestiary" not in state:
         state["bestiary"] = create_default_bestiary_state()
+
+    ensure_story_state(state)
+    ensure_story_event_state(state)
 
     default_skills = create_default_skills_state(SKILL_DATABASE)
 
