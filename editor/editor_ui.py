@@ -4,19 +4,15 @@ from editor.ui.editor_menu_bar import MENU_BAR_HEIGHT
 from editor.ui.editor_status_bar import STATUS_BAR_HEIGHT
 
 PANEL_WIDTH = 260
-
-BUTTON_HEIGHT = 30
+ROW_HEIGHT = 30
 BUTTON_MARGIN = 8
 
 COLOR_PANEL = (38, 41, 46)
-COLOR_PANEL_DARK = (24, 26, 30)
-COLOR_BUTTON = (55, 59, 66)
-COLOR_BUTTON_HOVER = (68, 73, 82)
-COLOR_BUTTON_ACTIVE = (86, 120, 92)
+COLOR_ROW_HOVER = (55, 59, 66)
+COLOR_ROW_ACTIVE = (86, 120, 92)
 COLOR_BORDER = (95, 100, 110)
 COLOR_TEXT = (230, 230, 230)
 COLOR_TEXT_MUTED = (165, 170, 178)
-
 
 NON_PLACEABLE_OBJECT_TYPES = {"player"}
 
@@ -26,17 +22,14 @@ def draw_text(screen, font, text, x, y, color=COLOR_TEXT):
     screen.blit(surface, (x, y))
 
 
-def draw_nav_item(screen, rect, label, active=False):
+def draw_nav_row(screen, rect, label, active=False):
     mouse_pos = pygame.mouse.get_pos()
 
-    color = COLOR_PANEL
     if rect.collidepoint(mouse_pos):
-        color = COLOR_BUTTON_HOVER
-    if active:
-        color = COLOR_BUTTON_ACTIVE
+        pygame.draw.rect(screen, COLOR_ROW_HOVER, rect)
 
-    pygame.draw.rect(screen, color, rect)
-    pygame.draw.rect(screen, COLOR_BORDER, rect, 1)
+    if active:
+        pygame.draw.rect(screen, COLOR_ROW_ACTIVE, rect)
 
     font = pygame.font.SysFont("consolas", 15)
     text = font.render(label, True, COLOR_TEXT)
@@ -47,6 +40,13 @@ def draw_nav_item(screen, rect, label, active=False):
             rect.x + 10,
             rect.y + (rect.height - text.get_height()) // 2,
         ),
+    )
+
+    pygame.draw.line(
+        screen,
+        COLOR_BORDER,
+        (rect.x, rect.bottom),
+        (rect.right, rect.bottom),
     )
 
 
@@ -61,8 +61,15 @@ def get_object_buttons(object_definitions=None):
     ]
 
 
-def draw_section_title(screen, font, text, x, y):
+def draw_section_title(screen, font, text, x, y, width):
     draw_text(screen, font, text.upper(), x, y, COLOR_TEXT_MUTED)
+
+    pygame.draw.line(
+        screen,
+        COLOR_BORDER,
+        (x, y + 22),
+        (x + width, y + 22),
+    )
 
 
 def draw_editor_side_panel(screen, mode, selected_object_type, object_definitions=None):
@@ -93,13 +100,13 @@ def draw_editor_side_panel(screen, mode, selected_object_type, object_definition
     y = MENU_BAR_HEIGHT + 12
     width = PANEL_WIDTH - BUTTON_MARGIN * 2
 
-    draw_section_title(screen, font, "Insertar objetos", x, y)
-    y += 24
+    draw_section_title(screen, font, "Insertar objetos", x, y, width)
+    y += 28
 
     for object_type, label in get_object_buttons(object_definitions):
-        rect = pygame.Rect(x, y, width, BUTTON_HEIGHT)
+        rect = pygame.Rect(x, y, width, ROW_HEIGHT)
 
-        draw_nav_item(
+        draw_nav_row(
             screen,
             rect,
             label,
@@ -112,15 +119,15 @@ def draw_editor_side_panel(screen, mode, selected_object_type, object_definition
             "object_type": object_type,
         })
 
-        y += BUTTON_HEIGHT + 4
+        y += ROW_HEIGHT
 
-    y += 16
-    draw_section_title(screen, font, "Colisiones", x, y)
-    y += 24
+    y += 18
+    draw_section_title(screen, font, "Colisiones", x, y, width)
+    y += 28
 
-    collision_rect = pygame.Rect(x, y, width, BUTTON_HEIGHT)
+    collision_rect = pygame.Rect(x, y, width, ROW_HEIGHT)
 
-    draw_nav_item(
+    draw_nav_row(
         screen,
         collision_rect,
         "Pintar colisiones",
@@ -132,7 +139,7 @@ def draw_editor_side_panel(screen, mode, selected_object_type, object_definition
         "action": "mode_collisions",
     })
 
-        y += ROW_HEIGHT + 18
+    y += ROW_HEIGHT + 18
     draw_section_title(screen, font, "Navegación", x, y, width)
     y += 28
 
@@ -166,13 +173,13 @@ def draw_editor_side_panel(screen, mode, selected_object_type, object_definition
         "action": "mode_exits",
     })
 
-    y += BUTTON_HEIGHT + 20
-    draw_section_title(screen, font, "Terreno", x, y)
-    y += 24
+    y += ROW_HEIGHT + 18
+    draw_section_title(screen, font, "Terreno", x, y, width)
+    y += 28
 
-    terrain_rect = pygame.Rect(x, y, width, BUTTON_HEIGHT)
+    terrain_rect = pygame.Rect(x, y, width, ROW_HEIGHT)
 
-    draw_nav_item(
+    draw_nav_row(
         screen,
         terrain_rect,
         "Grass",
@@ -183,33 +190,6 @@ def draw_editor_side_panel(screen, mode, selected_object_type, object_definition
         "rect": terrain_rect,
         "action": "terrain_grass",
     })
-
-    y += BUTTON_HEIGHT + 20
-    draw_section_title(screen, font, "Escena", x, y)
-    y += 24
-
-    scene_info = [
-        "Delimitar escena",
-        "Guardar como",
-        "Nueva escena",
-    ]
-
-    for label in scene_info:
-        rect = pygame.Rect(x, y, width, BUTTON_HEIGHT)
-
-        draw_nav_item(
-            screen,
-            rect,
-            label,
-            False,
-        )
-
-        buttons.append({
-            "rect": rect,
-            "action": "mockup",
-        })
-
-        y += BUTTON_HEIGHT + 4
 
     return buttons
 

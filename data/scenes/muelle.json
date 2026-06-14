@@ -184,5 +184,56 @@
       8
     ]
   ],
-  "exits": []
+  "spawns": [
+    {
+      "id": "spawn_001",
+      "cell": [
+        12,
+        9
+      ]
+    },
+    {
+      "id": "spawn_002",
+      "cell": [
+        13,
+        9
+      ]
+    },
+    {
+      "id": "spawn_003",
+      "cell": [
+        14,
+        9
+      ]
+    }
+  ],
+  "exits": [
+    {
+      "id": "exit_001",
+      "cell": [
+        12,
+        7
+      ],
+      "target_scene_id": "",
+      "target_spawn_id": ""
+    },
+    {
+      "id": "exit_002",
+      "cell": [
+        13,
+        7
+      ],
+      "target_scene_id": "",
+      "target_spawn_id": ""
+    },
+    {
+      "id": "exit_003",
+      "cell": [
+        14,
+        7
+      ],
+      "target_scene_id": "",
+      "target_spawn_id": ""
+    }
+  ]
 }

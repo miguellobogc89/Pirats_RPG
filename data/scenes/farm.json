@@ -1752,5 +1752,24 @@
       21
     ]
   ],
-  "exits": []
+  "spawns": [
+    {
+      "id": "spawn_001",
+      "cell": [
+        14,
+        18
+      ]
+    }
+  ],
+  "exits": [
+    {
+      "id": "exit_001",
+      "cell": [
+        21,
+        21
+      ],
+      "target_scene_id": "",
+      "target_spawn_id": ""
+    }
+  ]
 }
