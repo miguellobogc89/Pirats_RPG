@@ -408,6 +408,13 @@ class EditorInputManager:
             self.active_menu = None
             return None
 
+        if action == "menu_objects":
+            if self.active_menu == "objects":
+                self.active_menu = None
+            else:
+                self.active_menu = "objects"
+            return None
+
         if action == "menu_settings":
             self.active_menu = None
             return None
@@ -527,12 +534,7 @@ class EditorInputManager:
             self.selected_terrain_id = clicked_action["terrain_id"]
             return None
 
-        if action == "menu_objects":
-            if self.active_menu == "objects":
-                self.active_menu = None
-            else:
-                self.active_menu = "objects"
-            return None
+
 
         return None
 
