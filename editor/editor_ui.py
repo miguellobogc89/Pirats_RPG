@@ -281,6 +281,7 @@ def draw_editor_side_panel(
 
     buttons.append({
         "rect": terrain_rect,
+        "action": "select_terrain"
         "action": "terrain_grass",
     })
 

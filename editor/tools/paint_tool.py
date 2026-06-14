@@ -105,8 +105,8 @@ def paint_rect(scene_data, mode, selected_object_type, selected_terrain_id, obje
                 scene_data,
                 mode,
                 selected_object_type,
+                selected_terrain_id,
                 object_definitions,
-                selected_terrain_id
                 [x, y],
             )
 

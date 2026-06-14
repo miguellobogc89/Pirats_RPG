@@ -567,6 +567,7 @@ class EditorInputManager:
                 self.scene_data,
                 self.mode,
                 self.selected_object_type,
+                self.selected_terrain_id,
                 self.object_definitions,
                 self.camera,
                 event.pos,
