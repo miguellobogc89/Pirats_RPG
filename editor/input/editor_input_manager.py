@@ -20,6 +20,8 @@ class EditorInputManager:
         self.camera = camera
         self.save_scene_callback = save_scene_callback
 
+        self.active_menu = None
+
         self.mode = "objects"
         self.selected_object_type = None
         self.buttons = []
@@ -70,6 +72,35 @@ class EditorInputManager:
             return
 
         action = clicked_action["action"]
+
+        if action == "menu_file":
+            if self.active_menu == "file":
+                self.active_menu = None
+            else:
+                self.active_menu = "file"
+            return
+
+        if action == "menu_edit":
+            self.active_menu = None
+            return
+
+        if action == "menu_settings":
+            self.active_menu = None
+            return
+
+        if action == "file_save":
+            self.save_scene_callback(self.scene_data)
+            self.active_menu = None
+            return
+
+        if action == "file_exit":
+            self.save_scene_callback(self.scene_data)
+            self.active_menu = None
+            return "exit"
+
+        if action in ["file_new", "file_save_as"]:
+            self.active_menu = None
+            return
 
         if action == "save":
             self.save_scene_callback(self.scene_data)
@@ -174,7 +205,11 @@ class EditorInputManager:
         clicked_action = get_clicked_panel_action(event.pos, self.buttons)
 
         if clicked_action:
-            self.handle_panel_action(clicked_action)
+            panel_result = self.handle_panel_action(clicked_action)
+
+            if panel_result == "exit":
+                return "exit"
+
             return
 
         if self.is_inside_canvas(screen, event.pos):
@@ -247,7 +282,10 @@ class EditorInputManager:
                 self.save_scene_callback(self.scene_data)
 
         if event.type == pygame.MOUSEBUTTONDOWN:
-            self.handle_mouse_button_down(screen, event)
+            result = self.handle_mouse_button_down(screen, event)
+
+            if result == "exit":
+                return False
 
         if event.type == pygame.MOUSEBUTTONUP:
             self.handle_mouse_button_up(event)

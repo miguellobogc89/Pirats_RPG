@@ -15,7 +15,9 @@ from editor.editor_assets import (
 
 from editor.editor_camera import EditorCamera
 
-from editor.editor_ui import draw_editor_panel
+from editor.editor_ui import draw_editor_side_panel
+
+from editor.input.editor_input_manager import EditorInputManager
 
 from editor.rendering.editor_renderer import (
     draw_editor_scene,
@@ -29,7 +31,8 @@ from editor.scene_editor_serializer import (
     save_scene_for_game,
 )
 
-from editor.input.editor_input_manager import EditorInputManager
+from editor.ui.editor_menu_bar import draw_editor_menu_bar
+from editor.ui.editor_status_bar import draw_editor_status_bar
 
 
 def load_scene(scene_id=DEFAULT_SCENE_ID):
@@ -94,15 +97,28 @@ def main():
             camera,
         )
 
-        buttons = draw_editor_panel(
+        menu_buttons = draw_editor_menu_bar(
+            screen,
+            input_manager.active_menu,
+        )
+
+        side_buttons = draw_editor_side_panel(
             screen,
             input_manager.mode,
             input_manager.selected_object_type,
-            camera.zoom,
             object_definitions,
         )
 
-        input_manager.set_buttons(buttons)
+        input_manager.set_buttons(menu_buttons + side_buttons)
+
+        draw_editor_status_bar(
+            screen,
+            scene_data,
+            object_definitions,
+            camera,
+            input_manager.mode,
+            input_manager.selected_object_type,
+        )
 
         pygame.display.flip()
         clock.tick(60)

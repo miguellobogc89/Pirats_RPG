@@ -165,6 +165,35 @@ def draw_grid(screen, map_width, map_height, camera):
         )
 
 
+def draw_rect_tool_preview(screen, rect_preview_data, camera):
+    if rect_preview_data is None:
+        return
+
+    start_cell = rect_preview_data["start_cell"]
+    end_cell = rect_preview_data["end_cell"]
+    button = rect_preview_data["button"]
+
+    min_x = min(start_cell[0], end_cell[0])
+    max_x = max(start_cell[0], end_cell[0])
+    min_y = min(start_cell[1], end_cell[1])
+    max_y = max(start_cell[1], end_cell[1])
+
+    tile_size = camera.get_tile_size()
+
+    rect = pygame.Rect(
+        min_x * tile_size - camera.x,
+        min_y * tile_size - camera.y,
+        (max_x - min_x + 1) * tile_size,
+        (max_y - min_y + 1) * tile_size,
+    )
+
+    color = (80, 180, 255)
+
+    if button == 3:
+        color = (230, 80, 80)
+
+    pygame.draw.rect(screen, color, rect, 3)
+
 def draw_editor_scene(screen, scene_data, object_definitions, sprites, camera):
     map_width = scene_data["width"]
     map_height = scene_data["height"]

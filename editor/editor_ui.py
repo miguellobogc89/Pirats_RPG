@@ -1,32 +1,21 @@
 import pygame
 
+from editor.ui.editor_menu_bar import MENU_BAR_HEIGHT
+from editor.ui.editor_status_bar import STATUS_BAR_HEIGHT
 
 PANEL_WIDTH = 260
-TOP_BAR_HEIGHT = 46
-STATUS_BAR_HEIGHT = 26
 
-BUTTON_HEIGHT = 30
+ROW_HEIGHT = 30
 BUTTON_MARGIN = 8
 
-COLOR_BG = (28, 30, 34)
 COLOR_PANEL = (38, 41, 46)
 COLOR_PANEL_DARK = (24, 26, 30)
-COLOR_BUTTON = (55, 59, 66)
-COLOR_BUTTON_HOVER = (68, 73, 82)
-COLOR_BUTTON_ACTIVE = (86, 120, 92)
+COLOR_ROW_HOVER = (55, 59, 66)
+COLOR_ROW_ACTIVE = (86, 120, 92)
 COLOR_BORDER = (95, 100, 110)
 COLOR_TEXT = (230, 230, 230)
 COLOR_TEXT_MUTED = (165, 170, 178)
-COLOR_ACCENT = (120, 170, 120)
 
-
-OBJECT_BUTTONS = [
-    ("bush", "Bush"),
-    ("small_rock", "Small Rock"),
-    ("big_rock", "Big Rock"),
-    ("tree", "Tree"),
-    ("house", "House"),
-]
 NON_PLACEABLE_OBJECT_TYPES = {"player"}
 
 
@@ -35,87 +24,37 @@ def draw_text(screen, font, text, x, y, color=COLOR_TEXT):
     screen.blit(surface, (x, y))
 
 
-def draw_button(screen, rect, label, active=False):
+def draw_nav_row(screen, rect, label, active=False):
     mouse_pos = pygame.mouse.get_pos()
 
-    color = COLOR_BUTTON
     if rect.collidepoint(mouse_pos):
-        color = COLOR_BUTTON_HOVER
-    if active:
-        color = COLOR_BUTTON_ACTIVE
+        pygame.draw.rect(screen, COLOR_ROW_HOVER, rect)
 
-    pygame.draw.rect(screen, color, rect, border_radius=4)
-    pygame.draw.rect(screen, COLOR_BORDER, rect, 1, border_radius=4)
+    if active:
+        pygame.draw.rect(screen, COLOR_ROW_ACTIVE, rect)
 
     font = pygame.font.SysFont("consolas", 15)
     text = font.render(label, True, COLOR_TEXT)
 
-    text_x = rect.x + (rect.width - text.get_width()) // 2
-    text_y = rect.y + (rect.height - text.get_height()) // 2
-
-    screen.blit(text, (text_x, text_y))
-
-
-def draw_top_toolbar(screen, mode, zoom):
-    font = pygame.font.SysFont("consolas", 15)
-
-    rect = pygame.Rect(0, 0, screen.get_width(), TOP_BAR_HEIGHT)
-    pygame.draw.rect(screen, COLOR_PANEL_DARK, rect)
-    pygame.draw.line(screen, COLOR_BORDER, (0, TOP_BAR_HEIGHT), (screen.get_width(), TOP_BAR_HEIGHT))
-
-    buttons = []
-    x = 10
-    y = 8
-
-    items = [
-        ("Guardar", "save"),
-        ("Objetos", "mode_objects"),
-        ("Colisiones", "mode_collisions"),
-        ("-", "zoom_out"),
-        (f"{zoom:.1f}x", "none"),
-        ("+", "zoom_in"),
-    ]
-
-    for label, action in items:
-        width = 96
-        if label in ["-", "+"]:
-            width = 34
-        if action == "none":
-            width = 62
-
-        button_rect = pygame.Rect(x, y, width, BUTTON_HEIGHT)
-
-        active = False
-        if action == "mode_objects" and mode == "objects":
-            active = True
-        if action == "mode_collisions" and mode == "collisions":
-            active = True
-
-        draw_button(screen, button_rect, label, active)
-
-        if action != "none":
-            buttons.append({
-                "rect": button_rect,
-                "action": action,
-            })
-
-        x += width + 8
-
-    draw_text(
-        screen,
-        font,
-        "RPG Map Constructor",
-        screen.get_width() - PANEL_WIDTH + 14,
-        14,
-        COLOR_TEXT_MUTED,
+    screen.blit(
+        text,
+        (
+            rect.x + 10,
+            rect.y + (rect.height - text.get_height()) // 2,
+        ),
     )
 
-    return buttons
+    pygame.draw.line(
+        screen,
+        COLOR_BORDER,
+        (rect.x, rect.bottom),
+        (rect.right, rect.bottom),
+    )
 
 
 def get_object_buttons(object_definitions=None):
     if not object_definitions:
-        return OBJECT_BUTTONS
+        return []
 
     return [
         (object_type, object_type.replace("_", " ").title())
@@ -124,60 +63,52 @@ def get_object_buttons(object_definitions=None):
     ]
 
 
-def draw_right_panel(screen, mode, selected_object_type, zoom, object_definitions=None):
-    font = pygame.font.SysFont("consolas", 15)
-    title_font = pygame.font.SysFont("consolas", 18, bold=True)
-
-    screen_width = screen.get_width()
-    panel_x = screen_width - PANEL_WIDTH
-
-    pygame.draw.rect(
-        screen,
-        COLOR_PANEL,
-        (panel_x, TOP_BAR_HEIGHT, PANEL_WIDTH, screen.get_height() - TOP_BAR_HEIGHT - STATUS_BAR_HEIGHT),
-    )
+def draw_section_title(screen, font, text, x, y, width):
+    draw_text(screen, font, text.upper(), x, y, COLOR_TEXT_MUTED)
 
     pygame.draw.line(
         screen,
         COLOR_BORDER,
-        (panel_x, TOP_BAR_HEIGHT),
+        (x, y + 22),
+        (x + width, y + 22),
+    )
+
+
+def draw_editor_side_panel(screen, mode, selected_object_type, object_definitions=None):
+    font = pygame.font.SysFont("consolas", 14)
+
+    screen_width = screen.get_width()
+    panel_x = screen_width - PANEL_WIDTH
+
+    panel_rect = pygame.Rect(
+        panel_x,
+        MENU_BAR_HEIGHT,
+        PANEL_WIDTH,
+        screen.get_height() - MENU_BAR_HEIGHT - STATUS_BAR_HEIGHT,
+    )
+
+    pygame.draw.rect(screen, COLOR_PANEL, panel_rect)
+
+    pygame.draw.line(
+        screen,
+        COLOR_BORDER,
+        (panel_x, MENU_BAR_HEIGHT),
         (panel_x, screen.get_height() - STATUS_BAR_HEIGHT),
     )
 
     buttons = []
 
     x = panel_x + BUTTON_MARGIN
-    y = TOP_BAR_HEIGHT + 14
+    y = MENU_BAR_HEIGHT + 12
+    width = PANEL_WIDTH - BUTTON_MARGIN * 2
 
-    draw_text(screen, title_font, "Inspector", x, y)
-    y += 34
-
-    draw_text(screen, font, "Modo", x, y, COLOR_TEXT_MUTED)
-    y += 24
-
-    objects_rect = pygame.Rect(x, y, 112, BUTTON_HEIGHT)
-    collisions_rect = pygame.Rect(x + 120, y, 112, BUTTON_HEIGHT)
-
-    draw_button(screen, objects_rect, "Objects", mode == "objects")
-    draw_button(screen, collisions_rect, "Collision", mode == "collisions")
-
-    buttons.append({"rect": objects_rect, "action": "mode_objects"})
-    buttons.append({"rect": collisions_rect, "action": "mode_collisions"})
-
-    y += BUTTON_HEIGHT + 22
-
-    draw_text(screen, font, "Object Library", x, y, COLOR_TEXT_MUTED)
-    y += 24
+    draw_section_title(screen, font, "Insertar objetos", x, y, width)
+    y += 28
 
     for object_type, label in get_object_buttons(object_definitions):
-        rect = pygame.Rect(
-            x,
-            y,
-            PANEL_WIDTH - BUTTON_MARGIN * 2,
-            BUTTON_HEIGHT,
-        )
+        rect = pygame.Rect(x, y, width, ROW_HEIGHT)
 
-        draw_button(
+        draw_nav_row(
             screen,
             rect,
             label,
@@ -190,57 +121,43 @@ def draw_right_panel(screen, mode, selected_object_type, zoom, object_definition
             "object_type": object_type,
         })
 
-        y += BUTTON_HEIGHT + 7
-
-    y += 14
-
-    pygame.draw.line(
-        screen,
-        COLOR_BORDER,
-        (x, y),
-        (screen_width - BUTTON_MARGIN, y),
-    )
+        y += ROW_HEIGHT
 
     y += 18
+    draw_section_title(screen, font, "Colisiones", x, y, width)
+    y += 28
 
-    draw_text(screen, font, "Properties", x, y, COLOR_TEXT_MUTED)
-    y += 24
+    collision_rect = pygame.Rect(x, y, width, ROW_HEIGHT)
 
-    draw_text(screen, font, f"Selected: {selected_object_type}", x, y)
-    y += 22
-
-    draw_text(screen, font, f"Zoom: {zoom:.2f}x", x, y)
-
-    return buttons
-
-
-def draw_status_bar(screen, cell=None, mode=None, selected_object_type=None, zoom=None):
-    font = pygame.font.SysFont("consolas", 14)
-
-    y = screen.get_height() - STATUS_BAR_HEIGHT
-
-    pygame.draw.rect(
+    draw_nav_row(
         screen,
-        COLOR_PANEL_DARK,
-        (0, y, screen.get_width(), STATUS_BAR_HEIGHT),
+        collision_rect,
+        "Pintar colisiones",
+        mode == "collisions",
     )
 
-    pygame.draw.line(screen, COLOR_BORDER, (0, y), (screen.get_width(), y))
+    buttons.append({
+        "rect": collision_rect,
+        "action": "mode_collisions",
+    })
 
-    cell_text = "-"
-    if cell is not None:
-        cell_text = f"{cell[0]}, {cell[1]}"
+    y += ROW_HEIGHT + 18
+    draw_section_title(screen, font, "Terreno", x, y, width)
+    y += 28
 
-    text = f"Cell: {cell_text}   Mode: {mode}   Object: {selected_object_type}   Zoom: {zoom:.2f}x"
+    terrain_rect = pygame.Rect(x, y, width, ROW_HEIGHT)
 
-    draw_text(screen, font, text, 10, y + 5, COLOR_TEXT_MUTED)
+    draw_nav_row(
+        screen,
+        terrain_rect,
+        "Grass",
+        False,
+    )
 
-
-def draw_editor_panel(screen, mode, selected_object_type, zoom, object_definitions=None):
-    buttons = []
-
-    buttons.extend(draw_top_toolbar(screen, mode, zoom))
-    buttons.extend(draw_right_panel(screen, mode, selected_object_type, zoom, object_definitions))
+    buttons.append({
+        "rect": terrain_rect,
+        "action": "terrain_grass",
+    })
 
     return buttons
 

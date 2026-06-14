@@ -10,14 +10,6 @@
   },
   "objects": [
     {
-      "id": "tree_001",
-      "type": "tree",
-      "cell": [
-        20,
-        15
-      ]
-    },
-    {
       "id": "bush_001",
       "type": "bush",
       "cell": [
@@ -39,1574 +31,6 @@
       "cell": [
         12,
         8
-      ]
-    },
-    {
-      "id": "bush_005",
-      "type": "bush",
-      "cell": [
-        17,
-        17
-      ]
-    },
-    {
-      "id": "bush_006",
-      "type": "bush",
-      "cell": [
-        17,
-        17
-      ]
-    },
-    {
-      "id": "bush_007",
-      "type": "bush",
-      "cell": [
-        17,
-        17
-      ]
-    },
-    {
-      "id": "bush_008",
-      "type": "bush",
-      "cell": [
-        17,
-        17
-      ]
-    },
-    {
-      "id": "bush_009",
-      "type": "bush",
-      "cell": [
-        17,
-        17
-      ]
-    },
-    {
-      "id": "bush_010",
-      "type": "bush",
-      "cell": [
-        17,
-        17
-      ]
-    },
-    {
-      "id": "bush_011",
-      "type": "bush",
-      "cell": [
-        17,
-        17
-      ]
-    },
-    {
-      "id": "bush_012",
-      "type": "bush",
-      "cell": [
-        17,
-        17
-      ]
-    },
-    {
-      "id": "bush_013",
-      "type": "bush",
-      "cell": [
-        17,
-        17
-      ]
-    },
-    {
-      "id": "bush_014",
-      "type": "bush",
-      "cell": [
-        17,
-        17
-      ]
-    },
-    {
-      "id": "bush_015",
-      "type": "bush",
-      "cell": [
-        17,
-        17
-      ]
-    },
-    {
-      "id": "bush_016",
-      "type": "bush",
-      "cell": [
-        17,
-        17
-      ]
-    },
-    {
-      "id": "bush_017",
-      "type": "bush",
-      "cell": [
-        17,
-        17
-      ]
-    },
-    {
-      "id": "bush_018",
-      "type": "bush",
-      "cell": [
-        17,
-        17
-      ]
-    },
-    {
-      "id": "bush_019",
-      "type": "bush",
-      "cell": [
-        18,
-        17
-      ]
-    },
-    {
-      "id": "bush_020",
-      "type": "bush",
-      "cell": [
-        18,
-        17
-      ]
-    },
-    {
-      "id": "bush_021",
-      "type": "bush",
-      "cell": [
-        18,
-        17
-      ]
-    },
-    {
-      "id": "bush_022",
-      "type": "bush",
-      "cell": [
-        18,
-        17
-      ]
-    },
-    {
-      "id": "bush_023",
-      "type": "bush",
-      "cell": [
-        18,
-        17
-      ]
-    },
-    {
-      "id": "bush_024",
-      "type": "bush",
-      "cell": [
-        18,
-        17
-      ]
-    },
-    {
-      "id": "bush_025",
-      "type": "bush",
-      "cell": [
-        18,
-        17
-      ]
-    },
-    {
-      "id": "bush_026",
-      "type": "bush",
-      "cell": [
-        18,
-        17
-      ]
-    },
-    {
-      "id": "bush_027",
-      "type": "bush",
-      "cell": [
-        18,
-        17
-      ]
-    },
-    {
-      "id": "bush_028",
-      "type": "bush",
-      "cell": [
-        17,
-        17
-      ]
-    },
-    {
-      "id": "bush_029",
-      "type": "bush",
-      "cell": [
-        17,
-        17
-      ]
-    },
-    {
-      "id": "bush_030",
-      "type": "bush",
-      "cell": [
-        17,
-        17
-      ]
-    },
-    {
-      "id": "bush_031",
-      "type": "bush",
-      "cell": [
-        17,
-        17
-      ]
-    },
-    {
-      "id": "bush_032",
-      "type": "bush",
-      "cell": [
-        17,
-        17
-      ]
-    },
-    {
-      "id": "bush_033",
-      "type": "bush",
-      "cell": [
-        18,
-        17
-      ]
-    },
-    {
-      "id": "bush_034",
-      "type": "bush",
-      "cell": [
-        18,
-        17
-      ]
-    },
-    {
-      "id": "bush_035",
-      "type": "bush",
-      "cell": [
-        18,
-        17
-      ]
-    },
-    {
-      "id": "bush_036",
-      "type": "bush",
-      "cell": [
-        18,
-        17
-      ]
-    },
-    {
-      "id": "bush_037",
-      "type": "bush",
-      "cell": [
-        18,
-        17
-      ]
-    },
-    {
-      "id": "bush_038",
-      "type": "bush",
-      "cell": [
-        17,
-        17
-      ]
-    },
-    {
-      "id": "bush_039",
-      "type": "bush",
-      "cell": [
-        17,
-        17
-      ]
-    },
-    {
-      "id": "bush_040",
-      "type": "bush",
-      "cell": [
-        17,
-        17
-      ]
-    },
-    {
-      "id": "bush_041",
-      "type": "bush",
-      "cell": [
-        17,
-        17
-      ]
-    },
-    {
-      "id": "bush_042",
-      "type": "bush",
-      "cell": [
-        17,
-        17
-      ]
-    },
-    {
-      "id": "bush_043",
-      "type": "bush",
-      "cell": [
-        17,
-        17
-      ]
-    },
-    {
-      "id": "bush_044",
-      "type": "bush",
-      "cell": [
-        17,
-        17
-      ]
-    },
-    {
-      "id": "bush_045",
-      "type": "bush",
-      "cell": [
-        17,
-        17
-      ]
-    },
-    {
-      "id": "bush_046",
-      "type": "bush",
-      "cell": [
-        17,
-        17
-      ]
-    },
-    {
-      "id": "bush_047",
-      "type": "bush",
-      "cell": [
-        17,
-        17
-      ]
-    },
-    {
-      "id": "bush_048",
-      "type": "bush",
-      "cell": [
-        17,
-        17
-      ]
-    },
-    {
-      "id": "bush_049",
-      "type": "bush",
-      "cell": [
-        17,
-        17
-      ]
-    },
-    {
-      "id": "bush_050",
-      "type": "bush",
-      "cell": [
-        17,
-        17
-      ]
-    },
-    {
-      "id": "bush_051",
-      "type": "bush",
-      "cell": [
-        17,
-        17
-      ]
-    },
-    {
-      "id": "bush_052",
-      "type": "bush",
-      "cell": [
-        17,
-        16
-      ]
-    },
-    {
-      "id": "bush_053",
-      "type": "bush",
-      "cell": [
-        17,
-        16
-      ]
-    },
-    {
-      "id": "bush_054",
-      "type": "bush",
-      "cell": [
-        17,
-        16
-      ]
-    },
-    {
-      "id": "bush_055",
-      "type": "bush",
-      "cell": [
-        17,
-        16
-      ]
-    },
-    {
-      "id": "bush_056",
-      "type": "bush",
-      "cell": [
-        17,
-        16
-      ]
-    },
-    {
-      "id": "bush_057",
-      "type": "bush",
-      "cell": [
-        17,
-        16
-      ]
-    },
-    {
-      "id": "bush_058",
-      "type": "bush",
-      "cell": [
-        17,
-        16
-      ]
-    },
-    {
-      "id": "bush_059",
-      "type": "bush",
-      "cell": [
-        17,
-        16
-      ]
-    },
-    {
-      "id": "bush_060",
-      "type": "bush",
-      "cell": [
-        17,
-        16
-      ]
-    },
-    {
-      "id": "bush_061",
-      "type": "bush",
-      "cell": [
-        17,
-        16
-      ]
-    },
-    {
-      "id": "bush_062",
-      "type": "bush",
-      "cell": [
-        17,
-        16
-      ]
-    },
-    {
-      "id": "bush_063",
-      "type": "bush",
-      "cell": [
-        17,
-        17
-      ]
-    },
-    {
-      "id": "bush_064",
-      "type": "bush",
-      "cell": [
-        17,
-        17
-      ]
-    },
-    {
-      "id": "bush_065",
-      "type": "bush",
-      "cell": [
-        17,
-        17
-      ]
-    },
-    {
-      "id": "bush_066",
-      "type": "bush",
-      "cell": [
-        17,
-        17
-      ]
-    },
-    {
-      "id": "bush_067",
-      "type": "bush",
-      "cell": [
-        17,
-        17
-      ]
-    },
-    {
-      "id": "bush_068",
-      "type": "bush",
-      "cell": [
-        17,
-        17
-      ]
-    },
-    {
-      "id": "bush_069",
-      "type": "bush",
-      "cell": [
-        17,
-        17
-      ]
-    },
-    {
-      "id": "bush_070",
-      "type": "bush",
-      "cell": [
-        17,
-        17
-      ]
-    },
-    {
-      "id": "bush_071",
-      "type": "bush",
-      "cell": [
-        17,
-        17
-      ]
-    },
-    {
-      "id": "bush_072",
-      "type": "bush",
-      "cell": [
-        17,
-        17
-      ]
-    },
-    {
-      "id": "bush_073",
-      "type": "bush",
-      "cell": [
-        17,
-        17
-      ]
-    },
-    {
-      "id": "bush_074",
-      "type": "bush",
-      "cell": [
-        17,
-        17
-      ]
-    },
-    {
-      "id": "bush_075",
-      "type": "bush",
-      "cell": [
-        17,
-        17
-      ]
-    },
-    {
-      "id": "bush_076",
-      "type": "bush",
-      "cell": [
-        18,
-        17
-      ]
-    },
-    {
-      "id": "bush_077",
-      "type": "bush",
-      "cell": [
-        18,
-        17
-      ]
-    },
-    {
-      "id": "bush_078",
-      "type": "bush",
-      "cell": [
-        18,
-        17
-      ]
-    },
-    {
-      "id": "bush_079",
-      "type": "bush",
-      "cell": [
-        18,
-        17
-      ]
-    },
-    {
-      "id": "bush_080",
-      "type": "bush",
-      "cell": [
-        18,
-        17
-      ]
-    },
-    {
-      "id": "bush_081",
-      "type": "bush",
-      "cell": [
-        18,
-        17
-      ]
-    },
-    {
-      "id": "bush_082",
-      "type": "bush",
-      "cell": [
-        18,
-        17
-      ]
-    },
-    {
-      "id": "bush_083",
-      "type": "bush",
-      "cell": [
-        18,
-        17
-      ]
-    },
-    {
-      "id": "bush_084",
-      "type": "bush",
-      "cell": [
-        18,
-        17
-      ]
-    },
-    {
-      "id": "bush_085",
-      "type": "bush",
-      "cell": [
-        18,
-        17
-      ]
-    },
-    {
-      "id": "bush_086",
-      "type": "bush",
-      "cell": [
-        19,
-        17
-      ]
-    },
-    {
-      "id": "bush_087",
-      "type": "bush",
-      "cell": [
-        19,
-        17
-      ]
-    },
-    {
-      "id": "bush_088",
-      "type": "bush",
-      "cell": [
-        19,
-        17
-      ]
-    },
-    {
-      "id": "bush_089",
-      "type": "bush",
-      "cell": [
-        19,
-        17
-      ]
-    },
-    {
-      "id": "bush_090",
-      "type": "bush",
-      "cell": [
-        19,
-        17
-      ]
-    },
-    {
-      "id": "bush_091",
-      "type": "bush",
-      "cell": [
-        19,
-        17
-      ]
-    },
-    {
-      "id": "bush_092",
-      "type": "bush",
-      "cell": [
-        19,
-        17
-      ]
-    },
-    {
-      "id": "bush_093",
-      "type": "bush",
-      "cell": [
-        19,
-        17
-      ]
-    },
-    {
-      "id": "bush_094",
-      "type": "bush",
-      "cell": [
-        19,
-        17
-      ]
-    },
-    {
-      "id": "bush_095",
-      "type": "bush",
-      "cell": [
-        19,
-        17
-      ]
-    },
-    {
-      "id": "bush_096",
-      "type": "bush",
-      "cell": [
-        19,
-        17
-      ]
-    },
-    {
-      "id": "bush_097",
-      "type": "bush",
-      "cell": [
-        19,
-        17
-      ]
-    },
-    {
-      "id": "bush_098",
-      "type": "bush",
-      "cell": [
-        19,
-        17
-      ]
-    },
-    {
-      "id": "bush_099",
-      "type": "bush",
-      "cell": [
-        19,
-        17
-      ]
-    },
-    {
-      "id": "bush_100",
-      "type": "bush",
-      "cell": [
-        19,
-        17
-      ]
-    },
-    {
-      "id": "bush_101",
-      "type": "bush",
-      "cell": [
-        20,
-        17
-      ]
-    },
-    {
-      "id": "bush_102",
-      "type": "bush",
-      "cell": [
-        20,
-        17
-      ]
-    },
-    {
-      "id": "bush_103",
-      "type": "bush",
-      "cell": [
-        20,
-        17
-      ]
-    },
-    {
-      "id": "bush_104",
-      "type": "bush",
-      "cell": [
-        20,
-        17
-      ]
-    },
-    {
-      "id": "bush_105",
-      "type": "bush",
-      "cell": [
-        20,
-        17
-      ]
-    },
-    {
-      "id": "bush_106",
-      "type": "bush",
-      "cell": [
-        20,
-        18
-      ]
-    },
-    {
-      "id": "bush_107",
-      "type": "bush",
-      "cell": [
-        20,
-        18
-      ]
-    },
-    {
-      "id": "bush_108",
-      "type": "bush",
-      "cell": [
-        20,
-        18
-      ]
-    },
-    {
-      "id": "bush_109",
-      "type": "bush",
-      "cell": [
-        20,
-        18
-      ]
-    },
-    {
-      "id": "bush_110",
-      "type": "bush",
-      "cell": [
-        20,
-        18
-      ]
-    },
-    {
-      "id": "bush_111",
-      "type": "bush",
-      "cell": [
-        20,
-        18
-      ]
-    },
-    {
-      "id": "bush_112",
-      "type": "bush",
-      "cell": [
-        19,
-        18
-      ]
-    },
-    {
-      "id": "bush_113",
-      "type": "bush",
-      "cell": [
-        19,
-        18
-      ]
-    },
-    {
-      "id": "bush_114",
-      "type": "bush",
-      "cell": [
-        19,
-        18
-      ]
-    },
-    {
-      "id": "bush_115",
-      "type": "bush",
-      "cell": [
-        19,
-        18
-      ]
-    },
-    {
-      "id": "bush_116",
-      "type": "bush",
-      "cell": [
-        19,
-        18
-      ]
-    },
-    {
-      "id": "bush_117",
-      "type": "bush",
-      "cell": [
-        19,
-        18
-      ]
-    },
-    {
-      "id": "bush_118",
-      "type": "bush",
-      "cell": [
-        19,
-        18
-      ]
-    },
-    {
-      "id": "bush_119",
-      "type": "bush",
-      "cell": [
-        19,
-        18
-      ]
-    },
-    {
-      "id": "bush_120",
-      "type": "bush",
-      "cell": [
-        19,
-        18
-      ]
-    },
-    {
-      "id": "bush_121",
-      "type": "bush",
-      "cell": [
-        19,
-        18
-      ]
-    },
-    {
-      "id": "bush_122",
-      "type": "bush",
-      "cell": [
-        19,
-        18
-      ]
-    },
-    {
-      "id": "bush_123",
-      "type": "bush",
-      "cell": [
-        18,
-        18
-      ]
-    },
-    {
-      "id": "bush_124",
-      "type": "bush",
-      "cell": [
-        18,
-        18
-      ]
-    },
-    {
-      "id": "bush_125",
-      "type": "bush",
-      "cell": [
-        18,
-        18
-      ]
-    },
-    {
-      "id": "bush_126",
-      "type": "bush",
-      "cell": [
-        18,
-        18
-      ]
-    },
-    {
-      "id": "bush_127",
-      "type": "bush",
-      "cell": [
-        18,
-        18
-      ]
-    },
-    {
-      "id": "bush_128",
-      "type": "bush",
-      "cell": [
-        18,
-        18
-      ]
-    },
-    {
-      "id": "bush_129",
-      "type": "bush",
-      "cell": [
-        18,
-        18
-      ]
-    },
-    {
-      "id": "bush_130",
-      "type": "bush",
-      "cell": [
-        17,
-        18
-      ]
-    },
-    {
-      "id": "bush_131",
-      "type": "bush",
-      "cell": [
-        17,
-        18
-      ]
-    },
-    {
-      "id": "bush_132",
-      "type": "bush",
-      "cell": [
-        17,
-        18
-      ]
-    },
-    {
-      "id": "bush_133",
-      "type": "bush",
-      "cell": [
-        17,
-        18
-      ]
-    },
-    {
-      "id": "bush_134",
-      "type": "bush",
-      "cell": [
-        17,
-        18
-      ]
-    },
-    {
-      "id": "bush_135",
-      "type": "bush",
-      "cell": [
-        16,
-        18
-      ]
-    },
-    {
-      "id": "bush_136",
-      "type": "bush",
-      "cell": [
-        16,
-        18
-      ]
-    },
-    {
-      "id": "bush_137",
-      "type": "bush",
-      "cell": [
-        16,
-        18
-      ]
-    },
-    {
-      "id": "bush_138",
-      "type": "bush",
-      "cell": [
-        16,
-        18
-      ]
-    },
-    {
-      "id": "bush_139",
-      "type": "bush",
-      "cell": [
-        16,
-        18
-      ]
-    },
-    {
-      "id": "bush_140",
-      "type": "bush",
-      "cell": [
-        16,
-        18
-      ]
-    },
-    {
-      "id": "bush_141",
-      "type": "bush",
-      "cell": [
-        16,
-        18
-      ]
-    },
-    {
-      "id": "bush_142",
-      "type": "bush",
-      "cell": [
-        16,
-        18
-      ]
-    },
-    {
-      "id": "bush_143",
-      "type": "bush",
-      "cell": [
-        16,
-        17
-      ]
-    },
-    {
-      "id": "bush_144",
-      "type": "bush",
-      "cell": [
-        16,
-        17
-      ]
-    },
-    {
-      "id": "bush_145",
-      "type": "bush",
-      "cell": [
-        16,
-        17
-      ]
-    },
-    {
-      "id": "bush_146",
-      "type": "bush",
-      "cell": [
-        16,
-        17
-      ]
-    },
-    {
-      "id": "bush_147",
-      "type": "bush",
-      "cell": [
-        16,
-        17
-      ]
-    },
-    {
-      "id": "bush_148",
-      "type": "bush",
-      "cell": [
-        16,
-        17
-      ]
-    },
-    {
-      "id": "bush_149",
-      "type": "bush",
-      "cell": [
-        16,
-        16
-      ]
-    },
-    {
-      "id": "bush_150",
-      "type": "bush",
-      "cell": [
-        16,
-        16
-      ]
-    },
-    {
-      "id": "bush_151",
-      "type": "bush",
-      "cell": [
-        16,
-        16
-      ]
-    },
-    {
-      "id": "bush_152",
-      "type": "bush",
-      "cell": [
-        16,
-        16
-      ]
-    },
-    {
-      "id": "bush_153",
-      "type": "bush",
-      "cell": [
-        16,
-        16
-      ]
-    },
-    {
-      "id": "bush_154",
-      "type": "bush",
-      "cell": [
-        16,
-        16
-      ]
-    },
-    {
-      "id": "bush_155",
-      "type": "bush",
-      "cell": [
-        16,
-        16
-      ]
-    },
-    {
-      "id": "bush_156",
-      "type": "bush",
-      "cell": [
-        16,
-        16
-      ]
-    },
-    {
-      "id": "bush_157",
-      "type": "bush",
-      "cell": [
-        16,
-        16
-      ]
-    },
-    {
-      "id": "bush_158",
-      "type": "bush",
-      "cell": [
-        16,
-        16
-      ]
-    },
-    {
-      "id": "bush_159",
-      "type": "bush",
-      "cell": [
-        16,
-        16
-      ]
-    },
-    {
-      "id": "bush_160",
-      "type": "bush",
-      "cell": [
-        16,
-        16
-      ]
-    },
-    {
-      "id": "bush_161",
-      "type": "bush",
-      "cell": [
-        15,
-        16
-      ]
-    },
-    {
-      "id": "bush_162",
-      "type": "bush",
-      "cell": [
-        15,
-        16
-      ]
-    },
-    {
-      "id": "bush_163",
-      "type": "bush",
-      "cell": [
-        15,
-        16
-      ]
-    },
-    {
-      "id": "bush_164",
-      "type": "bush",
-      "cell": [
-        15,
-        16
-      ]
-    },
-    {
-      "id": "bush_165",
-      "type": "bush",
-      "cell": [
-        15,
-        16
-      ]
-    },
-    {
-      "id": "bush_167",
-      "type": "bush",
-      "cell": [
-        15,
-        17
-      ]
-    },
-    {
-      "id": "bush_168",
-      "type": "bush",
-      "cell": [
-        15,
-        17
-      ]
-    },
-    {
-      "id": "bush_169",
-      "type": "bush",
-      "cell": [
-        15,
-        17
-      ]
-    },
-    {
-      "id": "bush_170",
-      "type": "bush",
-      "cell": [
-        15,
-        17
-      ]
-    },
-    {
-      "id": "bush_171",
-      "type": "bush",
-      "cell": [
-        15,
-        18
-      ]
-    },
-    {
-      "id": "bush_172",
-      "type": "bush",
-      "cell": [
-        15,
-        18
-      ]
-    },
-    {
-      "id": "bush_173",
-      "type": "bush",
-      "cell": [
-        15,
-        18
-      ]
-    },
-    {
-      "id": "bush_174",
-      "type": "bush",
-      "cell": [
-        15,
-        18
-      ]
-    },
-    {
-      "id": "bush_175",
-      "type": "bush",
-      "cell": [
-        15,
-        18
-      ]
-    },
-    {
-      "id": "bush_176",
-      "type": "bush",
-      "cell": [
-        15,
-        18
-      ]
-    },
-    {
-      "id": "bush_177",
-      "type": "bush",
-      "cell": [
-        15,
-        18
-      ]
-    },
-    {
-      "id": "bush_178",
-      "type": "bush",
-      "cell": [
-        15,
-        18
-      ]
-    },
-    {
-      "id": "bush_179",
-      "type": "bush",
-      "cell": [
-        15,
-        18
-      ]
-    },
-    {
-      "id": "bush_180",
-      "type": "bush",
-      "cell": [
-        15,
-        19
-      ]
-    },
-    {
-      "id": "bush_181",
-      "type": "bush",
-      "cell": [
-        15,
-        19
-      ]
-    },
-    {
-      "id": "bush_182",
-      "type": "bush",
-      "cell": [
-        15,
-        19
-      ]
-    },
-    {
-      "id": "bush_183",
-      "type": "bush",
-      "cell": [
-        15,
-        19
-      ]
-    },
-    {
-      "id": "bush_184",
-      "type": "bush",
-      "cell": [
-        16,
-        19
-      ]
-    },
-    {
-      "id": "bush_185",
-      "type": "bush",
-      "cell": [
-        16,
-        19
-      ]
-    },
-    {
-      "id": "bush_186",
-      "type": "bush",
-      "cell": [
-        16,
-        19
-      ]
-    },
-    {
-      "id": "bush_187",
-      "type": "bush",
-      "cell": [
-        17,
-        19
-      ]
-    },
-    {
-      "id": "bush_188",
-      "type": "bush",
-      "cell": [
-        18,
-        19
-      ]
-    },
-    {
-      "id": "bush_189",
-      "type": "bush",
-      "cell": [
-        19,
-        19
-      ]
-    },
-    {
-      "id": "bush_190",
-      "type": "bush",
-      "cell": [
-        20,
-        19
-      ]
-    },
-    {
-      "id": "bush_191",
-      "type": "bush",
-      "cell": [
-        20,
-        19
-      ]
-    },
-    {
-      "id": "bush_192",
-      "type": "bush",
-      "cell": [
-        20,
-        19
-      ]
-    },
-    {
-      "id": "bush_193",
-      "type": "bush",
-      "cell": [
-        20,
-        19
-      ]
-    },
-    {
-      "id": "bush_194",
-      "type": "bush",
-      "cell": [
-        20,
-        19
-      ]
-    },
-    {
-      "id": "bush_195",
-      "type": "bush",
-      "cell": [
-        20,
-        19
-      ]
-    },
-    {
-      "id": "bush_196",
-      "type": "bush",
-      "cell": [
-        20,
-        19
-      ]
-    },
-    {
-      "id": "bush_197",
-      "type": "bush",
-      "cell": [
-        20,
-        19
-      ]
-    },
-    {
-      "id": "bush_198",
-      "type": "bush",
-      "cell": [
-        20,
-        19
-      ]
-    },
-    {
-      "id": "bush_199",
-      "type": "bush",
-      "cell": [
-        21,
-        19
-      ]
-    },
-    {
-      "id": "bush_200",
-      "type": "bush",
-      "cell": [
-        21,
-        19
-      ]
-    },
-    {
-      "id": "bush_201",
-      "type": "bush",
-      "cell": [
-        21,
-        19
       ]
     },
     {
@@ -2831,6 +1255,422 @@
       "cell": [
         6,
         16
+      ]
+    },
+    {
+      "id": "tree_159",
+      "type": "tree",
+      "cell": [
+        9,
+        5
+      ]
+    },
+    {
+      "id": "tree_159",
+      "type": "tree",
+      "cell": [
+        6,
+        8
+      ]
+    },
+    {
+      "id": "tree_159",
+      "type": "tree",
+      "cell": [
+        3,
+        10
+      ]
+    },
+    {
+      "id": "tree_160",
+      "type": "tree",
+      "cell": [
+        9,
+        11
+      ]
+    },
+    {
+      "id": "tree_161",
+      "type": "tree",
+      "cell": [
+        20,
+        6
+      ]
+    },
+    {
+      "id": "bush_162",
+      "type": "bush",
+      "cell": [
+        15,
+        15
+      ]
+    },
+    {
+      "id": "bush_163",
+      "type": "bush",
+      "cell": [
+        15,
+        16
+      ]
+    },
+    {
+      "id": "bush_164",
+      "type": "bush",
+      "cell": [
+        15,
+        17
+      ]
+    },
+    {
+      "id": "bush_165",
+      "type": "bush",
+      "cell": [
+        15,
+        18
+      ]
+    },
+    {
+      "id": "bush_166",
+      "type": "bush",
+      "cell": [
+        16,
+        18
+      ]
+    },
+    {
+      "id": "bush_167",
+      "type": "bush",
+      "cell": [
+        17,
+        18
+      ]
+    },
+    {
+      "id": "bush_168",
+      "type": "bush",
+      "cell": [
+        18,
+        18
+      ]
+    },
+    {
+      "id": "bush_169",
+      "type": "bush",
+      "cell": [
+        19,
+        18
+      ]
+    },
+    {
+      "id": "bush_170",
+      "type": "bush",
+      "cell": [
+        20,
+        18
+      ]
+    },
+    {
+      "id": "bush_171",
+      "type": "bush",
+      "cell": [
+        16,
+        15
+      ]
+    },
+    {
+      "id": "bush_172",
+      "type": "bush",
+      "cell": [
+        17,
+        15
+      ]
+    },
+    {
+      "id": "bush_173",
+      "type": "bush",
+      "cell": [
+        18,
+        15
+      ]
+    },
+    {
+      "id": "bush_174",
+      "type": "bush",
+      "cell": [
+        19,
+        15
+      ]
+    },
+    {
+      "id": "bush_175",
+      "type": "bush",
+      "cell": [
+        20,
+        15
+      ]
+    },
+    {
+      "id": "bush_176",
+      "type": "bush",
+      "cell": [
+        16,
+        16
+      ]
+    },
+    {
+      "id": "bush_177",
+      "type": "bush",
+      "cell": [
+        17,
+        16
+      ]
+    },
+    {
+      "id": "bush_178",
+      "type": "bush",
+      "cell": [
+        18,
+        16
+      ]
+    },
+    {
+      "id": "bush_179",
+      "type": "bush",
+      "cell": [
+        19,
+        16
+      ]
+    },
+    {
+      "id": "bush_180",
+      "type": "bush",
+      "cell": [
+        20,
+        16
+      ]
+    },
+    {
+      "id": "bush_181",
+      "type": "bush",
+      "cell": [
+        16,
+        17
+      ]
+    },
+    {
+      "id": "bush_182",
+      "type": "bush",
+      "cell": [
+        17,
+        17
+      ]
+    },
+    {
+      "id": "bush_183",
+      "type": "bush",
+      "cell": [
+        18,
+        17
+      ]
+    },
+    {
+      "id": "bush_184",
+      "type": "bush",
+      "cell": [
+        19,
+        17
+      ]
+    },
+    {
+      "id": "bush_185",
+      "type": "bush",
+      "cell": [
+        20,
+        17
+      ]
+    },
+    {
+      "id": "bush_186",
+      "type": "bush",
+      "cell": [
+        10,
+        15
+      ]
+    },
+    {
+      "id": "bush_187",
+      "type": "bush",
+      "cell": [
+        11,
+        15
+      ]
+    },
+    {
+      "id": "bush_188",
+      "type": "bush",
+      "cell": [
+        12,
+        15
+      ]
+    },
+    {
+      "id": "bush_189",
+      "type": "bush",
+      "cell": [
+        10,
+        16
+      ]
+    },
+    {
+      "id": "bush_190",
+      "type": "bush",
+      "cell": [
+        11,
+        16
+      ]
+    },
+    {
+      "id": "bush_191",
+      "type": "bush",
+      "cell": [
+        12,
+        16
+      ]
+    },
+    {
+      "id": "bush_192",
+      "type": "bush",
+      "cell": [
+        10,
+        17
+      ]
+    },
+    {
+      "id": "bush_193",
+      "type": "bush",
+      "cell": [
+        11,
+        17
+      ]
+    },
+    {
+      "id": "bush_194",
+      "type": "bush",
+      "cell": [
+        12,
+        17
+      ]
+    },
+    {
+      "id": "bush_195",
+      "type": "bush",
+      "cell": [
+        10,
+        18
+      ]
+    },
+    {
+      "id": "bush_196",
+      "type": "bush",
+      "cell": [
+        11,
+        18
+      ]
+    },
+    {
+      "id": "bush_197",
+      "type": "bush",
+      "cell": [
+        12,
+        18
+      ]
+    },
+    {
+      "id": "bush_198",
+      "type": "bush",
+      "cell": [
+        10,
+        20
+      ]
+    },
+    {
+      "id": "bush_199",
+      "type": "bush",
+      "cell": [
+        11,
+        20
+      ]
+    },
+    {
+      "id": "bush_200",
+      "type": "bush",
+      "cell": [
+        12,
+        20
+      ]
+    },
+    {
+      "id": "bush_201",
+      "type": "bush",
+      "cell": [
+        13,
+        20
+      ]
+    },
+    {
+      "id": "bush_202",
+      "type": "bush",
+      "cell": [
+        14,
+        20
+      ]
+    },
+    {
+      "id": "bush_203",
+      "type": "bush",
+      "cell": [
+        15,
+        20
+      ]
+    },
+    {
+      "id": "bush_204",
+      "type": "bush",
+      "cell": [
+        16,
+        20
+      ]
+    },
+    {
+      "id": "bush_205",
+      "type": "bush",
+      "cell": [
+        17,
+        20
+      ]
+    },
+    {
+      "id": "bush_206",
+      "type": "bush",
+      "cell": [
+        18,
+        20
+      ]
+    },
+    {
+      "id": "bush_207",
+      "type": "bush",
+      "cell": [
+        19,
+        20
+      ]
+    },
+    {
+      "id": "bush_208",
+      "type": "bush",
+      "cell": [
+        20,
+        20
       ]
     }
   ],
