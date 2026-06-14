@@ -21,11 +21,18 @@ from editor_ui import (
     get_clicked_panel_action,
 )
 
+from rendering.editor_renderer import (
+    draw_editor_scene,
+    draw_preview,
+)
+
 from scene_editor_serializer import (
     DEFAULT_SCENE_ID,
     load_scene_for_editor,
     save_scene_for_game,
 )
+
+from tools.paint_tool import paint_at_mouse
 
 
 def load_scene(scene_id=DEFAULT_SCENE_ID):
@@ -34,186 +41,6 @@ def load_scene(scene_id=DEFAULT_SCENE_ID):
 
 def save_scene(scene_data):
     save_scene_for_game(scene_data)
-
-
-def add_object(scene_data, object_type, cell):
-    if object_type is None:
-        return
-
-    object_id = f"{object_type}_{len(scene_data['objects']) + 1:03d}"
-
-    scene_data["objects"].append({
-        "id": object_id,
-        "type": object_type,
-        "cell": cell,
-    })
-
-
-def add_collision_cell(scene_data, cell):
-    if cell not in scene_data["collisions"]:
-        scene_data["collisions"].append(cell)
-
-
-def get_sprite_draw_position(cell, object_definition, sprite, camera):
-    tile_size = camera.get_tile_size()
-
-    footprint_width = object_definition["footprint"][0] * tile_size
-    footprint_height = object_definition["footprint"][1] * tile_size
-
-    anchor = object_definition.get("footprint_anchor", [0.5, 1.0])
-
-    footprint_x = cell[0] * tile_size - camera.x
-    footprint_y = cell[1] * tile_size - camera.y
-
-    footprint_center_x = footprint_x + footprint_width / 2
-    footprint_bottom_y = footprint_y + footprint_height
-
-    anchor_x = sprite.get_width() * anchor[0]
-    anchor_y = sprite.get_height() * anchor[1]
-
-    return (
-        int(footprint_center_x - anchor_x),
-        int(footprint_bottom_y - anchor_y),
-    )
-
-
-def draw_object_footprint(screen, cell, footprint, color, camera):
-    tile_size = camera.get_tile_size()
-
-    rect = pygame.Rect(
-        cell[0] * tile_size - camera.x,
-        cell[1] * tile_size - camera.y,
-        footprint[0] * tile_size,
-        footprint[1] * tile_size,
-    )
-
-    pygame.draw.rect(screen, color, rect, 2)
-
-
-def draw_scene_objects(screen, scene_data, object_definitions, sprites, camera):
-    for object_data in scene_data["objects"]:
-        object_type = object_data["type"]
-
-        if object_type not in object_definitions:
-            continue
-
-        object_definition = object_definitions[object_type]
-        cell = object_data["cell"]
-
-        draw_object_footprint(
-            screen,
-            cell,
-            object_definition["footprint"],
-            (30, 80, 30),
-            camera,
-        )
-
-        if object_type in sprites:
-            sprite = pygame.transform.scale_by(
-                sprites[object_type],
-                camera.zoom,
-            )
-
-            draw_pos = get_sprite_draw_position(
-                cell,
-                object_definition,
-                sprite,
-                camera,
-            )
-
-            screen.blit(sprite, draw_pos)
-
-
-def draw_collision_cells(screen, scene_data, camera):
-    tile_size = camera.get_tile_size()
-
-    for cell in scene_data["collisions"]:
-        rect = pygame.Rect(
-            cell[0] * tile_size - camera.x,
-            cell[1] * tile_size - camera.y,
-            tile_size,
-            tile_size,
-        )
-
-        pygame.draw.rect(screen, (180, 60, 60), rect, 2)
-
-
-def draw_preview(screen, selected_object_type, object_definitions, sprites, camera):
-    if selected_object_type is None:
-        return
-
-    if selected_object_type not in object_definitions:
-        return
-
-    mouse_pos = pygame.mouse.get_pos()
-    panel_start_x = screen.get_width() - PANEL_WIDTH
-
-    if mouse_pos[0] >= panel_start_x:
-        return
-
-    cell = camera.screen_to_cell(mouse_pos)
-    object_definition = object_definitions[selected_object_type]
-
-    draw_object_footprint(
-        screen,
-        cell,
-        object_definition["footprint"],
-        (80, 180, 255),
-        camera,
-    )
-
-    if selected_object_type in sprites:
-        preview_sprite = pygame.transform.scale_by(
-            sprites[selected_object_type],
-            camera.zoom,
-        )
-
-        preview_sprite.set_alpha(140)
-
-        draw_pos = get_sprite_draw_position(
-            cell,
-            object_definition,
-            preview_sprite,
-            camera,
-        )
-
-        screen.blit(preview_sprite, draw_pos)
-
-
-def draw_grid(screen, map_width, map_height, camera):
-    tile_size = camera.get_tile_size()
-
-    start_x = max(0, int(camera.x // tile_size))
-    end_x = min(
-        map_width,
-        int((camera.x + screen.get_width()) // tile_size) + 2,
-    )
-
-    start_y = max(0, int(camera.y // tile_size))
-    end_y = min(
-        map_height,
-        int((camera.y + screen.get_height()) // tile_size) + 2,
-    )
-
-    for grid_x in range(start_x, end_x + 1):
-        x = grid_x * tile_size - camera.x
-
-        pygame.draw.line(
-            screen,
-            (100, 140, 90),
-            (x, 0),
-            (x, map_height * tile_size - camera.y),
-        )
-
-    for grid_y in range(start_y, end_y + 1):
-        y = grid_y * tile_size - camera.y
-
-        pygame.draw.line(
-            screen,
-            (100, 140, 90),
-            (0, y),
-            (map_width * tile_size - camera.x, y),
-        )
 
 
 def is_inside_canvas(screen, pos):
@@ -252,28 +79,11 @@ def handle_panel_action(clicked_action, object_definitions):
     return None
 
 
-def paint_at_mouse(scene_data, mode, selected_object_type, object_definitions, camera, mouse_pos):
-    cell = camera.screen_to_cell(mouse_pos)
-
-    if mode == "objects" and selected_object_type:
-        add_object(
-            scene_data,
-            selected_object_type,
-            cell,
-        )
-
-    if mode == "collisions":
-        add_collision_cell(scene_data, cell)
-
-
 def main():
     pygame.init()
 
     scene_data = load_scene()
     object_definitions = load_object_definitions()
-
-    map_width = scene_data["width"]
-    map_height = scene_data["height"]
 
     screen = pygame.display.set_mode((1000, 700))
     pygame.display.set_caption("RPG Scene Editor")
@@ -325,6 +135,9 @@ def main():
                 if clicked_action:
                     action = clicked_action["action"]
 
+                    if action == "save":
+                        save_scene(scene_data)
+
                     if action == "zoom_in":
                         camera.panel_zoom_in()
 
@@ -346,7 +159,6 @@ def main():
                             scene_data,
                             mode,
                             selected_object_type,
-                            object_definitions,
                             camera,
                             event.pos,
                         )
@@ -370,16 +182,11 @@ def main():
                             scene_data,
                             mode,
                             selected_object_type,
-                            object_definitions,
                             camera,
                             event.pos,
                         )
 
-        draw_grid(screen, map_width, map_height, camera)
-
-        draw_collision_cells(screen, scene_data, camera)
-
-        draw_scene_objects(
+        draw_editor_scene(
             screen,
             scene_data,
             object_definitions,
