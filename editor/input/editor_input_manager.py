@@ -23,6 +23,21 @@ from editor.tools.paint_tool import (
     paint_rect,
 )
 
+from editor.areas.exit_tool import (
+    get_area_by_id,
+    get_exit_at_cell,
+    get_spawn_at_cell,
+    rename_area,
+    set_exit_target,
+)
+
+from editor.scene_editor_serializer import (
+    SCENES_DIR,
+    create_empty_scene_data,
+    list_saved_scenes,
+    load_scene_for_editor,
+    save_scene_as_for_game,
+)
 
 class EditorInputManager:
     def __init__(self, scene_data, object_definitions, camera, save_scene_callback):
@@ -57,6 +72,19 @@ class EditorInputManager:
         self.rect_start_cell = None
         self.rect_end_cell = None
         self.rect_button = None
+
+        self.selected_area_type = None
+        self.selected_area_id = None
+
+        self.show_area_name_dialog = False
+        self.area_name_text = ""
+
+        self.show_relations_dialog = False
+        self.relation_targets = []
+        self.selected_relation_exit_id = None
+        self.selected_relation_target_key = None
+        self.selected_relation_target_scene_id = None
+        self.selected_relation_target_spawn_id = None
 
     def set_buttons(self, buttons):
         self.buttons = buttons
@@ -278,6 +306,12 @@ class EditorInputManager:
         if self.show_open_scene_dialog:
             return self.handle_open_scene_dialog_action(clicked_action)
 
+        if self.show_area_name_dialog:
+            return self.handle_area_name_dialog_action(clicked_action["action"])
+
+        if self.show_relations_dialog:
+            return self.handle_relations_dialog_action(clicked_action)
+
         return None
 
     def handle_save_as_text_input(self, event):
@@ -393,6 +427,14 @@ class EditorInputManager:
 
             return None
 
+        if action == "edit_area_name":
+            self.open_area_name_dialog()
+            return None
+
+        if action == "open_relations_dialog":
+            self.open_relations_dialog()
+            return None
+
         return None
 
     def start_rect_tool(self, screen, event):
@@ -475,8 +517,13 @@ class EditorInputManager:
                     self.camera,
                     event.pos,
                 )
+
                 self.is_erasing = True
                 self.mark_dirty()
+
+                self.selected_area_type = None
+                self.selected_area_id = None
+
             return None
 
         clicked_action = get_clicked_panel_action(event.pos, self.buttons)
@@ -496,6 +543,8 @@ class EditorInputManager:
 
             self.is_painting = True
             self.mark_dirty()
+
+            self.select_area_at_cell(self.camera.screen_to_cell(event.pos))
 
         return None
 
@@ -563,11 +612,14 @@ class EditorInputManager:
             return True
 
         if event.type == pygame.KEYDOWN:
+            if self.show_area_name_dialog:
+                self.handle_area_name_text_input(event)
+                return True
             if self.show_save_as_dialog:
                 self.handle_save_as_text_input(event)
                 return True
 
-            if self.show_unsaved_dialog or self.show_open_scene_dialog:
+            if self.show_unsaved_dialog or self.show_open_scene_dialog or self.show_relations_dialog:
                 if event.key == pygame.K_ESCAPE:
                     self.show_unsaved_dialog = False
                     self.show_open_scene_dialog = False
@@ -593,3 +645,166 @@ class EditorInputManager:
             self.handle_mouse_motion(screen, event)
 
         return True
+
+
+    def get_selected_area(self):
+    if self.selected_area_type is None:
+        return None
+
+    if self.selected_area_id is None:
+        return None
+
+    return get_area_by_id(
+        self.scene_data,
+        self.selected_area_type,
+        self.selected_area_id,
+    )
+
+
+    def select_area_at_cell(self, cell):
+        if self.mode == "spawns":
+            spawn_data = get_spawn_at_cell(self.scene_data, cell)
+
+            if spawn_data is not None:
+                self.selected_area_type = "spawns"
+                self.selected_area_id = spawn_data["id"]
+
+            return
+
+        if self.mode == "exits":
+            exit_data = get_exit_at_cell(self.scene_data, cell)
+
+            if exit_data is not None:
+                self.selected_area_type = "exits"
+                self.selected_area_id = exit_data["id"]
+
+            return
+
+
+    def open_area_name_dialog(self):
+        selected_area = self.get_selected_area()
+
+        if selected_area is None:
+            return
+
+        self.area_name_text = selected_area.get("name", "")
+        self.show_area_name_dialog = True
+
+
+    def handle_area_name_dialog_action(self, action):
+        if action == "area_name_cancel":
+            self.show_area_name_dialog = False
+            return None
+
+        if action == "area_name_confirm":
+            renamed = rename_area(
+                self.scene_data,
+                self.selected_area_type,
+                self.selected_area_id,
+                self.area_name_text,
+            )
+
+            if renamed:
+                self.mark_dirty()
+                self.set_status("Nombre de área actualizado")
+
+            self.show_area_name_dialog = False
+            return None
+
+        return None
+
+
+    def handle_area_name_text_input(self, event):
+        if event.key == pygame.K_ESCAPE:
+            self.show_area_name_dialog = False
+            return
+
+        if event.key == pygame.K_RETURN:
+            self.handle_area_name_dialog_action("area_name_confirm")
+            return
+
+        if event.key == pygame.K_BACKSPACE:
+            self.area_name_text = self.area_name_text[:-1]
+            return
+
+        if event.unicode:
+            self.area_name_text += event.unicode
+
+
+    def build_relation_targets(self):
+        targets = []
+
+        saved_scenes = list_saved_scenes()
+
+        for scene_info in saved_scenes:
+            loaded_scene = load_scene_for_editor(scene_info["id"])
+
+            for spawn_data in loaded_scene.get("spawns", []):
+                targets.append({
+                    "scene_id": loaded_scene["id"],
+                    "scene_name": loaded_scene["name"],
+                    "spawn_id": spawn_data["id"],
+                    "spawn_name": spawn_data.get("name", spawn_data["id"]),
+                })
+
+        return targets
+
+
+    def open_relations_dialog(self):
+        self.relation_targets = self.build_relation_targets()
+        self.show_relations_dialog = True
+
+        if len(self.scene_data.get("exits", [])) > 0:
+            self.selected_relation_exit_id = self.scene_data["exits"][0]["id"]
+
+        if len(self.relation_targets) > 0:
+            first_target = self.relation_targets[0]
+            self.selected_relation_target_scene_id = first_target["scene_id"]
+            self.selected_relation_target_spawn_id = first_target["spawn_id"]
+            self.selected_relation_target_key = (
+                f"{first_target['scene_id']}::{first_target['spawn_id']}"
+            )
+
+
+    def handle_relations_dialog_action(self, clicked_action):
+        action = clicked_action["action"]
+
+        if action == "relation_cancel":
+            self.show_relations_dialog = False
+            return None
+
+        if action == "relation_select_exit":
+            self.selected_relation_exit_id = clicked_action["exit_id"]
+            return None
+
+        if action == "relation_select_target":
+            self.selected_relation_target_key = clicked_action["target_key"]
+            self.selected_relation_target_scene_id = clicked_action["target_scene_id"]
+            self.selected_relation_target_spawn_id = clicked_action["target_spawn_id"]
+            return None
+
+        if action == "relation_confirm":
+            if self.selected_relation_exit_id is None:
+                return None
+
+            if self.selected_relation_target_scene_id is None:
+                return None
+
+            if self.selected_relation_target_spawn_id is None:
+                return None
+
+            linked = set_exit_target(
+                self.scene_data,
+                self.selected_relation_exit_id,
+                self.selected_relation_target_scene_id,
+                self.selected_relation_target_spawn_id,
+            )
+
+            if linked:
+                self.mark_dirty()
+                self.set_status("Relación de salida actualizada")
+
+            self.show_relations_dialog = False
+            return None
+
+        return None

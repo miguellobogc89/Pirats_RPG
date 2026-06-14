@@ -29,6 +29,22 @@ def get_object_at_cell(scene_data, object_definitions, cell):
     return "-"
 
 
+def get_spawn_at_cell(scene_data, cell):
+    for spawn_data in scene_data.get("spawns", []):
+        if cell in spawn_data.get("cells", []):
+            return spawn_data["id"]
+
+    return "-"
+
+
+def get_exit_at_cell(scene_data, cell):
+    for exit_data in scene_data.get("exits", []):
+        if cell in exit_data.get("cells", []):
+            return exit_data["id"]
+
+    return "-"
+
+
 def draw_editor_status_bar(
     screen,
     scene_data,
@@ -82,11 +98,11 @@ def draw_editor_status_bar(
         f"Object: {object_type}   "
         f"Collision: {collision_text}   "
         f"Terrain: {terrain_text}   "
+        f"Spawn: {spawn_text}   "
+        f"Exit: {exit_text}   "
         f"Mode: {mode}   "
         f"Selected: {selected_object_type}   "
         f"{dirty_text}"
-        f"Spawn: {spawn_text}   "
-        f"Exit: {exit_text}   "
     )
 
     color = COLOR_TEXT_MUTED
@@ -96,18 +112,3 @@ def draw_editor_status_bar(
 
     surface = font.render(text, True, color)
     screen.blit(surface, (10, y + 6))
-
-def get_spawn_at_cell(scene_data, cell):
-    for spawn_data in scene_data.get("spawns", []):
-        if spawn_data["cell"] == cell:
-            return spawn_data["id"]
-
-    return "-"
-
-
-def get_exit_at_cell(scene_data, cell):
-    for exit_data in scene_data.get("exits", []):
-        if exit_data["cell"] == cell:
-            return exit_data["id"]
-
-    return "-"

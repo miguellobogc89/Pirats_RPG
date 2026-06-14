@@ -58,7 +58,7 @@
     "Duermes y recuperas energia."
   ],
   "inventory": {
-    "rows": 2,
+    "rows": 3,
     "columns": 8,
     "active_hotbar_index": 0,
     "grid": [
@@ -68,7 +68,11 @@
           "amount": 1
         },
         {
-          "item_id": "campfire",
+          "item_id": "pickaxe",
+          "amount": 1
+        },
+        {
+          "item_id": "hoe",
           "amount": 1
         },
         {
@@ -76,31 +80,85 @@
           "amount": 1
         },
         {
-          "item_id": "food",
-          "amount": 12
+          "item_id": "fishing_rod",
+          "amount": 1
         },
-        null,
         {
-          "item_id": "driftwood",
-          "amount": 5
+          "item_id": "wooden_sword",
+          "amount": 1
         },
-        null,
         {
-          "item_id": "sea_fiber",
-          "amount": 2
+          "item_id": "corn_seed",
+          "amount": 10
+        },
+        {
+          "item_id": "small_health_potion",
+          "amount": 3
         }
       ],
       [
         {
           "item_id": "wood",
-          "amount": 91
+          "amount": 50
         },
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
+        {
+          "item_id": "stone",
+          "amount": 40
+        },
+        {
+          "item_id": "log",
+          "amount": 12
+        },
+        {
+          "item_id": "plank",
+          "amount": 20
+        },
+        {
+          "item_id": "coal",
+          "amount": 15
+        },
+        {
+          "item_id": "iron_ore",
+          "amount": 10
+        },
+        {
+          "item_id": "copper_ore",
+          "amount": 10
+        },
+        {
+          "item_id": "campfire",
+          "amount": 1
+        }
+      ],
+      [
+        {
+          "item_id": "apple",
+          "amount": 5
+        },
+        {
+          "item_id": "carrot",
+          "amount": 5
+        },
+        {
+          "item_id": "corn",
+          "amount": 5
+        },
+        {
+          "item_id": "arrow",
+          "amount": 20
+        },
+        {
+          "item_id": "round_shield",
+          "amount": 1
+        },
+        {
+          "item_id": "amethyst",
+          "amount": 2
+        },
+        {
+          "item_id": "copper_key",
+          "amount": 1
+        },
         null
       ]
     ]
@@ -121,8 +179,8 @@
     }
   ],
   "time": {
-    "hour": 6,
-    "minute": 0,
+    "hour": 15,
+    "minute": 37.48999999999555,
     "day": 23
   },
   "placed_objects": [
@@ -401,7 +459,40 @@
       }
     ]
   },
-  "legacy_hotbar": [],
+  "legacy_hotbar": [
+    {
+      "item_id": "axe",
+      "amount": 1
+    },
+    {
+      "item_id": "pickaxe",
+      "amount": 1
+    },
+    {
+      "item_id": "hoe",
+      "amount": 1
+    },
+    {
+      "item_id": "watering_can",
+      "amount": 1
+    },
+    {
+      "item_id": "fishing_rod",
+      "amount": 1
+    },
+    {
+      "item_id": "wooden_sword",
+      "amount": 1
+    },
+    {
+      "item_id": "corn_seed",
+      "amount": 10
+    },
+    {
+      "item_id": "small_health_potion",
+      "amount": 3
+    }
+  ],
   "current_scene": "farm",
   "stash": {
     "rows": 3,

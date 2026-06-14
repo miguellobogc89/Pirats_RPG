@@ -194,36 +194,49 @@ def draw_rect_tool_preview(screen, rect_preview_data, camera):
 
     pygame.draw.rect(screen, color, rect, 3)
 
+
 def draw_spawn_cells(screen, scene_data, camera):
     tile_size = camera.get_tile_size()
 
     for spawn_data in scene_data.get("spawns", []):
-        cell = spawn_data["cell"]
+        for cell in spawn_data.get("cells", []):
+            rect = pygame.Rect(
+                cell[0] * tile_size - camera.x,
+                cell[1] * tile_size - camera.y,
+                tile_size,
+                tile_size,
+            )
 
-        rect = pygame.Rect(
-            cell[0] * tile_size - camera.x,
-            cell[1] * tile_size - camera.y,
-            tile_size,
-            tile_size,
-        )
+            pygame.draw.rect(screen, (80, 220, 120), rect, 3)
 
-        pygame.draw.rect(screen, (80, 220, 120), rect, 3)
+        spawn_cell = spawn_data.get("spawn_cell")
+
+        if spawn_cell is not None:
+            center_x = spawn_cell[0] * tile_size - camera.x + tile_size // 2
+            center_y = spawn_cell[1] * tile_size - camera.y + tile_size // 2
+
+            pygame.draw.circle(
+                screen,
+                (120, 255, 160),
+                (int(center_x), int(center_y)),
+                max(4, tile_size // 5),
+            )
 
 
 def draw_exit_cells(screen, scene_data, camera):
     tile_size = camera.get_tile_size()
 
     for exit_data in scene_data.get("exits", []):
-        cell = exit_data["cell"]
+        for cell in exit_data.get("cells", []):
+            rect = pygame.Rect(
+                cell[0] * tile_size - camera.x,
+                cell[1] * tile_size - camera.y,
+                tile_size,
+                tile_size,
+            )
 
-        rect = pygame.Rect(
-            cell[0] * tile_size - camera.x,
-            cell[1] * tile_size - camera.y,
-            tile_size,
-            tile_size,
-        )
+            pygame.draw.rect(screen, (240, 190, 70), rect, 3)
 
-        pygame.draw.rect(screen, (240, 190, 70), rect, 3)
 
 def draw_editor_scene(screen, scene_data, object_definitions, sprites, camera):
     map_width = scene_data["width"]
