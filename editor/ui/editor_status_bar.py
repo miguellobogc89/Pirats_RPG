@@ -5,6 +5,7 @@ STATUS_BAR_HEIGHT = 28
 COLOR_BAR = (24, 26, 30)
 COLOR_BORDER = (95, 100, 110)
 COLOR_TEXT_MUTED = (165, 170, 178)
+COLOR_TEXT_OK = (150, 220, 160)
 
 
 def get_object_at_cell(scene_data, object_definitions, cell):
@@ -28,7 +29,15 @@ def get_object_at_cell(scene_data, object_definitions, cell):
     return "-"
 
 
-def draw_editor_status_bar(screen, scene_data, object_definitions, camera, mode, selected_object_type):
+def draw_editor_status_bar(
+    screen,
+    scene_data,
+    object_definitions,
+    camera,
+    mode,
+    selected_object_type,
+    status_message="",
+):
     font = pygame.font.SysFont("consolas", 14)
 
     y = screen.get_height() - STATUS_BAR_HEIGHT
@@ -61,14 +70,25 @@ def draw_editor_status_bar(screen, scene_data, object_definitions, camera, mode,
 
     terrain_text = "grass"
 
+    dirty_text = "saved"
+    if status_message:
+        dirty_text = status_message
+
     text = (
+        f"Scene: {scene_data.get('name', '-')} ({scene_data.get('id', '-')})   "
         f"Cell: {cell[0]}, {cell[1]}   "
         f"Object: {object_type}   "
         f"Collision: {collision_text}   "
         f"Terrain: {terrain_text}   "
         f"Mode: {mode}   "
-        f"Selected: {selected_object_type}"
+        f"Selected: {selected_object_type}   "
+        f"{dirty_text}"
     )
 
-    surface = font.render(text, True, COLOR_TEXT_MUTED)
+    color = COLOR_TEXT_MUTED
+
+    if status_message:
+        color = COLOR_TEXT_OK
+
+    surface = font.render(text, True, color)
     screen.blit(surface, (10, y + 6))

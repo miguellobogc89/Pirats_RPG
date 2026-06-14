@@ -48,13 +48,15 @@ def draw_dropdown_item(screen, rect, label):
 def draw_file_dropdown(screen):
     x = 8
     y = MENU_BAR_HEIGHT
-    width = 170
+    width = 190
     item_height = 28
 
     items = [
         ("Nuevo", "file_new"),
+        ("Abrir...", "file_open"),
         ("Guardar", "file_save"),
-        ("Guardar como", "file_save_as"),
+        ("Guardar como...", "file_save_as"),
+        ("Abrir carpeta", "file_open_folder"),
         ("Salir", "file_exit"),
     ]
 
@@ -136,6 +138,7 @@ def draw_editor_menu_bar(screen, active_menu=None):
         })
 
         separator_x = rect.right
+
         pygame.draw.line(
             screen,
             COLOR_BORDER,

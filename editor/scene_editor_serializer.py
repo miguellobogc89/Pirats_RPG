@@ -1,4 +1,5 @@
 import json
+import re
 from pathlib import Path
 
 from game.world.grid_manager import TILE_SIZE
@@ -6,14 +7,51 @@ from game.world.grid_manager import TILE_SIZE
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 SCENES_DIR = PROJECT_ROOT / "data" / "scenes"
+
 DEFAULT_SCENE_ID = "farm"
 DEFAULT_SCENE_WIDTH = 80
 DEFAULT_SCENE_HEIGHT = 60
 DEFAULT_TILE_SIZE = TILE_SIZE
 
 
+def slugify_scene_name(scene_name):
+    value = scene_name.strip().lower()
+    value = value.replace("ñ", "n")
+    value = re.sub(r"[^a-z0-9]+", "_", value)
+    value = value.strip("_")
+
+    if value == "":
+        return "new_scene"
+
+    return value
+
+
 def get_scene_path(scene_id):
     return SCENES_DIR / f"{scene_id}.json"
+
+
+def list_saved_scenes():
+    SCENES_DIR.mkdir(parents=True, exist_ok=True)
+
+    scenes = []
+
+    for scene_path in sorted(SCENES_DIR.glob("*.json")):
+        try:
+            with scene_path.open("r", encoding="utf-8") as file:
+                raw_scene = json.load(file)
+        except Exception:
+            continue
+
+        scene_id = raw_scene.get("id", scene_path.stem)
+        scene_name = raw_scene.get("name", scene_id)
+
+        scenes.append({
+            "id": scene_id,
+            "name": scene_name,
+            "path": scene_path,
+        })
+
+    return scenes
 
 
 def load_scene_for_editor(scene_id=DEFAULT_SCENE_ID):
@@ -23,10 +61,7 @@ def load_scene_for_editor(scene_id=DEFAULT_SCENE_ID):
         with scene_path.open("r", encoding="utf-8") as file:
             raw_scene = json.load(file)
     else:
-        raw_scene = {
-            "id": scene_id,
-            "name": scene_id,
-        }
+        raw_scene = create_empty_scene_data(scene_id, scene_id)
 
     return normalize_scene_for_editor(raw_scene, fallback_scene_id=scene_id)
 
@@ -39,7 +74,36 @@ def save_scene_for_game(scene_data):
     with scene_path.open("w", encoding="utf-8") as file:
         json.dump(normalized_scene, file, indent=2, ensure_ascii=False)
 
+    scene_data.clear()
+    scene_data.update(normalized_scene)
+
     return scene_path
+
+
+def save_scene_as_for_game(scene_data, scene_name):
+    scene_id = slugify_scene_name(scene_name)
+
+    scene_data["id"] = scene_id
+    scene_data["name"] = scene_name.strip()
+
+    return save_scene_for_game(scene_data)
+
+
+def create_empty_scene_data(scene_id="new_scene", scene_name="New Scene"):
+    return {
+        "id": scene_id,
+        "name": scene_name,
+        "width": DEFAULT_SCENE_WIDTH,
+        "height": DEFAULT_SCENE_HEIGHT,
+        "tile_size": DEFAULT_TILE_SIZE,
+        "player_spawn": {
+            "x": 0,
+            "y": 0,
+        },
+        "objects": [],
+        "collisions": [],
+        "exits": [],
+    }
 
 
 def normalize_scene_for_editor(raw_scene, fallback_scene_id=DEFAULT_SCENE_ID):

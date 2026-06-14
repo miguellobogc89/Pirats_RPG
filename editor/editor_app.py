@@ -8,13 +8,17 @@ if str(PROJECT_ROOT) not in sys.path:
 
 from game.world.grid_manager import TILE_SIZE
 
+from editor.dialogs.open_scene_dialog import draw_open_scene_dialog
+from editor.dialogs.save_as_dialog import draw_save_as_dialog
+from editor.dialogs.unsaved_changes_dialog import draw_unsaved_changes_dialog
+
 from editor.editor_assets import (
     load_editor_sprites,
     load_object_definitions,
 )
 
 from editor.editor_camera import EditorCamera
-from editor.dialogs.unsaved_changes_dialog import draw_unsaved_changes_dialog
+
 from editor.editor_ui import draw_editor_side_panel
 
 from editor.input.editor_input_manager import EditorInputManager
@@ -40,7 +44,7 @@ def load_scene(scene_id=DEFAULT_SCENE_ID):
 
 
 def save_scene(scene_data):
-    save_scene_for_game(scene_data)
+    return save_scene_for_game(scene_data)
 
 
 def main():
@@ -118,13 +122,27 @@ def main():
             camera,
             input_manager.mode,
             input_manager.selected_object_type,
+            input_manager.status_message,
         )
-
 
         if input_manager.show_unsaved_dialog:
             dialog_buttons = draw_unsaved_changes_dialog(screen)
             input_manager.set_dialog_buttons(dialog_buttons)
-            
+
+        if input_manager.show_save_as_dialog:
+            dialog_buttons = draw_save_as_dialog(
+                screen,
+                input_manager.save_as_text,
+            )
+            input_manager.set_dialog_buttons(dialog_buttons)
+
+        if input_manager.show_open_scene_dialog:
+            dialog_buttons = draw_open_scene_dialog(
+                screen,
+                input_manager.saved_scenes,
+            )
+            input_manager.set_dialog_buttons(dialog_buttons)
+
         pygame.display.flip()
         clock.tick(60)
 
