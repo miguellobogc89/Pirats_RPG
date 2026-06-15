@@ -4,9 +4,13 @@ from pathlib import Path
 import pygame
 
 from editor.object_editor.object_preview_renderer import draw_object_preview
+from editor.object_editor.functional_type_forms import draw_functional_type_form
 from editor.widgets.checkbox import draw_checkbox
-from editor.widgets.dropdown import draw_dropdown
 from editor.widgets.editor_button import draw_editor_button
+from editor.widgets.floating_dropdown import (
+    draw_dropdown_field,
+    draw_floating_dropdown,
+)
 from editor.widgets.inspector_panel import (
     GODOT_BG,
     GODOT_BORDER,
@@ -20,7 +24,6 @@ from editor.widgets.inspector_panel import (
 from editor.widgets.modal_dialog import draw_modal_dialog
 from editor.widgets.property_group import draw_property_group
 from editor.widgets.text_input import draw_text_input
-from game.world.object_interaction_model import INTERACTION_MODES
 
 
 COLOR_OVERLAY = (0, 0, 0)
@@ -36,9 +39,6 @@ DEFAULT_CATEGORIES = [
     "Resource",
     "Other",
 ]
-REQUIRED_TOOL_OPTIONS = ["none", "axe", "pickaxe", "sword"]
-
-
 def make_object_id(name):
     clean_name = name.strip().lower()
     clean_name = re.sub(r"[^a-z0-9]+", "_", clean_name)
@@ -123,6 +123,7 @@ def sync_generated_id(state, object_definitions):
 
 def draw_inspector(screen, rect, state, object_definitions, scroll_y=0):
     buttons = []
+    floating_dropdown_requests = []
     y = draw_inspector_panel(screen, rect)
     clip_rect = pygame.Rect(rect.x, y, rect.w, rect.h - 112)
     previous_clip = screen.get_clip()
@@ -133,8 +134,9 @@ def draw_inspector(screen, rect, state, object_definitions, scroll_y=0):
 
     content_start_y = y
 
-    y, group_buttons = draw_general_group(screen, state, inner_x, y, inner_w)
+    y, group_buttons, group_floaters = draw_general_group(screen, state, inner_x, y, inner_w)
     buttons.extend(group_buttons)
+    floating_dropdown_requests.extend(group_floaters)
 
     y, group_buttons = draw_rendering_group(screen, state, inner_x, y, inner_w)
     buttons.extend(group_buttons)
@@ -142,11 +144,9 @@ def draw_inspector(screen, rect, state, object_definitions, scroll_y=0):
     y, group_buttons = draw_collision_group(screen, state, inner_x, y, inner_w)
     buttons.extend(group_buttons)
 
-    y, group_buttons = draw_inventory_group(screen, state, inner_x, y, inner_w)
+    y, group_buttons, group_floaters = draw_behaviour_group(screen, state, inner_x, y, inner_w)
     buttons.extend(group_buttons)
-
-    y, group_buttons = draw_behaviour_group(screen, state, inner_x, y, inner_w)
-    buttons.extend(group_buttons)
+    floating_dropdown_requests.extend(group_floaters)
 
     y, group_buttons = draw_interaction_points_group(screen, state, inner_x, y, inner_w)
     buttons.extend(group_buttons)
@@ -173,6 +173,8 @@ def draw_inspector(screen, rect, state, object_definitions, scroll_y=0):
     elif state.status_message:
         draw_text(screen, state.status_message, rect.x + 10, footer_y - 25, GODOT_MUTED, 12)
 
+    buttons.extend(draw_active_floating_dropdown(screen, state, floating_dropdown_requests))
+
     return buttons
 
 
@@ -181,15 +183,58 @@ def draw_group_header(screen, title, expanded, x, y, width):
     return rect, draw_property_group(screen, rect, title, expanded)
 
 
+def draw_active_floating_dropdown(screen, state, floating_dropdown_requests):
+    active_dropdown = getattr(state, "floating_dropdown", None)
+
+    if active_dropdown is None:
+        state.floating_dropdown_rect = None
+        state.floating_dropdown_max_scroll = 0
+        return []
+
+    active_request = None
+
+    for request in floating_dropdown_requests:
+        if request["id"] == active_dropdown:
+            active_request = request
+            break
+
+    if active_request is None:
+        state.floating_dropdown_rect = None
+        state.floating_dropdown_max_scroll = 0
+        return []
+
+    dropdown = draw_floating_dropdown(
+        screen,
+        active_request["anchor_rect"],
+        active_request["options"],
+        active_request["selected_value"],
+        active_request["select_action"],
+        active_request["option_key"],
+        scroll_y=getattr(state, "floating_dropdown_scroll_y", 0),
+        allow_new=active_request.get("allow_new", False),
+        new_action=active_request.get("new_action"),
+    )
+
+    state.floating_dropdown_rect = dropdown["rect"]
+    state.floating_dropdown_max_scroll = dropdown["max_scroll"]
+    state.floating_dropdown_scroll_y = max(
+        0,
+        min(state.floating_dropdown_scroll_y, state.floating_dropdown_max_scroll),
+    )
+
+    return dropdown["buttons"]
+
+
 def draw_general_group(screen, state, x, y, width):
     buttons = []
+    floating_dropdown_requests = []
     expanded = state.open_groups.get("General", True)
     header_rect, button = draw_group_header(screen, "General", expanded, x, y, width)
     buttons.append(button)
     y = header_rect.bottom
 
     if not expanded:
-        return y, buttons
+        return y, buttons, floating_dropdown_requests
 
     row_h = 28
     row = pygame.Rect(x, y, width, row_h)
@@ -221,22 +266,27 @@ def draw_general_group(screen, state, x, y, width):
     y += row_h
 
     row = pygame.Rect(x, y, width, row_h)
-    dropdown_buttons = draw_dropdown(
+    dropdown_buttons, anchor_rect = draw_dropdown_field(
         screen,
         row,
         "Categoria",
         state.category,
-        DEFAULT_CATEGORIES,
         "object_category_dropdown",
-        expanded=state.category_dropdown_open,
     )
     buttons.extend(dropdown_buttons)
+    floating_dropdown_requests.append({
+        "id": "category",
+        "anchor_rect": anchor_rect,
+        "options": DEFAULT_CATEGORIES,
+        "selected_value": state.category,
+        "select_action": "object_category_select",
+        "option_key": "category",
+        "allow_new": True,
+        "new_action": "object_category_new",
+    })
     y += row_h
 
-    if state.category_dropdown_open:
-        y += 24 * (len(DEFAULT_CATEGORIES) + 1)
-
-    return y, buttons
+    return y, buttons, floating_dropdown_requests
 
 
 def draw_rendering_group(screen, state, x, y, width):
@@ -322,68 +372,20 @@ def draw_inventory_group(screen, state, x, y, width):
 
 def draw_behaviour_group(screen, state, x, y, width):
     buttons = []
+    floating_dropdown_requests = []
     expanded = state.open_groups.get("Behaviour", True)
     header_rect, button = draw_group_header(screen, "Behaviour", expanded, x, y, width)
     buttons.append(button)
     y = header_rect.bottom
 
     if not expanded:
-        return y, buttons
+        return y, buttons, floating_dropdown_requests
 
-    row_h = 28
-    row = pygame.Rect(x, y, width, row_h)
-    dropdown_buttons = draw_dropdown(
-        screen,
-        row,
-        "Pickup",
-        "Interaction",
-        state.interaction_mode,
-        INTERACTION_MODES,
-        "object_interaction_mode_dropdown",
-        expanded=getattr(state, "interaction_mode_dropdown_open", False),
-        select_action="object_interaction_mode_select",
-        option_key="interaction_mode",
-        allow_new=False,
-    )
-    buttons.extend(dropdown_buttons)
-    y += row_h
+    y, form_buttons, form_floaters = draw_functional_type_form(screen, state, x, y, width)
+    buttons.extend(form_buttons)
+    floating_dropdown_requests.extend(form_floaters)
 
-    if getattr(state, "interaction_mode_dropdown_open", False):
-        y += 24 * len(INTERACTION_MODES)
-
-    row = pygame.Rect(x, y, width, 28)
-    buttons.append(
-        draw_checkbox(
-            screen,
-            row,
-            "Destructible",
-            state.destructible,
-            "object_toggle_destructible",
-        )
-    )
-    y += 28
-
-    row = pygame.Rect(x, y, width, row_h)
-    selected_tool = state.required_tool or "none"
-    dropdown_buttons = draw_dropdown(
-        screen,
-        row,
-        "Herramienta",
-        selected_tool,
-        REQUIRED_TOOL_OPTIONS,
-        "object_required_tool_dropdown",
-        expanded=getattr(state, "required_tool_dropdown_open", False),
-        select_action="object_required_tool_select",
-        option_key="required_tool",
-        allow_new=False,
-    )
-    buttons.extend(dropdown_buttons)
-    y += row_h
-
-    if getattr(state, "required_tool_dropdown_open", False):
-        y += 24 * len(REQUIRED_TOOL_OPTIONS)
-
-    return y, buttons
+    return y, buttons, floating_dropdown_requests
 
 
 def draw_interaction_points_group(screen, state, x, y, width):

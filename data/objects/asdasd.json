@@ -1,20 +1,24 @@
 {
+  "id": "asdasd",
   "name": "asdasd",
   "category": "other",
-  "sprite": "",
-  "footprint": [
-    1,
-    1
-  ],
-  "sprite_offset": [
-    0,
-    0
-  ],
-  "sprite_size": null,
-  "solid": true,
-  "stackable": false,
-  "pickup_mode": "none",
-  "pickable_interactable": false,
-  "interaction_points": [],
-  "id": "asdasd"
+  "functional_type": "decorative",
+  "visual": {
+    "sprite": "",
+    "sprite_offset": [
+      0,
+      0
+    ],
+    "sprite_size": null,
+    "visual_size": null
+  },
+  "collision": {
+    "footprint": [
+      1,
+      1
+    ],
+    "footprint_anchor": "center",
+    "solid": true,
+    "interaction_points": []
+  }
 }

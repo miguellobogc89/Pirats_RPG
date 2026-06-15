@@ -74,6 +74,10 @@ class EditorInputManager:
         self.show_open_scene_dialog = False
         self.show_open_object_dialog = False
         self.saved_scenes = []
+        self.open_scene_dialog_scroll_y = 0
+        self.open_scene_dialog_max_scroll = 0
+        self.open_object_dialog_scroll_y = 0
+        self.open_object_dialog_max_scroll = 0
 
         self.status_message = ""
 
@@ -196,6 +200,8 @@ class EditorInputManager:
         self.active_menu = None
         self.saved_scenes = list_saved_scenes()
         self.show_open_scene_dialog = True
+        self.open_scene_dialog_scroll_y = 0
+        self.open_scene_dialog_max_scroll = 0
         self.show_open_object_dialog = False
         self.show_save_as_dialog = False
         self.show_unsaved_dialog = False
@@ -205,6 +211,8 @@ class EditorInputManager:
     def open_open_object_dialog(self):
         self.active_menu = None
         self.show_open_object_dialog = True
+        self.open_object_dialog_scroll_y = 0
+        self.open_object_dialog_max_scroll = 0
         self.show_open_scene_dialog = False
         self.show_save_as_dialog = False
         self.show_unsaved_dialog = False
@@ -270,6 +278,29 @@ class EditorInputManager:
 
         if self.side_panel_scroll_y > self.side_panel_max_scroll:
             self.side_panel_scroll_y = self.side_panel_max_scroll
+
+    def scroll_open_list_dialog(self, amount):
+        if self.show_open_scene_dialog:
+            self.open_scene_dialog_scroll_y = max(
+                0,
+                min(
+                    self.open_scene_dialog_max_scroll,
+                    self.open_scene_dialog_scroll_y + amount,
+                ),
+            )
+            return True
+
+        if self.show_open_object_dialog:
+            self.open_object_dialog_scroll_y = max(
+                0,
+                min(
+                    self.open_object_dialog_max_scroll,
+                    self.open_object_dialog_scroll_y + amount,
+                ),
+            )
+            return True
+
+        return False
 
     def cancel_current_action(self):
         self.selected_object_type = None
@@ -406,6 +437,93 @@ class EditorInputManager:
                 self.object_editor_state.inspector_max_scroll,
                 self.object_editor_state.inspector_scroll_y + 60,
             )
+
+    def close_object_editor_floating_dropdown(self):
+        if self.object_editor_state is None:
+            return
+
+        self.object_editor_state.floating_dropdown = None
+        self.object_editor_state.floating_dropdown_scroll_y = 0
+        self.object_editor_state.floating_dropdown_max_scroll = 0
+        self.object_editor_state.floating_dropdown_rect = None
+
+    def toggle_object_editor_floating_dropdown(self, dropdown_id):
+        if self.object_editor_state is None:
+            return
+
+        if self.object_editor_state.floating_dropdown == dropdown_id:
+            self.close_object_editor_floating_dropdown()
+            return
+
+        self.object_editor_state.floating_dropdown = dropdown_id
+        self.object_editor_state.floating_dropdown_scroll_y = 0
+        self.object_editor_state.floating_dropdown_max_scroll = 0
+
+    def scroll_object_editor_floating_dropdown(self, button):
+        if self.object_editor_state is None:
+            return False
+
+        if self.object_editor_state.floating_dropdown is None:
+            return False
+
+        dropdown_rect = getattr(self.object_editor_state, "floating_dropdown_rect", None)
+
+        if dropdown_rect is not None and not dropdown_rect.collidepoint(pygame.mouse.get_pos()):
+            return False
+
+        if button == 4:
+            amount = -60
+        elif button == 5:
+            amount = 60
+        else:
+            return False
+
+        self.object_editor_state.floating_dropdown_scroll_y = max(
+            0,
+            min(
+                self.object_editor_state.floating_dropdown_max_scroll,
+                self.object_editor_state.floating_dropdown_scroll_y + amount,
+            ),
+        )
+        return True
+
+    def apply_object_functional_type(self, functional_type):
+        if self.object_editor_state is None:
+            return
+
+        self.object_editor_state.functional_type = functional_type
+
+        if functional_type == "npc":
+            self.object_editor_state.set_dynamic_field("interaction_mode", "talk")
+            self.object_editor_state.destructible = False
+            self.object_editor_state.required_tool = None
+            return
+
+        if functional_type == "destructible":
+            self.object_editor_state.destructible = True
+            return
+
+        if functional_type == "pickup":
+            self.object_editor_state.destructible = False
+            self.object_editor_state.required_tool = None
+            return
+
+        if functional_type == "trigger":
+            self.object_editor_state.destructible = False
+            self.object_editor_state.required_tool = None
+            return
+
+        if functional_type in ("interactable", "container", "door"):
+            self.object_editor_state.destructible = False
+            self.object_editor_state.required_tool = None
+
+            if functional_type == "interactable":
+                self.object_editor_state.set_dynamic_field("interaction_mode", "inspect")
+
+            return
+
+        self.object_editor_state.destructible = False
+        self.object_editor_state.required_tool = None
 
     def handle_unsaved_dialog_action(self, action):
         if action == "dialog_cancel":
@@ -640,6 +758,10 @@ class EditorInputManager:
 
     def handle_object_editor_text_input(self, event):
         if event.key == pygame.K_ESCAPE:
+            if self.object_editor_state.floating_dropdown is not None:
+                self.close_object_editor_floating_dropdown()
+                return
+
             if self.object_editor_state.selected_field is not None:
                 self.object_editor_state.selected_field = None
                 return
@@ -652,11 +774,18 @@ class EditorInputManager:
             self.object_editor_state.selected_field = None
             return
 
-        if self.object_editor_state.selected_field != "name":
+        selected_field = self.object_editor_state.selected_field
+
+        if selected_field is None:
             return
 
         self.handle_text_edit_input(event, max_length=48)
-        self.object_editor_state.name = self.text_edit_state.text
+
+        if selected_field == "name":
+            self.object_editor_state.name = self.text_edit_state.text
+        else:
+            self.object_editor_state.set_dynamic_field(selected_field, self.text_edit_state.text)
+
         self.sync_object_editor_text_visual_state()
 
     def sync_object_editor_text_visual_state(self):
@@ -887,6 +1016,19 @@ class EditorInputManager:
             self.object_editor_state.selected_field = None
             return None
 
+        if action == "object_focus_dynamic_field":
+            field_name = clicked_action.get("field_name")
+
+            if field_name is None:
+                return None
+
+            self.object_editor_state.selected_field = field_name
+            self.text_edit_state.set_text(str(self.object_editor_state.get_dynamic_field(field_name)))
+            if self.last_mouse_clicks >= 2:
+                self.text_edit_state.select_all()
+            self.sync_object_editor_text_visual_state()
+            return None
+
         if action == "object_toggle_group":
             group = clicked_action["group"]
             is_open = self.object_editor_state.open_groups.get(group, True)
@@ -901,17 +1043,22 @@ class EditorInputManager:
             self.object_editor_state.stackable = not self.object_editor_state.stackable
             return None
 
+        if action == "object_functional_type_dropdown":
+            self.toggle_object_editor_floating_dropdown("functional_type")
+            return None
+
+        if action == "object_functional_type_select":
+            self.apply_object_functional_type(clicked_action["functional_type"])
+            self.close_object_editor_floating_dropdown()
+            return None
+
         if action == "object_interaction_mode_dropdown":
-            self.object_editor_state.interaction_mode_dropdown_open = not getattr(
-                self.object_editor_state,
-                "interaction_mode_dropdown_open",
-                False,
-            )
+            self.toggle_object_editor_floating_dropdown("interaction_mode")
             return None
 
         if action == "object_interaction_mode_select":
-            self.object_editor_state.interaction_mode = clicked_action["interaction_mode"]
-            self.object_editor_state.interaction_mode_dropdown_open = False
+            self.object_editor_state.set_dynamic_field("interaction_mode", clicked_action["interaction_mode"])
+            self.close_object_editor_floating_dropdown()
             return None
 
         if action == "object_toggle_destructible":
@@ -919,31 +1066,34 @@ class EditorInputManager:
             return None
 
         if action == "object_required_tool_dropdown":
-            self.object_editor_state.required_tool_dropdown_open = not getattr(
-                self.object_editor_state,
-                "required_tool_dropdown_open",
-                False,
-            )
+            self.toggle_object_editor_floating_dropdown("required_tool")
             return None
 
         if action == "object_required_tool_select":
             required_tool = clicked_action["required_tool"]
-            self.object_editor_state.required_tool = None if required_tool == "none" else required_tool
-            self.object_editor_state.required_tool_dropdown_open = False
+            self.object_editor_state.set_dynamic_field(
+                "required_tool",
+                None if required_tool == "none" else required_tool,
+            )
+            self.close_object_editor_floating_dropdown()
             return None
 
         if action == "object_category_dropdown":
-            self.object_editor_state.category_dropdown_open = not self.object_editor_state.category_dropdown_open
+            self.toggle_object_editor_floating_dropdown("category")
             return None
 
         if action == "object_category_select":
             self.object_editor_state.category = clicked_action["category"]
-            self.object_editor_state.category_dropdown_open = False
+            self.close_object_editor_floating_dropdown()
             return None
 
         if action == "object_category_new":
-            self.object_editor_state.category_dropdown_open = False
+            self.close_object_editor_floating_dropdown()
             self.set_status("Nueva categoria pendiente de persistencia")
+            return None
+
+        if action == "object_toggle_dynamic_bool":
+            self.object_editor_state.toggle_dynamic_bool(clicked_action.get("field_name"))
             return None
 
         if action == "object_add_interaction_point":
@@ -1150,9 +1300,11 @@ class EditorInputManager:
 
         state.object_id = object_id
         state.original_object_id = object_id
-        state.sprite = object_definition.get("sprite", "")
+        visual = object_definition.get("visual", {})
+        state.sprite = visual.get("sprite", "")
         state.source_sprite_path = state.sprite
         state.category = object_definition.get("category", state.category)
+        state.load_from_definition(object_id, object_definition)
         self.object_definitions[object_id] = object_definition
         self.selected_object_type = object_id
         self.mode = "objects"
@@ -1460,6 +1612,9 @@ class EditorInputManager:
 
         if self.show_object_editor:
             if event.button in (4, 5):
+                if self.scroll_object_editor_floating_dropdown(event.button):
+                    return None
+
                 if self.zoom_object_preview(event):
                     return None
                 self.scroll_object_editor_inspector(event.button)
@@ -1476,6 +1631,28 @@ class EditorInputManager:
 
                 if self.start_object_sprite_drag(event):
                     return None
+
+            clicked_action = get_clicked_panel_action(event.pos, self.dialog_buttons)
+            result = self.handle_dialog_click(event)
+
+            if (
+                event.button == 1
+                and clicked_action is None
+                and self.object_editor_state is not None
+                and self.object_editor_state.floating_dropdown is not None
+            ):
+                self.close_object_editor_floating_dropdown()
+
+            return result
+
+        if self.show_open_scene_dialog or self.show_open_object_dialog:
+            if event.button == 4:
+                self.scroll_open_list_dialog(-60)
+                return None
+
+            if event.button == 5:
+                self.scroll_open_list_dialog(60)
+                return None
 
             return self.handle_dialog_click(event)
 

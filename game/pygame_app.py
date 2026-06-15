@@ -28,7 +28,6 @@ from game.ui_renderer import draw_log
 from game.world.camera import get_camera_position
 from game.world.world_config import WORLD_WIDTH, WORLD_HEIGHT
 from game.world.world_renderer import draw_world_background
-from game.world_objects import WORLD_OBJECTS
 from game.collectable_manager import update_collectables
 from game.cartography.ui.cartography_overlay import draw_cartography_overlay
 from game.scenes.scene_loader import load_scene_data
@@ -83,16 +82,6 @@ from game.world.grid_renderer import (
 )
 from game.world.collision_manager import set_scene_collision_rects
 
-
-WORLD_OBJECT_SPRITES = {
-    "tree": "assets/world/object_tree.png",
-    "rock": "assets/world/rock.png",
-    "bush": "assets/world/object_bush.png",
-    "fishing_spot": "assets/world/fishing_spot.png",
-    "dock": "assets/world/dock.png",
-    "ship": "assets/world/ship.png",
-    "bed": "assets/world/bed.png",
-}
 
 WIDTH = 960
 HEIGHT = 640
@@ -228,7 +217,6 @@ class PygameApp:
         self.scene_npcs = []
 
         if self.scene_data is None:
-            self.state["_use_legacy_world_objects"] = True
             set_scene_collision_rects([])
             return
 
@@ -250,7 +238,6 @@ class PygameApp:
 
             self.scene_world_objects.append(scene_object)
 
-        self.state["_use_legacy_world_objects"] = self.scene_data is None
         set_scene_collision_rects(
             build_scene_collision_rects(
                 self.scene_data,
@@ -260,7 +247,7 @@ class PygameApp:
 
     def get_active_world_objects(self):
         if self.scene_data is None:
-            return WORLD_OBJECTS
+            return []
 
         return self.scene_world_objects
 
@@ -554,9 +541,6 @@ class PygameApp:
                 radius += 7
 
             sprite_path = world_object.get("sprite")
-
-            if sprite_path is None:
-                sprite_path = WORLD_OBJECT_SPRITES.get(world_object["type"])
 
             if sprite_path is not None:
                 sprite_rect = None

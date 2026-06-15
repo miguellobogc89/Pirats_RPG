@@ -1,0 +1,42 @@
+{
+  "id": "bush",
+  "name": "Bush",
+  "category": "other",
+  "functional_type": "destructible",
+  "visual": {
+    "sprite": "assets/world/bush.png",
+    "sprite_offset": [
+      0,
+      0
+    ],
+    "sprite_size": null,
+    "visual_size": [
+      1,
+      1
+    ]
+  },
+  "collision": {
+    "footprint": [
+      1,
+      1
+    ],
+    "footprint_anchor": "center",
+    "solid": true,
+    "interaction_points": []
+  },
+  "destructible": {
+    "hp": 1,
+    "required_tool": null,
+    "energy_cost": 1,
+    "drops": [
+      {
+        "item_id": "food",
+        "amount": [
+          2,
+          5
+        ],
+        "chance": 100
+      }
+    ]
+  }
+}

@@ -11,7 +11,10 @@ def load_npcs_from_scene(scene_data):
 
     for object_data in scene_data.get("objects", []):
         object_type = object_data.get("type")
-        object_definition = object_definitions.get(object_type, {})
+        object_definition = object_definitions.get(object_type)
+
+        if object_definition is None:
+            continue
 
         if not is_npc_object(object_data, object_definition):
             continue
@@ -25,10 +28,7 @@ def load_npcs_from_scene(scene_data):
 
 
 def is_npc_object(object_data, object_definition):
-    return (
-        object_data.get("type") == "npc"
-        or object_definition.get("type") == "npc"
-    )
+    return object_definition["functional_type"] == "npc"
 
 
 def build_npc(object_data, object_definition, tile_size):
@@ -37,8 +37,11 @@ def build_npc(object_data, object_definition, tile_size):
     if not isinstance(cell, list) or len(cell) < 2:
         return None
 
-    footprint = object_definition.get("footprint", [1, 1])
-    visual_size = object_definition.get("visual_size", footprint)
+    visual = object_definition["visual"]
+    collision = object_definition["collision"]
+    npc_data = object_definition["npc"]
+    footprint = collision["footprint"]
+    visual_size = visual.get("visual_size") or footprint
     world_x = cell[0] * tile_size + footprint[0] * tile_size / 2
     world_y = cell[1] * tile_size + footprint[1] * tile_size / 2
     npc_id = object_data.get("id", f"npc_{cell[0]}_{cell[1]}")
@@ -54,15 +57,9 @@ def build_npc(object_data, object_definition, tile_size):
             "x": world_x,
             "y": world_y,
         },
-        "dialogue_id": object_data.get(
-            "dialogue_id",
-            properties.get("dialogue_id", object_definition.get("dialogue_id")),
-        ),
-        "portrait_path": object_data.get(
-            "portrait_path",
-            object_definition.get("portrait_path"),
-        ),
-        "sprite": object_data.get("sprite", object_definition.get("sprite")),
+        "dialogue_id": properties.get("dialogue_id", npc_data.get("dialogue_id")),
+        "portrait_path": properties.get("portrait_path", npc_data.get("portrait_path")),
+        "sprite": visual["sprite"],
         "properties": dict(properties),
         "radius": max(18, int(max(visual_size) * tile_size / 2)),
         "cell": cell,

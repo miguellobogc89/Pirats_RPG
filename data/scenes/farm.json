@@ -2140,13 +2140,6 @@
       },
       {
         "cell": [
-          27,
-          13
-        ],
-        "terrain_id": "water"
-      },
-      {
-        "cell": [
           28,
           13
         ],
@@ -12168,6 +12161,167 @@
           14
         ],
         "terrain_id": "sand"
+      },
+      {
+        "cell": [
+          27,
+          13
+        ],
+        "terrain_id": "water"
+      },
+      {
+        "cell": [
+          20,
+          11
+        ],
+        "terrain_id": "wood_floor"
+      },
+      {
+        "cell": [
+          20,
+          12
+        ],
+        "terrain_id": "wood_floor"
+      },
+      {
+        "cell": [
+          20,
+          13
+        ],
+        "terrain_id": "wood_floor"
+      },
+      {
+        "cell": [
+          20,
+          14
+        ],
+        "terrain_id": "wood_floor"
+      },
+      {
+        "cell": [
+          19,
+          13
+        ],
+        "terrain_id": "wood_floor"
+      },
+      {
+        "cell": [
+          19,
+          12
+        ],
+        "terrain_id": "wood_floor"
+      },
+      {
+        "cell": [
+          19,
+          11
+        ],
+        "terrain_id": "wood_floor"
+      },
+      {
+        "cell": [
+          13,
+          15
+        ],
+        "terrain_id": "wood_floor"
+      },
+      {
+        "cell": [
+          13,
+          16
+        ],
+        "terrain_id": "wood_floor"
+      },
+      {
+        "cell": [
+          13,
+          17
+        ],
+        "terrain_id": "wood_floor"
+      },
+      {
+        "cell": [
+          13,
+          18
+        ],
+        "terrain_id": "wood_floor"
+      },
+      {
+        "cell": [
+          14,
+          18
+        ],
+        "terrain_id": "wood_floor"
+      },
+      {
+        "cell": [
+          14,
+          19
+        ],
+        "terrain_id": "wood_floor"
+      },
+      {
+        "cell": [
+          13,
+          19
+        ],
+        "terrain_id": "wood_floor"
+      },
+      {
+        "cell": [
+          14,
+          17
+        ],
+        "terrain_id": "wood_floor"
+      },
+      {
+        "cell": [
+          14,
+          16
+        ],
+        "terrain_id": "wood_floor"
+      },
+      {
+        "cell": [
+          14,
+          15
+        ],
+        "terrain_id": "wood_floor"
+      },
+      {
+        "cell": [
+          14,
+          14
+        ],
+        "terrain_id": "wood_floor"
+      },
+      {
+        "cell": [
+          14,
+          13
+        ],
+        "terrain_id": "wood_floor"
+      },
+      {
+        "cell": [
+          13,
+          13
+        ],
+        "terrain_id": "wood_floor"
+      },
+      {
+        "cell": [
+          13,
+          14
+        ],
+        "terrain_id": "wood_floor"
+      },
+      {
+        "cell": [
+          13,
+          12
+        ],
+        "terrain_id": "wood_floor"
       }
     ]
   }

@@ -183,17 +183,23 @@ def main():
             input_manager.set_dialog_buttons(dialog_buttons)
 
         if input_manager.show_open_scene_dialog:
-            dialog_buttons = draw_open_scene_dialog(
+            dialog_result = draw_open_scene_dialog(
                 screen,
                 input_manager.saved_scenes,
+                input_manager.open_scene_dialog_scroll_y,
             )
+            dialog_buttons = dialog_result["buttons"]
+            input_manager.open_scene_dialog_max_scroll = dialog_result["max_scroll"]
             input_manager.set_dialog_buttons(dialog_buttons)
 
         if input_manager.show_open_object_dialog:
-            dialog_buttons = draw_open_object_dialog(
+            dialog_result = draw_open_object_dialog(
                 screen,
                 object_definitions,
+                input_manager.open_object_dialog_scroll_y,
             )
+            dialog_buttons = dialog_result["buttons"]
+            input_manager.open_object_dialog_max_scroll = dialog_result["max_scroll"]
             input_manager.set_dialog_buttons(dialog_buttons)
 
         if input_manager.show_area_name_dialog:

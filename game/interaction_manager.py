@@ -3,7 +3,6 @@ import random
 from core.save_manager import save_state
 from game.inventory.hotbar_manager import get_active_tool
 from game.scenes.scene_state import get_current_scene_state
-from game.world_objects import WORLD_OBJECTS
 from game.collectable_manager import spawn_collectables_from_drops
 from game.npcs import interact_with_npc
 from game.story_events import dispatch_story_event
@@ -18,7 +17,7 @@ def get_nearby_object(state, game_data, interaction_range, world_objects=None):
     removed_objects = set(get_current_scene_state(state).get("removed_objects", []))
     destroyed_objects = set(state.get("destroyed_world_objects", []))
     if world_objects is None:
-        world_objects = WORLD_OBJECTS
+        world_objects = []
 
     for world_object in world_objects:
         if world_object["id"] in removed_objects or world_object["id"] in destroyed_objects:
@@ -81,22 +80,23 @@ def interact_with_nearby_object(app):
         app.add_log("Abres el cofre.")
         return
 
-    interaction_mode = world_object.get("interaction_mode", "none")
+    functional_type = world_object.get("functional_type", "decorative")
+    functional_data = world_object.get("functional_data", {})
 
-    if interaction_mode == "pickup":
+    if functional_type == "pickup":
         pickup_world_object(app, world_object)
         return
 
-    if interaction_mode == "trigger":
+    if functional_type == "trigger":
         dispatch_object_interaction_event(app, world_object)
         return
 
-    if interaction_mode in ("inspect", "talk", "open", "use", "repair"):
+    if functional_type in ("interactable", "container", "door"):
         dispatch_object_interaction_event(app, world_object)
         app.add_log(get_interaction_message(world_object))
         return
 
-    if world_object.get("destructible", False):
+    if functional_type == "destructible":
         interact_with_resource_object(app, world_object)
         return
 
@@ -117,11 +117,12 @@ def prepare_slot_drag_for_save(app):
 
 
 def interact_with_resource_object(app, world_object):
-    if not world_object.get("destructible", False):
+    if world_object.get("functional_type") != "destructible":
         app.add_log(get_interaction_message(world_object))
         return
 
-    required_tool = world_object.get("required_tool")
+    destructible_data = world_object.get("functional_data", {})
+    required_tool = destructible_data.get("required_tool")
 
     if required_tool is not None:
         active_tool = get_active_tool(app.state)
@@ -130,7 +131,7 @@ def interact_with_resource_object(app, world_object):
             app.add_log(f"No puedes usar esa herramienta con {world_object['name']}.")
             return
 
-    energy_cost = world_object.get("energy_cost", 0)
+    energy_cost = destructible_data.get("energy_cost", 0)
     current_energy = app.state["energy"]["current"]
 
     if current_energy < energy_cost:
@@ -142,16 +143,13 @@ def interact_with_resource_object(app, world_object):
 
     app.add_log(f"Golpeas {world_object['name']}. Energía -{energy_cost}.")
 
-    hit_drops = roll_drops(world_object, "on_hit")
-    spawn_collectables_from_drops(app.state, hit_drops, world_object["x"], world_object["y"])
-
     if world_object["hp"] <= 0:
-        destroy_drops = roll_drops(world_object, "on_destroy")
+        destroy_drops = roll_drops(destructible_data.get("drops", []))
         spawn_collectables_from_drops(app.state, destroy_drops, world_object["x"], world_object["y"])
 
         app.add_log(f"{world_object['name']} destruido.")
 
-        if world_object["type"] == "rock":
+        if world_object["type"] in ("rock", "small_rock", "big_rock"):
             app.skill_manager.register_action("rock_destroyed")
 
         if world_object["type"] == "tree":
@@ -169,9 +167,6 @@ def interact_with_resource_object(app, world_object):
         if world_object["id"] not in app.state["destroyed_world_objects"]:
             app.state["destroyed_world_objects"].append(world_object["id"])
 
-        if world_object in WORLD_OBJECTS:
-            WORLD_OBJECTS.remove(world_object)
-
         app.nearby_object = None
 
         if hasattr(app, "load_scene_runtime"):
@@ -179,8 +174,19 @@ def interact_with_resource_object(app, world_object):
 
 
 def get_interaction_message(world_object):
-    interaction_mode = world_object.get("interaction_mode", "none")
+    functional_type = world_object.get("functional_type", "decorative")
+    functional_data = world_object.get("functional_data", {})
     name = world_object.get("name", "Objeto")
+    interaction_mode = functional_data.get("interaction_mode")
+
+    if functional_type == "destructible":
+        return f"{name} se puede romper."
+
+    if functional_type == "pickup":
+        return f"Recoges {name}."
+
+    if functional_type == "trigger":
+        return ""
 
     if interaction_mode == "inspect":
         return f"Inspeccionas {name}."
@@ -204,26 +210,29 @@ def get_interaction_message(world_object):
 
 
 def dispatch_object_interaction_event(app, world_object):
+    functional_data = world_object.get("functional_data", {})
     dispatch_story_event(
         app,
         "object_interacted",
         {
             "scene_id": app.state.get("current_scene"),
             "object_id": world_object.get("id"),
-            "interaction_mode": world_object.get("interaction_mode"),
-            "interaction_id": world_object.get("properties", {}).get("interaction_id"),
+            "functional_type": world_object.get("functional_type"),
+            "interaction_mode": functional_data.get("interaction_mode"),
+            "interaction_id": functional_data.get(
+                "interaction_id",
+                world_object.get("properties", {}).get("interaction_id"),
+            ),
         },
     )
 
 
 def pickup_world_object(app, world_object):
-    item_id = world_object.get("properties", {}).get("item_id")
-
-    if not item_id:
-        item_id = world_object.get("source_type", world_object.get("type"))
+    pickup_data = world_object.get("functional_data", {})
+    item_id = pickup_data.get("item_id") or world_object.get("type")
 
     try:
-        amount = int(world_object.get("properties", {}).get("amount", 1))
+        amount = int(pickup_data.get("quantity", 1))
     except (TypeError, ValueError):
         amount = 1
 
@@ -254,8 +263,7 @@ def pickup_world_object(app, world_object):
         app.load_scene_runtime(app.state.get("current_scene", "farm"))
 
 
-def roll_drops(world_object, drop_moment):
-    drops = world_object.get("drops", {}).get(drop_moment, [])
+def roll_drops(drops):
     rolled_drops = []
 
     for drop in drops:

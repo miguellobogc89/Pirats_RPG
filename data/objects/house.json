@@ -1,0 +1,33 @@
+{
+  "id": "house",
+  "name": "House",
+  "category": "other",
+  "functional_type": "door",
+  "visual": {
+    "sprite": "assets/world/house.png",
+    "sprite_offset": [
+      0,
+      0
+    ],
+    "sprite_size": null,
+    "visual_size": [
+      7,
+      7
+    ]
+  },
+  "collision": {
+    "footprint": [
+      7,
+      4
+    ],
+    "footprint_anchor": "center",
+    "solid": true,
+    "interaction_points": []
+  },
+  "door": {
+    "door_id": "house",
+    "locked": false,
+    "required_key": "",
+    "interaction_id": ""
+  }
+}

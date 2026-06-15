@@ -1,20 +1,32 @@
 {
+  "id": "anciano",
   "name": "anciano",
   "category": "other",
-  "sprite": "assets/icons/other/anciano.png",
-  "footprint": [
-    2,
-    1
-  ],
-  "sprite_offset": [
-    -11,
-    -98
-  ],
-  "sprite_size": [
-    91,
-    128
-  ],
-  "solid": true,
-  "stackable": false,
-  "id": "anciano"
+  "functional_type": "npc",
+  "visual": {
+    "sprite": "assets/icons/other/anciano.png",
+    "sprite_offset": [
+      -11,
+      -98
+    ],
+    "sprite_size": [
+      91,
+      128
+    ],
+    "visual_size": null
+  },
+  "collision": {
+    "footprint": [
+      2,
+      1
+    ],
+    "footprint_anchor": "center",
+    "solid": true,
+    "interaction_points": []
+  },
+  "npc": {
+    "npc_id": "anciano",
+    "dialogue_id": "",
+    "portrait_path": ""
+  }
 }

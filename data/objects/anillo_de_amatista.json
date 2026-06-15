@@ -1,20 +1,27 @@
 {
+  "id": "anillo_de_amatista",
   "name": "anillo de amatista",
   "category": "other",
-  "sprite": "assets/icons/other/anillo_de_amatista.png",
-  "footprint": [
-    1,
-    1
-  ],
-  "sprite_offset": [
-    5,
-    7
-  ],
-  "sprite_size": [
-    21,
-    19
-  ],
-  "solid": true,
-  "stackable": true,
-  "id": "anillo_de_amatista"
+  "functional_type": "decorative",
+  "visual": {
+    "sprite": "assets/icons/other/anillo_de_amatista.png",
+    "sprite_offset": [
+      5,
+      7
+    ],
+    "sprite_size": [
+      21,
+      19
+    ],
+    "visual_size": null
+  },
+  "collision": {
+    "footprint": [
+      1,
+      1
+    ],
+    "footprint_anchor": "center",
+    "solid": true,
+    "interaction_points": []
+  }
 }

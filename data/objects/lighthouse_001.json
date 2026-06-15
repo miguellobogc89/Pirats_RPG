@@ -1,0 +1,32 @@
+{
+  "id": "lighthouse_001",
+  "name": "lighthouse_001",
+  "category": "building",
+  "functional_type": "interactable",
+  "visual": {
+    "sprite": "assets/icons/building/lighthouse_001.png",
+    "sprite_offset": [
+      -53,
+      -173
+    ],
+    "sprite_size": [
+      128,
+      194
+    ],
+    "visual_size": null
+  },
+  "collision": {
+    "footprint": [
+      1,
+      1
+    ],
+    "footprint_anchor": "center",
+    "solid": true,
+    "interaction_points": []
+  },
+  "interactable": {
+    "interaction_mode": "inspect",
+    "interaction_id": "",
+    "required_item": ""
+  }
+}

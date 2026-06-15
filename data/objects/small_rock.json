@@ -1,0 +1,42 @@
+{
+  "id": "small_rock",
+  "name": "Small Rock",
+  "category": "other",
+  "functional_type": "destructible",
+  "visual": {
+    "sprite": "assets/world/rock.png",
+    "sprite_offset": [
+      0,
+      0
+    ],
+    "sprite_size": null,
+    "visual_size": [
+      1,
+      1
+    ]
+  },
+  "collision": {
+    "footprint": [
+      1,
+      1
+    ],
+    "footprint_anchor": "center",
+    "solid": true,
+    "interaction_points": []
+  },
+  "destructible": {
+    "hp": 3,
+    "required_tool": "pickaxe",
+    "energy_cost": 3,
+    "drops": [
+      {
+        "item_id": "stone",
+        "amount": [
+          3,
+          5
+        ],
+        "chance": 100
+      }
+    ]
+  }
+}

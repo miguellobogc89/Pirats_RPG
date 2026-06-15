@@ -179,48 +179,6 @@
     "stackable": true,
     "id": "anillo_de_amatista"
   },
-  "aaaa": {
-    "name": "aaaa",
-    "category": "other",
-    "sprite": "assets/icons/other/aaaa.png",
-    "footprint": [
-      1,
-      1
-    ],
-    "sprite_offset": [
-      8,
-      -4
-    ],
-    "sprite_size": [
-      18,
-      20
-    ],
-    "solid": true,
-    "stackable": false,
-    "id": "aaaa"
-  },
-  "aaaaaa": {
-    "name": "aaaaaa",
-    "category": "other",
-    "sprite": "assets/icons/other/aaaaaa.png",
-    "footprint": [
-      1,
-      1
-    ],
-    "sprite_offset": [
-      15,
-      15
-    ],
-    "sprite_size": [
-      32,
-      32
-    ],
-    "solid": true,
-    "stackable": true,
-    "pickup_mode": "collectable",
-    "pickable_interactable": false,
-    "id": "aaaaaa"
-  },
   "ship1": {
     "name": "ship1",
     "category": "decoration",
@@ -349,5 +307,155 @@
     "pickable_interactable": true,
     "interaction_points": [],
     "id": "test1"
+  },
+  "lighthouse_001": {
+    "name": "lighthouse_001",
+    "category": "building",
+    "sprite": "assets/icons/building/lighthouse_001.png",
+    "footprint": [
+      1,
+      1
+    ],
+    "sprite_offset": [
+      -53,
+      -173
+    ],
+    "sprite_size": [
+      128,
+      194
+    ],
+    "solid": true,
+    "stackable": false,
+    "interaction_mode": "inspect",
+    "destructible": false,
+    "required_tool": null,
+    "interaction_points": [],
+    "id": "lighthouse_001"
+  },
+  "lighthouse_002": {
+    "name": "lighthouse_002",
+    "category": "building",
+    "sprite": "",
+    "footprint": [
+      1,
+      1
+    ],
+    "sprite_offset": [
+      0,
+      0
+    ],
+    "sprite_size": null,
+    "solid": true,
+    "stackable": false,
+    "interaction_mode": "inspect",
+    "destructible": false,
+    "required_tool": null,
+    "interaction_points": [],
+    "id": "lighthouse_002"
+  },
+  "nuevo": {
+    "name": "nuevo",
+    "category": "other",
+    "sprite": "",
+    "footprint": [
+      1,
+      1
+    ],
+    "sprite_offset": [
+      0,
+      0
+    ],
+    "sprite_size": null,
+    "solid": true,
+    "stackable": false,
+    "interaction_mode": "none",
+    "destructible": false,
+    "required_tool": null,
+    "interaction_points": [],
+    "id": "nuevo"
+  },
+  "nuevo_copy": {
+    "name": "nuevo",
+    "category": "other",
+    "sprite": "",
+    "footprint": [
+      1,
+      1
+    ],
+    "sprite_offset": [
+      0,
+      0
+    ],
+    "sprite_size": null,
+    "solid": true,
+    "stackable": false,
+    "interaction_mode": "none",
+    "destructible": false,
+    "required_tool": null,
+    "interaction_points": [],
+    "id": "nuevo_copy"
+  },
+  "nuevo_copy_2": {
+    "name": "nuevo",
+    "category": "other",
+    "sprite": "",
+    "footprint": [
+      1,
+      1
+    ],
+    "sprite_offset": [
+      0,
+      0
+    ],
+    "sprite_size": null,
+    "solid": true,
+    "stackable": false,
+    "interaction_mode": "none",
+    "destructible": false,
+    "required_tool": null,
+    "interaction_points": [],
+    "id": "nuevo_copy_2"
+  },
+  "nuevo_copy_3": {
+    "name": "nuevo",
+    "category": "other",
+    "sprite": "",
+    "footprint": [
+      1,
+      1
+    ],
+    "sprite_offset": [
+      0,
+      0
+    ],
+    "sprite_size": null,
+    "solid": true,
+    "stackable": false,
+    "interaction_mode": "none",
+    "destructible": false,
+    "required_tool": null,
+    "interaction_points": [],
+    "id": "nuevo_copy_3"
+  },
+  "nuevowww": {
+    "name": "nuevowww",
+    "category": "other",
+    "sprite": "",
+    "footprint": [
+      1,
+      1
+    ],
+    "sprite_offset": [
+      0,
+      0
+    ],
+    "sprite_size": null,
+    "solid": true,
+    "stackable": false,
+    "interaction_mode": "none",
+    "destructible": false,
+    "required_tool": null,
+    "interaction_points": [],
+    "id": "nuevowww"
   }
 }

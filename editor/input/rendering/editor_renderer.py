@@ -5,11 +5,13 @@ from editor.editor_ui import PANEL_WIDTH
 
 def get_sprite_draw_position(cell, object_definition, sprite, camera):
     tile_size = camera.get_tile_size()
+    collision = object_definition.get("collision", {})
 
-    footprint_width = object_definition["footprint"][0] * tile_size
-    footprint_height = object_definition["footprint"][1] * tile_size
+    footprint = collision.get("footprint", [1, 1])
+    footprint_width = footprint[0] * tile_size
+    footprint_height = footprint[1] * tile_size
 
-    anchor = object_definition.get("footprint_anchor", [0.5, 1.0])
+    anchor = [0.5, 1.0]
 
     footprint_x = cell[0] * tile_size - camera.x
     footprint_y = cell[1] * tile_size - camera.y
@@ -52,7 +54,7 @@ def draw_scene_objects(screen, scene_data, object_definitions, sprites, camera):
         draw_object_footprint(
             screen,
             cell,
-            object_definition["footprint"],
+            object_definition["collision"]["footprint"],
             (30, 80, 30),
             camera,
         )
@@ -106,7 +108,7 @@ def draw_preview(screen, selected_object_type, object_definitions, sprites, came
     draw_object_footprint(
         screen,
         cell,
-        object_definition["footprint"],
+        object_definition["collision"]["footprint"],
         (80, 180, 255),
         camera,
     )

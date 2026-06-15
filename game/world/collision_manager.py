@@ -30,29 +30,5 @@ def set_scene_collision_rects(collision_rects):
 def get_scene_collision_rects():
     return list(SCENE_COLLISION_RECTS)
 
-from game.world.grid_manager import world_to_grid
-from game.world_objects import WORLD_OBJECTS
-
-
 def is_world_object_cell_blocked(state, grid_x, grid_y):
-    if not state.get("_use_legacy_world_objects", True):
-        return False
-
-    destroyed_objects = state.get("destroyed_world_objects", [])
-
-    for world_object in WORLD_OBJECTS:
-        if world_object["id"] in destroyed_objects:
-            continue
-
-        if world_object["type"] not in ["tree", "rock", "bush"]:
-            continue
-
-        object_grid_x, object_grid_y = world_to_grid(
-            world_object["x"],
-            world_object["y"],
-        )
-
-        if grid_x == object_grid_x and grid_y == object_grid_y:
-            return True
-
     return False

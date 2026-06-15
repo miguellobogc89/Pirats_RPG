@@ -1,40 +1,37 @@
-import pygame
-
-from editor.widgets.editor_button import draw_editor_button
-from editor.widgets.inspector_panel import GODOT_BG, GODOT_BORDER, GODOT_TEXT, draw_text
+from editor.widgets.inspector_panel import GODOT_TEXT
+from editor.widgets.modal_dialog import (
+    draw_modal_dialog,
+    draw_modal_footer_buttons,
+    draw_wrapped_text,
+)
 
 
 def draw_confirm_dialog(screen, title, message, confirm_action, cancel_action):
-    overlay = pygame.Surface(screen.get_size(), pygame.SRCALPHA)
-    overlay.fill((0, 0, 0, 150))
-    screen.blit(overlay, (0, 0))
-
-    rect = pygame.Rect(0, 0, 420, 170)
-    rect.center = screen.get_rect().center
-    pygame.draw.rect(screen, GODOT_BG, rect, border_radius=5)
-    pygame.draw.rect(screen, GODOT_BORDER, rect, 1, border_radius=5)
-
-    draw_text(screen, title, rect.x + 18, rect.y + 16, GODOT_TEXT, 14, True)
-    draw_text(screen, message, rect.x + 18, rect.y + 56, GODOT_TEXT, 13)
-
-    buttons = []
-    buttons.append(
-        draw_editor_button(
-            screen,
-            pygame.Rect(rect.right - 210, rect.bottom - 44, 92, 28),
-            "Eliminar",
-            confirm_action,
-            compact=True,
-            danger=True,
-        )
+    modal = draw_modal_dialog(
+        screen,
+        title,
+        width=460,
+        height=190,
+        close_action=cancel_action,
     )
-    buttons.append(
-        draw_editor_button(
+    modal_rect = modal["rect"]
+    content_rect = modal["content_rect"]
+
+    message_rect = content_rect.copy()
+    message_rect.y += 8
+    message_rect.h = 82
+    draw_wrapped_text(screen, message, message_rect, GODOT_TEXT, 13)
+
+    buttons = [modal["close_button"]]
+    buttons.extend(
+        draw_modal_footer_buttons(
             screen,
-            pygame.Rect(rect.right - 108, rect.bottom - 44, 92, 28),
-            "Cancelar",
-            cancel_action,
-            compact=True,
+            modal_rect,
+            [
+                {"label": "Eliminar", "action": confirm_action, "danger": True},
+                {"label": "Cancelar", "action": cancel_action},
+            ],
+            button_width=92,
         )
     )
     return buttons

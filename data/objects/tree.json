@@ -1,0 +1,42 @@
+{
+  "id": "tree",
+  "name": "Tree",
+  "category": "other",
+  "functional_type": "destructible",
+  "visual": {
+    "sprite": "assets/world/tree.png",
+    "sprite_offset": [
+      0,
+      0
+    ],
+    "sprite_size": null,
+    "visual_size": [
+      5,
+      8
+    ]
+  },
+  "collision": {
+    "footprint": [
+      2,
+      2
+    ],
+    "footprint_anchor": "bottom_center",
+    "solid": true,
+    "interaction_points": []
+  },
+  "destructible": {
+    "hp": 3,
+    "required_tool": "axe",
+    "energy_cost": 2,
+    "drops": [
+      {
+        "item_id": "wood",
+        "amount": [
+          4,
+          8
+        ],
+        "chance": 100
+      }
+    ]
+  }
+}

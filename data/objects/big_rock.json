@@ -1,0 +1,58 @@
+{
+  "id": "big_rock",
+  "name": "Big Rock",
+  "category": "other",
+  "functional_type": "destructible",
+  "visual": {
+    "sprite": "assets/world/rock.png",
+    "sprite_offset": [
+      0,
+      0
+    ],
+    "sprite_size": null,
+    "visual_size": [
+      2,
+      2
+    ]
+  },
+  "collision": {
+    "footprint": [
+      2,
+      2
+    ],
+    "footprint_anchor": "center",
+    "solid": true,
+    "interaction_points": []
+  },
+  "destructible": {
+    "hp": 4,
+    "required_tool": "pickaxe",
+    "energy_cost": 3,
+    "drops": [
+      {
+        "item_id": "stone",
+        "amount": [
+          4,
+          7
+        ],
+        "chance": 100
+      },
+      {
+        "item_id": "iron",
+        "amount": [
+          1,
+          3
+        ],
+        "chance": 60
+      },
+      {
+        "item_id": "carbon",
+        "amount": [
+          1,
+          2
+        ],
+        "chance": 35
+      }
+    ]
+  }
+}

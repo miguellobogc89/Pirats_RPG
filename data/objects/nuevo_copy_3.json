@@ -1,0 +1,24 @@
+{
+  "id": "nuevo_copy_3",
+  "name": "nuevo",
+  "category": "other",
+  "functional_type": "decorative",
+  "visual": {
+    "sprite": "",
+    "sprite_offset": [
+      0,
+      0
+    ],
+    "sprite_size": null,
+    "visual_size": null
+  },
+  "collision": {
+    "footprint": [
+      1,
+      1
+    ],
+    "footprint_anchor": "center",
+    "solid": true,
+    "interaction_points": []
+  }
+}

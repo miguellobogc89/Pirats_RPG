@@ -1,0 +1,32 @@
+{
+  "id": "dock",
+  "name": "Dock",
+  "category": "other",
+  "functional_type": "interactable",
+  "visual": {
+    "sprite": "assets/world/dock.png",
+    "sprite_offset": [
+      0,
+      0
+    ],
+    "sprite_size": null,
+    "visual_size": [
+      2,
+      2
+    ]
+  },
+  "collision": {
+    "footprint": [
+      2,
+      2
+    ],
+    "footprint_anchor": "center",
+    "solid": false,
+    "interaction_points": []
+  },
+  "interactable": {
+    "interaction_mode": "open",
+    "interaction_id": "",
+    "required_item": ""
+  }
+}

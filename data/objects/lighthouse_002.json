@@ -1,0 +1,29 @@
+{
+  "id": "lighthouse_002",
+  "name": "lighthouse_002",
+  "category": "building",
+  "functional_type": "interactable",
+  "visual": {
+    "sprite": "",
+    "sprite_offset": [
+      0,
+      0
+    ],
+    "sprite_size": null,
+    "visual_size": null
+  },
+  "collision": {
+    "footprint": [
+      1,
+      1
+    ],
+    "footprint_anchor": "center",
+    "solid": true,
+    "interaction_points": []
+  },
+  "interactable": {
+    "interaction_mode": "inspect",
+    "interaction_id": "",
+    "required_item": ""
+  }
+}

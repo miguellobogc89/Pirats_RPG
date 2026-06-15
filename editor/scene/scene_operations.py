@@ -20,7 +20,7 @@ def get_used_object_cells(scene_data, object_definitions):
         if object_type not in object_definitions:
             continue
 
-        footprint = object_definitions[object_type]["footprint"]
+        footprint = object_definitions[object_type]["collision"]["footprint"]
         object_cells = get_occupied_cells_for_object(
             object_data["cell"],
             footprint,
@@ -90,7 +90,7 @@ def can_place_object(scene_data, object_type, cell, object_definitions):
     if object_type not in object_definitions:
         return False
 
-    footprint = object_definitions[object_type]["footprint"]
+    footprint = object_definitions[object_type]["collision"]["footprint"]
     new_object_cells = get_occupied_cells_for_object(cell, footprint)
     used_cells = get_used_object_cells(scene_data, object_definitions)
 
@@ -124,7 +124,7 @@ def get_object_at_cell(scene_data, cell, object_definitions):
         if object_type not in object_definitions:
             continue
 
-        footprint = object_definitions[object_type].get("footprint", [1, 1])
+        footprint = object_definitions[object_type]["collision"]["footprint"]
         occupied_cells = get_occupied_cells_for_object(
             object_data.get("cell", [0, 0]),
             footprint,
@@ -223,7 +223,7 @@ def remove_object_at_cell(scene_data, cell, object_definitions):
         if object_type not in object_definitions:
             continue
 
-        footprint = object_definitions[object_type]["footprint"]
+        footprint = object_definitions[object_type]["collision"]["footprint"]
 
         occupied_cells = get_occupied_cells_for_object(
             object_data["cell"],

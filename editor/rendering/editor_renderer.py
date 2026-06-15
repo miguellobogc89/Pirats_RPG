@@ -10,18 +10,20 @@ from game.world.object_sprite_layout import (
 
 def get_sprite_draw_position(cell, object_definition, sprite, camera):
     tile_size = camera.get_tile_size()
-    sprite_size = object_definition.get("sprite_size")
+    visual = object_definition.get("visual", {})
+    collision = object_definition.get("collision", {})
+    sprite_size = visual.get("sprite_size")
 
     if sprite_size is None:
         sprite_size = [sprite.get_width(), sprite.get_height()]
 
     sprite_rect = get_object_sprite_rect(
         cell,
-        object_definition.get("footprint", [1, 1]),
+        collision.get("footprint", [1, 1]),
         [sprite_size[0] * camera.zoom, sprite_size[1] * camera.zoom],
         [
-            object_definition.get("sprite_offset", [0, 0])[0] * camera.zoom,
-            object_definition.get("sprite_offset", [0, 0])[1] * camera.zoom,
+            visual.get("sprite_offset", [0, 0])[0] * camera.zoom,
+            visual.get("sprite_offset", [0, 0])[1] * camera.zoom,
         ],
         tile_size=tile_size,
         camera_offset=(camera.x, camera.y),
@@ -62,7 +64,7 @@ def draw_scene_objects(
         draw_object_footprint(
             screen,
             cell,
-            object_definition["footprint"],
+            object_definition["collision"]["footprint"],
             (245, 220, 90) if object_data.get("id") == selected_scene_object_id else (30, 80, 30),
             camera,
         )
@@ -86,7 +88,7 @@ def draw_scene_objects(
             draw_object_footprint(
                 screen,
                 cell,
-                object_definition["footprint"],
+                object_definition["collision"]["footprint"],
                 (255, 255, 255),
                 camera,
             )
@@ -125,7 +127,7 @@ def draw_preview(screen, selected_object_type, object_definitions, sprites, came
     draw_object_footprint(
         screen,
         cell,
-        object_definition["footprint"],
+        object_definition["collision"]["footprint"],
         (80, 180, 255),
         camera,
     )

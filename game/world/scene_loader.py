@@ -1,20 +1,12 @@
-import json
 from pathlib import Path
 import pygame
 
+from game.data.object_definition_repository import load_object_definitions
 from game.scenes.scene_loader import load_scene_data
 
 
-OBJECT_DEFINITIONS_PATH = "data/object_definitions.json"
-
-
-def load_json(path):
-    with open(path, "r", encoding="utf-8") as file:
-        return json.load(file)
-
-
 def load_scene(scene_id):
-    object_definitions = load_json(OBJECT_DEFINITIONS_PATH)
+    object_definitions = load_object_definitions()
     scene_data = load_scene_data(scene_id)
 
     return {
@@ -24,12 +16,22 @@ def load_scene(scene_id):
 
 
 def load_object_sprite(object_definition, tile_size):
-    sprite_path = object_definition["sprite"]
+    visual = object_definition["visual"]
+    sprite_path = visual["sprite"]
     if not Path(sprite_path).exists():
         return None
 
-    visual_width = object_definition["visual_size"][0] * tile_size
-    visual_height = object_definition["visual_size"][1] * tile_size
+    visual_size = visual.get("visual_size")
+
+    if visual_size is not None:
+        visual_width = visual_size[0] * tile_size
+        visual_height = visual_size[1] * tile_size
+    elif visual.get("sprite_size") is not None:
+        visual_width = visual["sprite_size"][0]
+        visual_height = visual["sprite_size"][1]
+    else:
+        visual_width = object_definition["collision"]["footprint"][0] * tile_size
+        visual_height = object_definition["collision"]["footprint"][1] * tile_size
 
     try:
         image = pygame.image.load(sprite_path).convert_alpha()

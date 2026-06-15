@@ -1,23 +1,32 @@
 {
+  "id": "test1",
   "name": "test1",
   "category": "building",
-  "sprite": "assets/icons/building/test1.png",
-  "footprint": [
-    3,
-    3
-  ],
-  "sprite_offset": [
-    -81,
-    -277
-  ],
-  "sprite_size": [
-    255,
-    383
-  ],
-  "solid": true,
-  "stackable": false,
-  "pickup_mode": "interactable",
-  "pickable_interactable": true,
-  "interaction_points": [],
-  "id": "test1"
+  "functional_type": "interactable",
+  "visual": {
+    "sprite": "assets/icons/building/test1.png",
+    "sprite_offset": [
+      -81,
+      -277
+    ],
+    "sprite_size": [
+      255,
+      383
+    ],
+    "visual_size": null
+  },
+  "collision": {
+    "footprint": [
+      3,
+      3
+    ],
+    "footprint_anchor": "center",
+    "solid": true,
+    "interaction_points": []
+  },
+  "interactable": {
+    "interaction_mode": "inspect",
+    "interaction_id": "",
+    "required_item": ""
+  }
 }

@@ -1,163 +1,17 @@
-import json
 from pathlib import Path
 
 import pygame
-from game.world.object_interaction_model import normalize_object_interaction
+
+from game.data.object_definition_repository import (
+    load_object_definitions as load_repository_object_definitions,
+)
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
-OBJECT_DEFINITIONS_PATH = PROJECT_ROOT / "data" / "object_definitions.json"
-OBJECT_DEFINITION_DIR = PROJECT_ROOT / "data" / "objects"
-
-GAMEPLAY_OBJECT_DEFAULTS = {
-    "tree": {
-        "name": "Arbol",
-        "type": "tree",
-        "icon": "T",
-        "required_tool": "axe",
-        "destructible": True,
-        "interaction_mode": "none",
-        "energy_cost": 2,
-        "hp": 3,
-        "drops": {
-            "on_hit": [],
-            "on_destroy": [
-                {"item_id": "wood", "amount": [4, 8], "chance": 100},
-            ],
-        },
-    },
-    "bush": {
-        "name": "Arbusto",
-        "type": "bush",
-        "icon": "B",
-        "required_tool": None,
-        "destructible": True,
-        "interaction_mode": "none",
-        "energy_cost": 1,
-        "hp": 1,
-        "drops": {
-            "on_hit": [],
-            "on_destroy": [
-                {"item_id": "food", "amount": [2, 5], "chance": 100},
-            ],
-        },
-    },
-    "small_rock": {
-        "name": "Roca",
-        "type": "rock",
-        "icon": "R",
-        "required_tool": "pickaxe",
-        "destructible": True,
-        "interaction_mode": "none",
-        "energy_cost": 3,
-        "hp": 3,
-        "drops": {
-            "on_hit": [
-                {"item_id": "stone", "amount": [1, 2], "chance": 45},
-            ],
-            "on_destroy": [
-                {"item_id": "stone", "amount": [3, 5], "chance": 100},
-            ],
-        },
-    },
-    "big_rock": {
-        "name": "Roca",
-        "type": "rock",
-        "icon": "R",
-        "required_tool": "pickaxe",
-        "destructible": True,
-        "interaction_mode": "none",
-        "energy_cost": 3,
-        "hp": 4,
-        "drops": {
-            "on_hit": [
-                {"item_id": "stone", "amount": [1, 2], "chance": 45},
-            ],
-            "on_destroy": [
-                {"item_id": "stone", "amount": [4, 7], "chance": 100},
-                {"item_id": "iron", "amount": [1, 3], "chance": 60},
-                {"item_id": "carbon", "amount": [1, 2], "chance": 35},
-            ],
-        },
-    },
-    "house": {
-        "name": "Casa",
-        "type": "house",
-        "icon": "H",
-        "required_tool": None,
-        "destructible": False,
-        "interaction_mode": "none",
-        "energy_cost": 0,
-        "hp": 1,
-    },
-    "dock": {
-        "name": "Muelle",
-        "type": "dock",
-        "icon": "D",
-        "required_tool": None,
-        "destructible": False,
-        "interaction_mode": "open",
-        "energy_cost": 0,
-        "hp": 1,
-    },
-    "ship": {
-        "name": "Barco",
-        "type": "ship",
-        "icon": "S",
-        "required_tool": None,
-        "destructible": False,
-        "interaction_mode": "open",
-        "energy_cost": 0,
-        "hp": 1,
-    },
-    "bed": {
-        "name": "Cama",
-        "type": "bed",
-        "icon": "B",
-        "required_tool": None,
-        "destructible": False,
-        "interaction_mode": "use",
-        "energy_cost": 0,
-        "hp": 1,
-    },
-    "stash": {
-        "name": "Cofre",
-        "type": "stash",
-        "icon": "C",
-        "required_tool": None,
-        "destructible": False,
-        "interaction_mode": "open",
-        "energy_cost": 0,
-        "hp": 1,
-    },
-}
 
 
 def load_object_definitions():
-    object_definitions = {}
-
-    if OBJECT_DEFINITIONS_PATH.exists():
-        with OBJECT_DEFINITIONS_PATH.open("r", encoding="utf-8") as file:
-            object_definitions.update(json.load(file))
-
-    if OBJECT_DEFINITION_DIR.exists():
-        for object_path in sorted(OBJECT_DEFINITION_DIR.glob("*.json")):
-            with object_path.open("r", encoding="utf-8") as file:
-                object_definition = json.load(file)
-
-            object_id = object_definition.get("id", object_path.stem)
-            object_definitions[object_id] = normalize_object_interaction(
-                object_definition,
-                object_id,
-            )
-
-    for object_id, object_definition in list(object_definitions.items()):
-        object_definitions[object_id] = normalize_object_interaction(
-            object_definition,
-            object_id,
-        )
-
-    return object_definitions
+    return load_repository_object_definitions()
 
 
 def build_scene_world_objects(scene_data):
@@ -166,9 +20,12 @@ def build_scene_world_objects(scene_data):
 
     for object_data in scene_data.get("objects", []):
         object_type = object_data.get("type")
-        object_definition = object_definitions.get(object_type, {})
+        object_definition = object_definitions.get(object_type)
 
-        if object_type == "npc" or object_definition.get("type") == "npc":
+        if object_definition is None:
+            continue
+
+        if object_definition["functional_type"] == "npc":
             continue
 
         scene_object = build_scene_world_object(
@@ -177,10 +34,8 @@ def build_scene_world_objects(scene_data):
             scene_data.get("tile_size", 16),
         )
 
-        if scene_object is None:
-            continue
-
-        scene_objects.append(scene_object)
+        if scene_object is not None:
+            scene_objects.append(scene_object)
 
     return scene_objects
 
@@ -192,58 +47,66 @@ def build_scene_world_object(object_data, object_definition, scene_tile_size):
         return None
 
     object_type = object_data.get("type", "object")
-    defaults = GAMEPLAY_OBJECT_DEFAULTS.get(object_type, {})
-    merged_interaction_data = dict(defaults)
-    merged_interaction_data.update(object_definition)
-    merged_interaction_data.update(object_data)
-    properties = object_data.get("properties", {})
-    if isinstance(properties, dict):
-        merged_interaction_data.update(properties)
-    normalized_interaction = normalize_object_interaction(
-        merged_interaction_data,
-        object_type,
-    )
-    footprint = object_definition.get("footprint", [1, 1])
-    visual_size = object_definition.get("visual_size")
+    visual = object_definition["visual"]
+    collision = object_definition["collision"]
+    functional_type = object_definition["functional_type"]
+    functional_data = dict(object_definition.get(functional_type, {}))
+    footprint = collision["footprint"]
+    visual_size = get_visual_size(visual, footprint, scene_tile_size)
+    world_x = cell[0] * scene_tile_size + footprint[0] * scene_tile_size / 2
+    world_y = cell[1] * scene_tile_size + footprint[1] * scene_tile_size / 2
+    radius = max(16, int(max(visual_size) * scene_tile_size / 2))
+    hp = get_runtime_hp(functional_type, functional_data, object_data)
 
-    if visual_size is None and object_definition.get("sprite_size"):
-        sprite_size = object_definition["sprite_size"]
-        visual_size = [
+    return {
+        "id": object_data.get("id", f"{object_type}_{cell[0]}_{cell[1]}"),
+        "name": object_data.get("name", object_definition.get("name", object_type)),
+        "type": object_type,
+        "functional_type": functional_type,
+        "functional_data": functional_data,
+        "properties": dict(object_data.get("properties", {})),
+        "x": world_x,
+        "y": world_y,
+        "radius": radius,
+        "sprite": visual["sprite"],
+        "sprite_offset": visual["sprite_offset"],
+        "sprite_size": visual["sprite_size"],
+        "footprint": footprint,
+        "solid": collision["solid"],
+        "scene_cell": cell,
+        "scene_tile_size": scene_tile_size,
+        "hp": hp,
+        "max_hp": hp,
+    }
+
+
+def get_visual_size(visual, footprint, scene_tile_size):
+    visual_size = visual.get("visual_size")
+
+    if visual_size is not None:
+        return visual_size
+
+    sprite_size = visual.get("sprite_size")
+
+    if sprite_size is not None:
+        return [
             max(1, sprite_size[0] / scene_tile_size),
             max(1, sprite_size[1] / scene_tile_size),
         ]
 
-    if visual_size is None:
-        visual_size = footprint
-    world_x = cell[0] * scene_tile_size + footprint[0] * scene_tile_size / 2
-    world_y = cell[1] * scene_tile_size + footprint[1] * scene_tile_size / 2
-    radius = max(16, int(max(visual_size) * scene_tile_size / 2))
-    hp = defaults.get("hp", 1)
+    return footprint
 
-    return {
-        "id": object_data.get("id", f"{object_type}_{cell[0]}_{cell[1]}"),
-        "name": object_data.get("name", defaults.get("name", object_type)),
-        "type": defaults.get("type", object_type),
-        "source_type": object_type,
-        "properties": dict(object_data.get("properties", {})),
-        "interaction_mode": normalized_interaction["interaction_mode"],
-        "destructible": normalized_interaction["destructible"],
-        "x": world_x,
-        "y": world_y,
-        "radius": radius,
-        "icon": defaults.get("icon", "?"),
-        "sprite": object_definition.get("sprite"),
-        "sprite_offset": object_definition.get("sprite_offset", [0, 0]),
-        "sprite_size": object_definition.get("sprite_size"),
-        "footprint": footprint,
-        "scene_cell": cell,
-        "scene_tile_size": scene_tile_size,
-        "hp": object_data.get("hp", hp),
-        "max_hp": object_data.get("max_hp", hp),
-        "required_tool": normalized_interaction["required_tool"],
-        "energy_cost": defaults.get("energy_cost", 0),
-        "drops": defaults.get("drops", {"on_hit": [], "on_destroy": []}),
-    }
+
+def get_runtime_hp(functional_type, functional_data, object_data):
+    if functional_type != "destructible":
+        return 1
+
+    hp = object_data.get("hp", functional_data.get("hp", 1))
+
+    try:
+        return max(1, int(hp))
+    except (TypeError, ValueError):
+        return 1
 
 
 def build_scene_collision_rects(scene_data, scene_objects):
@@ -256,16 +119,12 @@ def build_scene_collision_rects(scene_data, scene_objects):
         if rect is not None:
             collision_rects.append(rect)
 
-    object_definitions = load_object_definitions()
-
     for scene_object in scene_objects:
-        object_definition = object_definitions.get(scene_object.get("source_type"), {})
-
-        if not object_definition.get("solid", False):
+        if not scene_object_is_solid(scene_object):
             continue
 
         cell = scene_object.get("scene_cell")
-        footprint = scene_object.get("footprint", [1, 1])
+        footprint = scene_object.get("footprint")
 
         if not isinstance(cell, list) or len(cell) < 2:
             continue
@@ -280,6 +139,10 @@ def build_scene_collision_rects(scene_data, scene_objects):
         )
 
     return collision_rects
+
+
+def scene_object_is_solid(scene_object):
+    return bool(scene_object.get("solid", False))
 
 
 def collision_to_rect(collision, tile_size):

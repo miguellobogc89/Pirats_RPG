@@ -1,22 +1,32 @@
 {
+  "id": "ship1",
   "name": "ship1",
   "category": "decoration",
-  "sprite": "assets/icons/decoration/ship1.png",
-  "footprint": [
-    10,
-    3
-  ],
-  "sprite_offset": [
-    -67,
-    -202
-  ],
-  "sprite_size": [
-    454,
-    343
-  ],
-  "solid": true,
-  "stackable": false,
-  "pickup_mode": "none",
-  "pickable_interactable": false,
-  "id": "ship1"
+  "functional_type": "interactable",
+  "visual": {
+    "sprite": "assets/icons/decoration/ship1.png",
+    "sprite_offset": [
+      -67,
+      -202
+    ],
+    "sprite_size": [
+      454,
+      343
+    ],
+    "visual_size": null
+  },
+  "collision": {
+    "footprint": [
+      10,
+      3
+    ],
+    "footprint_anchor": "center",
+    "solid": true,
+    "interaction_points": []
+  },
+  "interactable": {
+    "interaction_mode": "open",
+    "interaction_id": "",
+    "required_item": ""
+  }
 }

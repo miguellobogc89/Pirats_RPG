@@ -1,0 +1,27 @@
+{
+  "id": "player",
+  "name": "Player",
+  "category": "other",
+  "functional_type": "decorative",
+  "visual": {
+    "sprite": "assets/player/player_idle.png",
+    "sprite_offset": [
+      0,
+      0
+    ],
+    "sprite_size": null,
+    "visual_size": [
+      1,
+      1
+    ]
+  },
+  "collision": {
+    "footprint": [
+      1,
+      1
+    ],
+    "footprint_anchor": "center",
+    "solid": true,
+    "interaction_points": []
+  }
+}

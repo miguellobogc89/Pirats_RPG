@@ -1,0 +1,32 @@
+{
+  "id": "old_man",
+  "name": "Anciano",
+  "category": "other",
+  "functional_type": "npc",
+  "visual": {
+    "sprite": "assets/world/NPC.png",
+    "sprite_offset": [
+      0,
+      0
+    ],
+    "sprite_size": null,
+    "visual_size": [
+      2,
+      2
+    ]
+  },
+  "collision": {
+    "footprint": [
+      1,
+      1
+    ],
+    "footprint_anchor": "center",
+    "solid": true,
+    "interaction_points": []
+  },
+  "npc": {
+    "npc_id": "old_man",
+    "dialogue_id": "old_man_intro",
+    "portrait_path": ""
+  }
+}

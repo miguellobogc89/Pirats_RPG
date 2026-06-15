@@ -1,0 +1,33 @@
+{
+  "id": "stash",
+  "name": "Stash",
+  "category": "other",
+  "functional_type": "container",
+  "visual": {
+    "sprite": "assets/world/house.png",
+    "sprite_offset": [
+      0,
+      0
+    ],
+    "sprite_size": null,
+    "visual_size": [
+      2,
+      2
+    ]
+  },
+  "collision": {
+    "footprint": [
+      2,
+      2
+    ],
+    "footprint_anchor": "center",
+    "solid": false,
+    "interaction_points": []
+  },
+  "container": {
+    "container_id": "stash",
+    "capacity": 16,
+    "locked": false,
+    "required_key": ""
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "id": "bed",
+  "name": "Bed",
+  "category": "other",
+  "functional_type": "interactable",
+  "visual": {
+    "sprite": "assets/world/bed.png",
+    "sprite_offset": [
+      0,
+      0
+    ],
+    "sprite_size": null,
+    "visual_size": [
+      2,
+      2
+    ]
+  },
+  "collision": {
+    "footprint": [
+      2,
+      2
+    ],
+    "footprint_anchor": "center",
+    "solid": false,
+    "interaction_points": []
+  },
+  "interactable": {
+    "interaction_mode": "use",
+    "interaction_id": "",
+    "required_item": ""
+  }
+}

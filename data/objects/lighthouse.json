@@ -1,22 +1,32 @@
 {
+  "id": "lighthouse",
   "name": "lighthouse",
   "category": "building",
-  "sprite": "assets/icons/building/lighthouse.png",
-  "footprint": [
-    3,
-    3
-  ],
-  "sprite_offset": [
-    -58,
-    -213
-  ],
-  "sprite_size": [
-    191,
-    312
-  ],
-  "solid": true,
-  "stackable": false,
-  "pickup_mode": "interactable",
-  "pickable_interactable": true,
-  "id": "lighthouse"
+  "functional_type": "interactable",
+  "visual": {
+    "sprite": "assets/icons/building/lighthouse.png",
+    "sprite_offset": [
+      -58,
+      -213
+    ],
+    "sprite_size": [
+      191,
+      312
+    ],
+    "visual_size": null
+  },
+  "collision": {
+    "footprint": [
+      3,
+      3
+    ],
+    "footprint_anchor": "center",
+    "solid": true,
+    "interaction_points": []
+  },
+  "interactable": {
+    "interaction_mode": "inspect",
+    "interaction_id": "",
+    "required_item": ""
+  }
 }
