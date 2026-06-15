@@ -15,7 +15,7 @@ def get_object_at_cell(scene_data, object_definitions, cell):
         if object_type not in object_definitions:
             continue
 
-        footprint = object_definitions[object_type]["footprint"]
+        footprint = object_definitions[object_type]["collision"]["footprint"]
         origin_cell = object_data["cell"]
 
         min_x = origin_cell[0]
