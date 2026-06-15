@@ -169,4 +169,31 @@ def draw_editor_menu_bar(screen, active_menu=None):
     if active_menu == "objects":
         buttons.extend(draw_objects_dropdown(screen))
 
+    buttons.extend(draw_window_controls(screen))
+
+    return buttons
+
+
+def draw_window_controls(screen):
+    buttons = []
+    labels = [
+        ("_", "window_minimize"),
+        ("[]", "window_toggle_fullscreen"),
+        ("X", "window_close"),
+    ]
+    size = 26
+    gap = 6
+    x = screen.get_width() - (size + gap) * len(labels) - 8
+    y = 4
+
+    for label, action in labels:
+        rect = pygame.Rect(x, y, size, size)
+        draw_menu_label(screen, rect, label)
+        pygame.draw.rect(screen, COLOR_BORDER, rect, 1, border_radius=3)
+        buttons.append({
+            "rect": rect,
+            "action": action,
+        })
+        x += size + gap
+
     return buttons

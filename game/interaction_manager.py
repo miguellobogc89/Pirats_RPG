@@ -7,6 +7,7 @@ from game.world_objects import WORLD_OBJECTS
 from game.collectable_manager import spawn_collectables_from_drops
 from game.npcs import interact_with_npc
 from game.story_events import dispatch_story_event
+from game.inventory.inventory_manager import add_item
 
 
 def get_nearby_object(state, game_data, interaction_range, world_objects=None):
@@ -80,7 +81,26 @@ def interact_with_nearby_object(app):
         app.add_log("Abres el cofre.")
         return
 
-    interact_with_resource_object(app, world_object)
+    interaction_mode = world_object.get("interaction_mode", "none")
+
+    if interaction_mode == "pickup":
+        pickup_world_object(app, world_object)
+        return
+
+    if interaction_mode == "trigger":
+        dispatch_object_interaction_event(app, world_object)
+        return
+
+    if interaction_mode in ("inspect", "talk", "open", "use", "repair"):
+        dispatch_object_interaction_event(app, world_object)
+        app.add_log(get_interaction_message(world_object))
+        return
+
+    if world_object.get("destructible", False):
+        interact_with_resource_object(app, world_object)
+        return
+
+    app.add_log(get_interaction_message(world_object))
 
 
 def prepare_slot_drag_for_save(app):
@@ -97,6 +117,10 @@ def prepare_slot_drag_for_save(app):
 
 
 def interact_with_resource_object(app, world_object):
+    if not world_object.get("destructible", False):
+        app.add_log(get_interaction_message(world_object))
+        return
+
     required_tool = world_object.get("required_tool")
 
     if required_tool is not None:
@@ -152,6 +176,82 @@ def interact_with_resource_object(app, world_object):
 
         if hasattr(app, "load_scene_runtime"):
             app.load_scene_runtime(app.state.get("current_scene", "farm"))
+
+
+def get_interaction_message(world_object):
+    interaction_mode = world_object.get("interaction_mode", "none")
+    name = world_object.get("name", "Objeto")
+
+    if interaction_mode == "inspect":
+        return f"Inspeccionas {name}."
+
+    if interaction_mode == "talk":
+        return f"No parece querer hablar ahora."
+
+    if interaction_mode == "open":
+        return f"No puedes abrir {name} ahora."
+
+    if interaction_mode == "use":
+        return f"Usas {name}."
+
+    if interaction_mode == "repair":
+        return f"{name} necesita reparacion."
+
+    if interaction_mode == "trigger":
+        return ""
+
+    return f"{name} no se puede destruir."
+
+
+def dispatch_object_interaction_event(app, world_object):
+    dispatch_story_event(
+        app,
+        "object_interacted",
+        {
+            "scene_id": app.state.get("current_scene"),
+            "object_id": world_object.get("id"),
+            "interaction_mode": world_object.get("interaction_mode"),
+            "interaction_id": world_object.get("properties", {}).get("interaction_id"),
+        },
+    )
+
+
+def pickup_world_object(app, world_object):
+    item_id = world_object.get("properties", {}).get("item_id")
+
+    if not item_id:
+        item_id = world_object.get("source_type", world_object.get("type"))
+
+    try:
+        amount = int(world_object.get("properties", {}).get("amount", 1))
+    except (TypeError, ValueError):
+        amount = 1
+
+    if amount <= 0:
+        amount = 1
+
+    if not add_item(app.state, item_id, amount):
+        app.add_log("Inventario lleno.")
+        return
+
+    scene_state = get_current_scene_state(app.state)
+
+    if world_object["id"] not in scene_state["removed_objects"]:
+        scene_state["removed_objects"].append(world_object["id"])
+
+    app.add_log(f"Recoges {world_object.get('name', item_id)} x{amount}.")
+    dispatch_story_event(
+        app,
+        "item_collected",
+        {
+            "item_id": item_id,
+            "amount": amount,
+            "scene_id": app.state.get("current_scene"),
+        },
+    )
+
+    if hasattr(app, "load_scene_runtime"):
+        app.load_scene_runtime(app.state.get("current_scene", "farm"))
 
 
 def roll_drops(world_object, drop_moment):

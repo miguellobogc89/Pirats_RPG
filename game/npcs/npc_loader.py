@@ -42,6 +42,10 @@ def build_npc(object_data, object_definition, tile_size):
     world_x = cell[0] * tile_size + footprint[0] * tile_size / 2
     world_y = cell[1] * tile_size + footprint[1] * tile_size / 2
     npc_id = object_data.get("id", f"npc_{cell[0]}_{cell[1]}")
+    properties = object_data.get("properties", {})
+
+    if not isinstance(properties, dict):
+        properties = {}
 
     return {
         "id": npc_id,
@@ -52,13 +56,14 @@ def build_npc(object_data, object_definition, tile_size):
         },
         "dialogue_id": object_data.get(
             "dialogue_id",
-            object_definition.get("dialogue_id"),
+            properties.get("dialogue_id", object_definition.get("dialogue_id")),
         ),
         "portrait_path": object_data.get(
             "portrait_path",
             object_definition.get("portrait_path"),
         ),
         "sprite": object_data.get("sprite", object_definition.get("sprite")),
+        "properties": dict(properties),
         "radius": max(18, int(max(visual_size) * tile_size / 2)),
         "cell": cell,
     }

@@ -1,73 +1,353 @@
 {
   "player": {
     "sprite": "assets/player/player_idle.png",
-    "visual_size": [1, 1],
-    "footprint": [1, 1],
+    "visual_size": [
+      1,
+      1
+    ],
+    "footprint": [
+      1,
+      1
+    ],
     "solid": true
   },
   "bush": {
     "sprite": "assets/world/bush.png",
-    "visual_size": [1, 1],
-    "footprint": [1, 1],
+    "visual_size": [
+      1,
+      1
+    ],
+    "footprint": [
+      1,
+      1
+    ],
     "solid": true
   },
   "small_rock": {
     "sprite": "assets/world/rock.png",
-    "visual_size": [1, 1],
-    "footprint": [1, 1],
+    "visual_size": [
+      1,
+      1
+    ],
+    "footprint": [
+      1,
+      1
+    ],
     "solid": true
   },
   "big_rock": {
     "sprite": "assets/world/rock.png",
-    "visual_size": [2, 2],
-    "footprint": [2, 2],
+    "visual_size": [
+      2,
+      2
+    ],
+    "footprint": [
+      2,
+      2
+    ],
     "solid": true
   },
   "tree": {
     "sprite": "assets/world/tree.png",
-    "visual_size": [5, 8],
-    "footprint": [2, 2],
-    "footprint_anchor": [0.5, 1.0],
+    "visual_size": [
+      5,
+      8
+    ],
+    "footprint": [
+      2,
+      2
+    ],
+    "footprint_anchor": [
+      0.5,
+      1.0
+    ],
     "solid": true
   },
   "house": {
     "sprite": "assets/world/house.png",
-    "visual_size": [7, 7],
-    "footprint": [7, 4],
+    "visual_size": [
+      7,
+      7
+    ],
+    "footprint": [
+      7,
+      4
+    ],
     "solid": true,
     "target_scene": "house_inside"
   },
   "dock": {
     "sprite": "assets/world/dock.png",
-    "visual_size": [2, 2],
-    "footprint": [2, 2],
+    "visual_size": [
+      2,
+      2
+    ],
+    "footprint": [
+      2,
+      2
+    ],
     "solid": false
   },
   "ship": {
     "sprite": "assets/world/ship.png",
-    "visual_size": [3, 2],
-    "footprint": [3, 2],
+    "visual_size": [
+      3,
+      2
+    ],
+    "footprint": [
+      3,
+      2
+    ],
     "solid": false
   },
   "bed": {
     "sprite": "assets/world/bed.png",
-    "visual_size": [2, 2],
-    "footprint": [2, 2],
+    "visual_size": [
+      2,
+      2
+    ],
+    "footprint": [
+      2,
+      2
+    ],
     "solid": false
   },
   "stash": {
     "sprite": "assets/world/house.png",
-    "visual_size": [2, 2],
-    "footprint": [2, 2],
+    "visual_size": [
+      2,
+      2
+    ],
+    "footprint": [
+      2,
+      2
+    ],
     "solid": false
   },
   "old_man": {
     "type": "npc",
     "dialogue_id": "old_man_intro",
-    "visual_size": [2, 2],
+    "visual_size": [
+      2,
+      2
+    ],
     "name": "Anciano",
     "sprite": "assets/world/NPC.png",
-    "footprint": [1, 1],
+    "footprint": [
+      1,
+      1
+    ],
     "solid": true
+  },
+  "anciano": {
+    "name": "anciano",
+    "category": "other",
+    "sprite": "assets/icons/other/anciano.png",
+    "footprint": [
+      2,
+      1
+    ],
+    "sprite_offset": [
+      -11,
+      -98
+    ],
+    "sprite_size": [
+      91,
+      128
+    ],
+    "solid": true,
+    "stackable": false,
+    "id": "anciano"
+  },
+  "anillo_de_amatista": {
+    "name": "anillo de amatista",
+    "category": "other",
+    "sprite": "assets/icons/other/anillo_de_amatista.png",
+    "footprint": [
+      1,
+      1
+    ],
+    "sprite_offset": [
+      5,
+      7
+    ],
+    "sprite_size": [
+      21,
+      19
+    ],
+    "solid": true,
+    "stackable": true,
+    "id": "anillo_de_amatista"
+  },
+  "aaaa": {
+    "name": "aaaa",
+    "category": "other",
+    "sprite": "assets/icons/other/aaaa.png",
+    "footprint": [
+      1,
+      1
+    ],
+    "sprite_offset": [
+      8,
+      -4
+    ],
+    "sprite_size": [
+      18,
+      20
+    ],
+    "solid": true,
+    "stackable": false,
+    "id": "aaaa"
+  },
+  "aaaaaa": {
+    "name": "aaaaaa",
+    "category": "other",
+    "sprite": "assets/icons/other/aaaaaa.png",
+    "footprint": [
+      1,
+      1
+    ],
+    "sprite_offset": [
+      15,
+      15
+    ],
+    "sprite_size": [
+      32,
+      32
+    ],
+    "solid": true,
+    "stackable": true,
+    "pickup_mode": "collectable",
+    "pickable_interactable": false,
+    "id": "aaaaaa"
+  },
+  "ship1": {
+    "name": "ship1",
+    "category": "decoration",
+    "sprite": "assets/icons/decoration/ship1.png",
+    "footprint": [
+      10,
+      3
+    ],
+    "sprite_offset": [
+      -67,
+      -202
+    ],
+    "sprite_size": [
+      454,
+      343
+    ],
+    "solid": true,
+    "stackable": false,
+    "pickup_mode": "none",
+    "pickable_interactable": false,
+    "id": "ship1"
+  },
+  "3333": {
+    "name": "3333",
+    "category": "other",
+    "sprite": "assets/icons/other/3333.png",
+    "footprint": [
+      1,
+      1
+    ],
+    "sprite_offset": [
+      -208,
+      -493
+    ],
+    "sprite_size": [
+      1536,
+      1024
+    ],
+    "solid": true,
+    "stackable": false,
+    "pickup_mode": "none",
+    "pickable_interactable": false,
+    "id": "3333"
+  },
+  "lighthouse": {
+    "name": "lighthouse",
+    "category": "building",
+    "sprite": "assets/icons/building/lighthouse.png",
+    "footprint": [
+      3,
+      3
+    ],
+    "sprite_offset": [
+      -58,
+      -213
+    ],
+    "sprite_size": [
+      191,
+      312
+    ],
+    "solid": true,
+    "stackable": false,
+    "pickup_mode": "interactable",
+    "pickable_interactable": true,
+    "id": "lighthouse"
+  },
+  "asdasd": {
+    "name": "asdasd",
+    "category": "other",
+    "sprite": "",
+    "footprint": [
+      1,
+      1
+    ],
+    "sprite_offset": [
+      0,
+      0
+    ],
+    "sprite_size": null,
+    "solid": true,
+    "stackable": false,
+    "pickup_mode": "none",
+    "pickable_interactable": false,
+    "interaction_points": [],
+    "id": "asdasd"
+  },
+  "asdasd_copy": {
+    "name": "asdasd",
+    "category": "other",
+    "sprite": "",
+    "footprint": [
+      1,
+      1
+    ],
+    "sprite_offset": [
+      0,
+      0
+    ],
+    "sprite_size": null,
+    "solid": true,
+    "stackable": false,
+    "pickup_mode": "none",
+    "pickable_interactable": false,
+    "interaction_points": [],
+    "id": "asdasd_copy"
+  },
+  "test1": {
+    "name": "test1",
+    "category": "building",
+    "sprite": "assets/icons/building/test1.png",
+    "footprint": [
+      3,
+      3
+    ],
+    "sprite_offset": [
+      -81,
+      -277
+    ],
+    "sprite_size": [
+      255,
+      383
+    ],
+    "solid": true,
+    "stackable": false,
+    "pickup_mode": "interactable",
+    "pickable_interactable": true,
+    "interaction_points": [],
+    "id": "test1"
   }
 }

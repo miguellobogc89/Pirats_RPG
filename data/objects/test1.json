@@ -1,0 +1,23 @@
+{
+  "name": "test1",
+  "category": "building",
+  "sprite": "assets/icons/building/test1.png",
+  "footprint": [
+    3,
+    3
+  ],
+  "sprite_offset": [
+    -81,
+    -277
+  ],
+  "sprite_size": [
+    255,
+    383
+  ],
+  "solid": true,
+  "stackable": false,
+  "pickup_mode": "interactable",
+  "pickable_interactable": true,
+  "interaction_points": [],
+  "id": "test1"
+}

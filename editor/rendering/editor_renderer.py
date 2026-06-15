@@ -2,45 +2,54 @@ import pygame
 
 from editor.editor_ui import PANEL_WIDTH
 from editor.terrain.terrain_renderer import draw_editor_terrain
+from game.world.object_sprite_layout import (
+    get_object_footprint_rect,
+    get_object_sprite_rect,
+)
 
 
 def get_sprite_draw_position(cell, object_definition, sprite, camera):
     tile_size = camera.get_tile_size()
+    sprite_size = object_definition.get("sprite_size")
 
-    footprint_width = object_definition["footprint"][0] * tile_size
-    footprint_height = object_definition["footprint"][1] * tile_size
+    if sprite_size is None:
+        sprite_size = [sprite.get_width(), sprite.get_height()]
 
-    anchor = object_definition.get("footprint_anchor", [0.5, 1.0])
-
-    footprint_x = cell[0] * tile_size - camera.x
-    footprint_y = cell[1] * tile_size - camera.y
-
-    footprint_center_x = footprint_x + footprint_width / 2
-    footprint_bottom_y = footprint_y + footprint_height
-
-    anchor_x = sprite.get_width() * anchor[0]
-    anchor_y = sprite.get_height() * anchor[1]
-
-    return (
-        int(footprint_center_x - anchor_x),
-        int(footprint_bottom_y - anchor_y),
+    sprite_rect = get_object_sprite_rect(
+        cell,
+        object_definition.get("footprint", [1, 1]),
+        [sprite_size[0] * camera.zoom, sprite_size[1] * camera.zoom],
+        [
+            object_definition.get("sprite_offset", [0, 0])[0] * camera.zoom,
+            object_definition.get("sprite_offset", [0, 0])[1] * camera.zoom,
+        ],
+        tile_size=tile_size,
+        camera_offset=(camera.x, camera.y),
     )
+    return sprite_rect.topleft
 
 
 def draw_object_footprint(screen, cell, footprint, color, camera):
     tile_size = camera.get_tile_size()
 
-    rect = pygame.Rect(
-        cell[0] * tile_size - camera.x,
-        cell[1] * tile_size - camera.y,
-        footprint[0] * tile_size,
-        footprint[1] * tile_size,
+    rect = get_object_footprint_rect(
+        cell,
+        footprint,
+        tile_size=tile_size,
+        camera_offset=(camera.x, camera.y),
     )
 
     pygame.draw.rect(screen, color, rect, 2)
 
 
-def draw_scene_objects(screen, scene_data, object_definitions, sprites, camera):
+def draw_scene_objects(
+    screen,
+    scene_data,
+    object_definitions,
+    sprites,
+    camera,
+    selected_scene_object_id=None,
+):
     for object_data in scene_data["objects"]:
         object_type = object_data["type"]
 
@@ -54,7 +63,7 @@ def draw_scene_objects(screen, scene_data, object_definitions, sprites, camera):
             screen,
             cell,
             object_definition["footprint"],
-            (30, 80, 30),
+            (245, 220, 90) if object_data.get("id") == selected_scene_object_id else (30, 80, 30),
             camera,
         )
 
@@ -72,6 +81,15 @@ def draw_scene_objects(screen, scene_data, object_definitions, sprites, camera):
             )
 
             screen.blit(sprite, draw_pos)
+
+        if object_data.get("id") == selected_scene_object_id:
+            draw_object_footprint(
+                screen,
+                cell,
+                object_definition["footprint"],
+                (255, 255, 255),
+                camera,
+            )
 
 
 def draw_collision_cells(screen, scene_data, camera):
@@ -133,17 +151,11 @@ def draw_preview(screen, selected_object_type, object_definitions, sprites, came
 def draw_grid(screen, map_width, map_height, camera):
     tile_size = camera.get_tile_size()
 
-    start_x = max(0, int(camera.x // tile_size))
-    end_x = min(
-        map_width,
-        int((camera.x + screen.get_width()) // tile_size) + 2,
-    )
+    start_x = int(camera.x // tile_size) - 2
+    end_x = int((camera.x + screen.get_width()) // tile_size) + 2
 
-    start_y = max(0, int(camera.y // tile_size))
-    end_y = min(
-        map_height,
-        int((camera.y + screen.get_height()) // tile_size) + 2,
-    )
+    start_y = int(camera.y // tile_size) - 2
+    end_y = int((camera.y + screen.get_height()) // tile_size) + 2
 
     for grid_x in range(start_x, end_x + 1):
         x = grid_x * tile_size - camera.x
@@ -287,7 +299,14 @@ def draw_area_tooltip(screen, scene_data, camera):
     screen.blit(text, (rect.x + padding, rect.y + padding))
 
 
-def draw_editor_scene(screen, scene_data, object_definitions, sprites, camera):
+def draw_editor_scene(
+    screen,
+    scene_data,
+    object_definitions,
+    sprites,
+    camera,
+    selected_scene_object_id=None,
+):
     map_width = scene_data["width"]
     map_height = scene_data["height"]
 
@@ -303,5 +322,6 @@ def draw_editor_scene(screen, scene_data, object_definitions, sprites, camera):
         object_definitions,
         sprites,
         camera,
+        selected_scene_object_id,
     )
     draw_area_tooltip(screen, scene_data, camera)

@@ -3,6 +3,7 @@ import re
 from pathlib import Path
 
 from editor.areas.exit_tool import ensure_area_lists
+from editor.scene.scene_operations import normalize_object_instance
 from game.world.grid_manager import TILE_SIZE
 
 
@@ -131,7 +132,7 @@ def normalize_scene(raw_scene, fallback_scene_id):
         "height": height,
         "tile_size": DEFAULT_TILE_SIZE,
         "player_spawn": normalize_player_spawn(raw_scene),
-        "objects": normalize_list(raw_scene.get("objects")),
+        "objects": normalize_objects(raw_scene),
         "collisions": normalize_collisions(raw_scene),
         "spawns": normalize_list(raw_scene.get("spawns")),
         "exits": normalize_list(raw_scene.get("exits")),
@@ -191,6 +192,18 @@ def normalize_list(value):
         return value
 
     return []
+
+
+def normalize_objects(raw_scene):
+    normalized_objects = []
+
+    for object_data in normalize_list(raw_scene.get("objects")):
+        normalized_object = normalize_object_instance(object_data)
+
+        if normalized_object is not None:
+            normalized_objects.append(normalized_object)
+
+    return normalized_objects
 
 def normalize_terrain(raw_scene):
     terrain = raw_scene.get("terrain")

@@ -70,10 +70,4 @@ class EditorCamera:
         self.x -= dx
         self.y -= dy
 
-        if self.x < 0:
-            self.x = 0
-
-        if self.y < 0:
-            self.y = 0
-
         self.last_mouse_pos = mouse_pos

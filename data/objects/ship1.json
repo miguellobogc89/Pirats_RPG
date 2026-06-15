@@ -1,0 +1,22 @@
+{
+  "name": "ship1",
+  "category": "decoration",
+  "sprite": "assets/icons/decoration/ship1.png",
+  "footprint": [
+    10,
+    3
+  ],
+  "sprite_offset": [
+    -67,
+    -202
+  ],
+  "sprite_size": [
+    454,
+    343
+  ],
+  "solid": true,
+  "stackable": false,
+  "pickup_mode": "none",
+  "pickable_interactable": false,
+  "id": "ship1"
+}

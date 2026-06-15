@@ -4,6 +4,7 @@ SUPPORTED_EVENTS = [
     "area_entered",
     "area_exited",
     "npc_talked",
+    "object_interacted",
     "item_collected",
     "item_total_reached",
     "object_repaired",
@@ -30,6 +31,9 @@ SUPPORTED_CONDITIONS = [
     "flag",
     "scene_id",
     "npc_id",
+    "object_id",
+    "interaction_id",
+    "interaction_mode",
     "item_id",
     "amount",
 ]

@@ -1,0 +1,20 @@
+{
+  "name": "aaaa",
+  "category": "other",
+  "sprite": "assets/icons/other/aaaa.png",
+  "footprint": [
+    1,
+    1
+  ],
+  "sprite_offset": [
+    8,
+    -4
+  ],
+  "sprite_size": [
+    18,
+    20
+  ],
+  "solid": true,
+  "stackable": false,
+  "id": "aaaa"
+}

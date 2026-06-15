@@ -19,10 +19,22 @@ def get_sprite(sprite_path):
         return None
 
     try:
-        sprite = pygame.image.load(sprite_path).convert_alpha()
+        loaded_sprite = pygame.image.load(sprite_path)
     except pygame.error:
         _missing_sprites.add(sprite_path)
         return None
+
+    try:
+        if pygame.display.get_surface() is not None:
+            sprite = loaded_sprite.convert_alpha()
+        else:
+            sprite = loaded_sprite
+    except pygame.error:
+        try:
+            sprite = loaded_sprite.convert()
+        except pygame.error:
+            _missing_sprites.add(sprite_path)
+            return None
 
     _sprite_cache[sprite_path] = sprite
 

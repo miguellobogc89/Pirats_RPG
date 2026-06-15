@@ -2,10 +2,12 @@ import json
 from pathlib import Path
 
 import pygame
+from game.world.object_interaction_model import normalize_object_interaction
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 OBJECT_DEFINITIONS_PATH = PROJECT_ROOT / "data" / "object_definitions.json"
+OBJECT_DEFINITION_DIR = PROJECT_ROOT / "data" / "objects"
 
 GAMEPLAY_OBJECT_DEFAULTS = {
     "tree": {
@@ -13,6 +15,8 @@ GAMEPLAY_OBJECT_DEFAULTS = {
         "type": "tree",
         "icon": "T",
         "required_tool": "axe",
+        "destructible": True,
+        "interaction_mode": "none",
         "energy_cost": 2,
         "hp": 3,
         "drops": {
@@ -27,6 +31,8 @@ GAMEPLAY_OBJECT_DEFAULTS = {
         "type": "bush",
         "icon": "B",
         "required_tool": None,
+        "destructible": True,
+        "interaction_mode": "none",
         "energy_cost": 1,
         "hp": 1,
         "drops": {
@@ -41,6 +47,8 @@ GAMEPLAY_OBJECT_DEFAULTS = {
         "type": "rock",
         "icon": "R",
         "required_tool": "pickaxe",
+        "destructible": True,
+        "interaction_mode": "none",
         "energy_cost": 3,
         "hp": 3,
         "drops": {
@@ -57,6 +65,8 @@ GAMEPLAY_OBJECT_DEFAULTS = {
         "type": "rock",
         "icon": "R",
         "required_tool": "pickaxe",
+        "destructible": True,
+        "interaction_mode": "none",
         "energy_cost": 3,
         "hp": 4,
         "drops": {
@@ -75,6 +85,8 @@ GAMEPLAY_OBJECT_DEFAULTS = {
         "type": "house",
         "icon": "H",
         "required_tool": None,
+        "destructible": False,
+        "interaction_mode": "none",
         "energy_cost": 0,
         "hp": 1,
     },
@@ -83,6 +95,8 @@ GAMEPLAY_OBJECT_DEFAULTS = {
         "type": "dock",
         "icon": "D",
         "required_tool": None,
+        "destructible": False,
+        "interaction_mode": "open",
         "energy_cost": 0,
         "hp": 1,
     },
@@ -91,6 +105,8 @@ GAMEPLAY_OBJECT_DEFAULTS = {
         "type": "ship",
         "icon": "S",
         "required_tool": None,
+        "destructible": False,
+        "interaction_mode": "open",
         "energy_cost": 0,
         "hp": 1,
     },
@@ -99,6 +115,8 @@ GAMEPLAY_OBJECT_DEFAULTS = {
         "type": "bed",
         "icon": "B",
         "required_tool": None,
+        "destructible": False,
+        "interaction_mode": "use",
         "energy_cost": 0,
         "hp": 1,
     },
@@ -107,6 +125,8 @@ GAMEPLAY_OBJECT_DEFAULTS = {
         "type": "stash",
         "icon": "C",
         "required_tool": None,
+        "destructible": False,
+        "interaction_mode": "open",
         "energy_cost": 0,
         "hp": 1,
     },
@@ -114,11 +134,30 @@ GAMEPLAY_OBJECT_DEFAULTS = {
 
 
 def load_object_definitions():
-    if not OBJECT_DEFINITIONS_PATH.exists():
-        return {}
+    object_definitions = {}
 
-    with OBJECT_DEFINITIONS_PATH.open("r", encoding="utf-8") as file:
-        return json.load(file)
+    if OBJECT_DEFINITIONS_PATH.exists():
+        with OBJECT_DEFINITIONS_PATH.open("r", encoding="utf-8") as file:
+            object_definitions.update(json.load(file))
+
+    if OBJECT_DEFINITION_DIR.exists():
+        for object_path in sorted(OBJECT_DEFINITION_DIR.glob("*.json")):
+            with object_path.open("r", encoding="utf-8") as file:
+                object_definition = json.load(file)
+
+            object_id = object_definition.get("id", object_path.stem)
+            object_definitions[object_id] = normalize_object_interaction(
+                object_definition,
+                object_id,
+            )
+
+    for object_id, object_definition in list(object_definitions.items()):
+        object_definitions[object_id] = normalize_object_interaction(
+            object_definition,
+            object_id,
+        )
+
+    return object_definitions
 
 
 def build_scene_world_objects(scene_data):
@@ -154,8 +193,28 @@ def build_scene_world_object(object_data, object_definition, scene_tile_size):
 
     object_type = object_data.get("type", "object")
     defaults = GAMEPLAY_OBJECT_DEFAULTS.get(object_type, {})
+    merged_interaction_data = dict(defaults)
+    merged_interaction_data.update(object_definition)
+    merged_interaction_data.update(object_data)
+    properties = object_data.get("properties", {})
+    if isinstance(properties, dict):
+        merged_interaction_data.update(properties)
+    normalized_interaction = normalize_object_interaction(
+        merged_interaction_data,
+        object_type,
+    )
     footprint = object_definition.get("footprint", [1, 1])
-    visual_size = object_definition.get("visual_size", footprint)
+    visual_size = object_definition.get("visual_size")
+
+    if visual_size is None and object_definition.get("sprite_size"):
+        sprite_size = object_definition["sprite_size"]
+        visual_size = [
+            max(1, sprite_size[0] / scene_tile_size),
+            max(1, sprite_size[1] / scene_tile_size),
+        ]
+
+    if visual_size is None:
+        visual_size = footprint
     world_x = cell[0] * scene_tile_size + footprint[0] * scene_tile_size / 2
     world_y = cell[1] * scene_tile_size + footprint[1] * scene_tile_size / 2
     radius = max(16, int(max(visual_size) * scene_tile_size / 2))
@@ -166,17 +225,22 @@ def build_scene_world_object(object_data, object_definition, scene_tile_size):
         "name": object_data.get("name", defaults.get("name", object_type)),
         "type": defaults.get("type", object_type),
         "source_type": object_type,
+        "properties": dict(object_data.get("properties", {})),
+        "interaction_mode": normalized_interaction["interaction_mode"],
+        "destructible": normalized_interaction["destructible"],
         "x": world_x,
         "y": world_y,
         "radius": radius,
         "icon": defaults.get("icon", "?"),
         "sprite": object_definition.get("sprite"),
+        "sprite_offset": object_definition.get("sprite_offset", [0, 0]),
+        "sprite_size": object_definition.get("sprite_size"),
         "footprint": footprint,
         "scene_cell": cell,
         "scene_tile_size": scene_tile_size,
         "hp": object_data.get("hp", hp),
         "max_hp": object_data.get("max_hp", hp),
-        "required_tool": defaults.get("required_tool"),
+        "required_tool": normalized_interaction["required_tool"],
         "energy_cost": defaults.get("energy_cost", 0),
         "drops": defaults.get("drops", {"on_hit": [], "on_destroy": []}),
     }

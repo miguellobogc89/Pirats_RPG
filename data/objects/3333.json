@@ -1,0 +1,22 @@
+{
+  "name": "3333",
+  "category": "other",
+  "sprite": "assets/icons/other/3333.png",
+  "footprint": [
+    1,
+    1
+  ],
+  "sprite_offset": [
+    -208,
+    -493
+  ],
+  "sprite_size": [
+    1536,
+    1024
+  ],
+  "solid": true,
+  "stackable": false,
+  "pickup_mode": "none",
+  "pickable_interactable": false,
+  "id": "3333"
+}

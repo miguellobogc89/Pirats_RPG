@@ -1,0 +1,22 @@
+{
+  "name": "lighthouse",
+  "category": "building",
+  "sprite": "assets/icons/building/lighthouse.png",
+  "footprint": [
+    3,
+    3
+  ],
+  "sprite_offset": [
+    -58,
+    -213
+  ],
+  "sprite_size": [
+    191,
+    312
+  ],
+  "solid": true,
+  "stackable": false,
+  "pickup_mode": "interactable",
+  "pickable_interactable": true,
+  "id": "lighthouse"
+}

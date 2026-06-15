@@ -61,6 +61,27 @@ def list_saved_games():
     return saved_games
 
 
+def get_latest_saved_game():
+    saved_games = list_saved_games()
+
+    if not saved_games:
+        return None
+
+    return max(
+        saved_games,
+        key=lambda saved_game: saved_game["path"].stat().st_mtime,
+    )
+
+
+def load_latest_saved_state():
+    latest_saved_game = get_latest_saved_game()
+
+    if latest_saved_game is None:
+        return None
+
+    return load_saved_state(latest_saved_game["id"])
+
+
 def get_saved_game_label(saved_state, save_slot_id):
     player = saved_state.get("player", {}) if isinstance(saved_state, dict) else {}
     time = saved_state.get("time", {}) if isinstance(saved_state, dict) else {}

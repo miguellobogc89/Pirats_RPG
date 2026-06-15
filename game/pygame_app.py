@@ -15,6 +15,7 @@ from game.inventory.hotbar_manager import (
     set_active_hotbar_index,
 )
 from game.world.grid_manager import TILE_SIZE, world_to_grid, grid_to_world
+from game.world.object_sprite_layout import get_object_sprite_rect
 from game.cartography.cartography_manager import CartographyManager
 from game.cartography.expedition_manager import ExpeditionManager
 from game.cartography.cartography_validator import (
@@ -558,15 +559,35 @@ class PygameApp:
                 sprite_path = WORLD_OBJECT_SPRITES.get(world_object["type"])
 
             if sprite_path is not None:
-                sprite_size = radius * 2 + 18
-                sprite_rect = draw_sprite_centered(
-                    self.screen,
-                    sprite_path,
-                    x,
-                    y,
-                    sprite_size,
-                    sprite_size,
-                )
+                sprite_rect = None
+
+                if world_object.get("sprite_size") is not None:
+                    from game.ui.sprite_renderer import draw_sprite_in_rect
+
+                    sprite_rect = get_object_sprite_rect(
+                        world_object.get("scene_cell", [0, 0]),
+                        world_object.get("footprint", [1, 1]),
+                        world_object["sprite_size"],
+                        world_object.get("sprite_offset", [0, 0]),
+                        tile_size=world_object.get("scene_tile_size", TILE_SIZE),
+                        camera_offset=(camera_x, camera_y),
+                    )
+                    sprite_rect = draw_sprite_in_rect(
+                        self.screen,
+                        sprite_path,
+                        sprite_rect,
+                        padding=0,
+                    )
+                else:
+                    sprite_size = radius * 2 + 18
+                    sprite_rect = draw_sprite_centered(
+                        self.screen,
+                        sprite_path,
+                        x,
+                        y,
+                        sprite_size,
+                        sprite_size,
+                    )
 
                 if sprite_rect is not None and selected:
                     pygame.draw.rect(self.screen, WARN, sprite_rect.inflate(8, 8), 2, border_radius=6)
@@ -601,8 +622,6 @@ class PygameApp:
 
         pygame.draw.circle(self.screen, DARK, (px, py), 13)
         pygame.draw.circle(self.screen, WHITE, (px, py - 18), 9)
-
-        from game.world.grid_manager import TILE_SIZE, world_to_grid, grid_to_world
 
         foot_x = player["x"]
         foot_y = player["y"] + 6

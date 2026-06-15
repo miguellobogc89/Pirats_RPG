@@ -48,7 +48,7 @@ def normalize_scene_data(raw_scene, fallback_scene_id=None):
         "height": height,
         "tile_size": tile_size,
         "player_spawn": normalize_player_spawn(raw_scene, tile_size),
-        "objects": normalize_list_field(raw_scene, "objects"),
+        "objects": normalize_objects(raw_scene),
         "collisions": normalize_collisions(raw_scene),
         "spawns": normalize_spawns(raw_scene),
         "exits": normalize_exits(raw_scene),
@@ -97,6 +97,43 @@ def normalize_list_field(raw_scene, field_name):
         return value
 
     return []
+
+
+def normalize_objects(raw_scene):
+    normalized_objects = []
+
+    for object_data in normalize_list_field(raw_scene, "objects"):
+        if not isinstance(object_data, dict):
+            continue
+
+        object_type = object_data.get("type")
+        cell = object_data.get("cell")
+
+        if not object_type:
+            continue
+
+        if not isinstance(cell, list) or len(cell) < 2:
+            continue
+
+        properties = object_data.get("properties")
+        if not isinstance(properties, dict):
+            properties = {}
+
+        normalized_object = dict(object_data)
+        normalized_object["id"] = normalized_object.get(
+            "id",
+            f"{object_type}_{cell[0]}_{cell[1]}",
+        )
+        normalized_object["type"] = object_type
+        normalized_object["cell"] = [cell[0], cell[1]]
+        normalized_object["properties"] = {
+            str(key): str(value)
+            for key, value in properties.items()
+            if str(key).strip() != ""
+        }
+        normalized_objects.append(normalized_object)
+
+    return normalized_objects
 
 
 def normalize_collisions(raw_scene):
