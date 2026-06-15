@@ -86,12 +86,25 @@ def create_default_upgrades_state(game_data):
 
 def create_initial_state(game_data):
     initial_day = get_config_value(game_data, "initial_day")
-    initial_scene_id = "farm"
+    initial_scene_id = "muelle"
+    initial_spawn_id = "StartGame"
     initial_scene = load_scene_data(initial_scene_id)
     player_spawn = {"x": 400, "y": 300}
 
     if initial_scene is not None:
-        player_spawn = initial_scene["player_spawn"]
+        tile_size = initial_scene.get("tile_size", 16)
+
+        for spawn_data in initial_scene.get("spawns", []):
+            if spawn_data.get("id") == initial_spawn_id:
+                spawn_cell = spawn_data.get("spawn_cell")
+
+                if isinstance(spawn_cell, list) and len(spawn_cell) >= 2:
+                    player_spawn = {
+                        "x": spawn_cell[0] * tile_size + tile_size // 2,
+                        "y": spawn_cell[1] * tile_size + tile_size // 2,
+                    }
+
+                break
 
     return {
         "resources": {
@@ -273,7 +286,7 @@ def normalize_state(state, game_data=None):
         state["log"] = []
 
     if "current_scene" not in state:
-        state["current_scene"] = "farm"
+        state["current_scene"] = "muelle"
 
     ensure_scene_states(state)
 

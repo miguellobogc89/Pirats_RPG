@@ -12,6 +12,12 @@ from editor.widgets.inspector_panel import (
 
 
 OPTION_HEIGHT = 24
+SCREEN_MARGIN = 8
+MIN_DROPDOWN_WIDTH = 120
+
+
+def clamp_value(value, minimum, maximum):
+    return max(minimum, min(value, maximum))
 
 
 def draw_dropdown_field(screen, rect, label, value, action):
@@ -46,24 +52,27 @@ def draw_floating_dropdown(
     new_label="+ Nueva categoria",
 ):
     buttons = []
-    visible_count = min(max_visible_options, len(options) + (1 if allow_new else 0))
+    options = list(options or [])
+    total_rows = len(options) + (1 if allow_new else 0)
+    visible_count = min(max_visible_options, total_rows)
 
     if visible_count <= 0:
         return {
             "buttons": [],
             "max_scroll": 0,
+            "scroll_y": 0,
             "rect": pygame.Rect(anchor_rect.x, anchor_rect.bottom, anchor_rect.w, 0),
         }
 
-    total_rows = len(options) + (1 if allow_new else 0)
-    dropdown_h = visible_count * OPTION_HEIGHT
-    dropdown_rect = pygame.Rect(anchor_rect.x, anchor_rect.bottom + 2, anchor_rect.w, dropdown_h)
-
-    if dropdown_rect.bottom > screen.get_height() - 8:
-        dropdown_rect.bottom = anchor_rect.top - 2
+    dropdown_rect = calculate_dropdown_rect(
+        screen,
+        anchor_rect,
+        total_rows,
+        visible_count,
+    )
 
     max_scroll = max(0, total_rows * OPTION_HEIGHT - dropdown_rect.h)
-    scroll_y = max(0, min(scroll_y, max_scroll))
+    scroll_y = clamp_value(scroll_y, 0, max_scroll)
 
     pygame.draw.rect(screen, GODOT_PANEL, dropdown_rect, border_radius=2)
     pygame.draw.rect(screen, GODOT_BORDER, dropdown_rect, 1, border_radius=2)
@@ -89,7 +98,7 @@ def draw_floating_dropdown(
 
         draw_text(screen, option, option_rect.x + 6, option_rect.y + 5, GODOT_TEXT, 12)
         buttons.append({
-            "rect": option_rect,
+            "rect": option_rect.clip(dropdown_rect),
             "action": select_action,
             option_key: option,
         })
@@ -109,7 +118,7 @@ def draw_floating_dropdown(
                 pygame.draw.rect(screen, (55, 59, 66), new_rect)
             draw_text(screen, new_label, new_rect.x + 6, new_rect.y + 5, (86, 145, 214), 12)
             buttons.append({
-                "rect": new_rect,
+                "rect": new_rect.clip(dropdown_rect),
                 "action": new_action,
             })
 
@@ -121,8 +130,39 @@ def draw_floating_dropdown(
     return {
         "buttons": buttons,
         "max_scroll": max_scroll,
+        "scroll_y": scroll_y,
         "rect": dropdown_rect,
     }
+
+
+def calculate_dropdown_rect(screen, anchor_rect, total_rows, visible_count):
+    viewport = pygame.Rect(
+        SCREEN_MARGIN,
+        SCREEN_MARGIN,
+        max(1, screen.get_width() - SCREEN_MARGIN * 2),
+        max(1, screen.get_height() - SCREEN_MARGIN * 2),
+    )
+    desired_h = visible_count * OPTION_HEIGHT
+    available_below = max(0, viewport.bottom - anchor_rect.bottom - 2)
+    available_above = max(0, anchor_rect.top - viewport.top - 2)
+    open_above = available_below < desired_h and available_above > available_below
+    available_h = available_above if open_above else available_below
+
+    if available_h < OPTION_HEIGHT:
+        available_h = max(OPTION_HEIGHT, viewport.h)
+
+    visible_rows_by_space = max(1, min(visible_count, available_h // OPTION_HEIGHT))
+    dropdown_h = min(desired_h, visible_rows_by_space * OPTION_HEIGHT, viewport.h)
+    dropdown_w = min(max(anchor_rect.w, MIN_DROPDOWN_WIDTH), viewport.w)
+    dropdown_x = clamp_value(anchor_rect.x, viewport.x, viewport.right - dropdown_w)
+
+    if open_above:
+        dropdown_y = anchor_rect.top - 2 - dropdown_h
+    else:
+        dropdown_y = anchor_rect.bottom + 2
+
+    dropdown_y = clamp_value(dropdown_y, viewport.y, viewport.bottom - dropdown_h)
+    return pygame.Rect(dropdown_x, dropdown_y, dropdown_w, dropdown_h)
 
 
 def draw_dropdown_scrollbar(screen, rect, scroll_y, max_scroll):

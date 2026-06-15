@@ -217,10 +217,7 @@ def draw_active_floating_dropdown(screen, state, floating_dropdown_requests):
 
     state.floating_dropdown_rect = dropdown["rect"]
     state.floating_dropdown_max_scroll = dropdown["max_scroll"]
-    state.floating_dropdown_scroll_y = max(
-        0,
-        min(state.floating_dropdown_scroll_y, state.floating_dropdown_max_scroll),
-    )
+    state.floating_dropdown_scroll_y = dropdown.get("scroll_y", 0)
 
     return dropdown["buttons"]
 
