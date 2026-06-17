@@ -1,15 +1,15 @@
-import pygame
+﻿import pygame
 
-from editor.widgets.checkbox import draw_checkbox
-from editor.widgets.floating_dropdown import draw_dropdown_field
-from editor.widgets.inspector_panel import (
+from editor.ui.widgets.checkbox import draw_checkbox
+from editor.ui.widgets.floating_dropdown import draw_dropdown_field
+from editor.ui.widgets.inspector_panel import (
     GODOT_DANGER,
     GODOT_MUTED,
     GODOT_PANEL,
     GODOT_TEXT,
     draw_text,
 )
-from editor.widgets.text_input import draw_text_input
+from editor.ui.widgets.text_input import draw_text_input
 from game.objects.object_schema import FUNCTIONAL_TYPES, INTERACTION_MODES
 
 
@@ -210,3 +210,4 @@ def draw_validation_warnings(screen, state, x, y, width):
         y += 28
 
     return y
+

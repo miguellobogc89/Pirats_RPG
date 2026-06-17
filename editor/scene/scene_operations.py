@@ -1,4 +1,4 @@
-def get_occupied_cells_for_object(cell, footprint):
+﻿def get_occupied_cells_for_object(cell, footprint):
     occupied_cells = []
 
     for offset_x in range(footprint[0]):
@@ -235,3 +235,4 @@ def remove_object_at_cell(scene_data, cell, object_definitions):
             return True
 
     return False
+

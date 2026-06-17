@@ -1,4 +1,4 @@
-def add_collision_cell(scene_data, cell):
+﻿def add_collision_cell(scene_data, cell):
     if cell not in scene_data["collisions"]:
         scene_data["collisions"].append(cell)
         return True

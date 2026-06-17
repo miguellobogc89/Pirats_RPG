@@ -1,4 +1,4 @@
-import pygame
+﻿import pygame
 
 STATUS_BAR_HEIGHT = 28
 

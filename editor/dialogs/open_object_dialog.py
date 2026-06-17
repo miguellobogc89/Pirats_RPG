@@ -1,8 +1,8 @@
-import pygame
+﻿import pygame
 
 from editor.object_editor.object_definition_repository import list_object_definitions
-from editor.widgets.editor_button import draw_editor_button
-from editor.widgets.list_dialog import (
+from editor.ui.widgets.editor_button import draw_editor_button
+from editor.ui.widgets.list_dialog import (
     draw_list_dialog,
     draw_list_row_background,
     draw_row_text,
@@ -79,3 +79,4 @@ def draw_object_row(screen, row, item):
     delete_button["object_id"] = item["object_id"]
 
     return [open_button, delete_button]
+

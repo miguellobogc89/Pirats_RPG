@@ -1,4 +1,4 @@
-def generate_area_id(prefix, items):
+﻿def generate_area_id(prefix, items):
     used_ids = {
         item.get("id")
         for item in items
@@ -303,3 +303,4 @@ def set_exit_targets(scene_data, exit_id, target_links):
 
     exit_data["target_links"] = dedupe_target_links(target_links)
     return True
+

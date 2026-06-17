@@ -1,4 +1,4 @@
-import pygame
+﻿import pygame
 
 from editor.modules.database_editor.database_widgets import (
     draw_database_field,
@@ -306,3 +306,4 @@ def get_record_by_id(records, record_id):
             return record
 
     return None
+

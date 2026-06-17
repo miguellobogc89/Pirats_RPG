@@ -1,4 +1,4 @@
-from editor.areas.collision_tool import (
+﻿from editor.areas.collision_tool import (
     add_collision_cell,
     remove_collision_cell,
 )

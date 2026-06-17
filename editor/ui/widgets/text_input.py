@@ -1,6 +1,6 @@
-import pygame
+﻿import pygame
 
-from editor.widgets.inspector_panel import (
+from editor.ui.widgets.inspector_panel import (
     GODOT_BORDER,
     GODOT_BORDER_ACTIVE,
     GODOT_FIELD,
@@ -76,3 +76,4 @@ def draw_text_input(
         "rect": field_rect,
         "action": action,
     }
+

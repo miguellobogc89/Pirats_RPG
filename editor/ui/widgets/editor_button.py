@@ -1,4 +1,4 @@
-import pygame
+﻿import pygame
 
 
 COLOR_BUTTON = (58, 64, 74)
@@ -41,3 +41,4 @@ def draw_editor_button(screen, rect, label, action, compact=False, danger=False,
         "rect": rect,
         "action": action,
     }
+

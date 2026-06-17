@@ -1,4 +1,4 @@
-from pathlib import Path
+﻿from pathlib import Path
 
 import pygame
 
@@ -66,3 +66,4 @@ def load_editor_sprites(object_definitions, tile_size):
             sprites[object_type] = sprite
 
     return sprites
+

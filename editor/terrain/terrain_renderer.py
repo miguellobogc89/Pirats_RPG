@@ -1,4 +1,4 @@
-import pygame
+﻿import pygame
 
 from game.world.grid_manager import TILE_SIZE
 from editor.terrain.terrain_palette import TERRAIN_PALETTE, DEFAULT_TERRAIN_ID

@@ -1,4 +1,4 @@
-import pygame
+﻿import pygame
 
 MENU_BAR_HEIGHT = 34
 
@@ -197,3 +197,4 @@ def draw_window_controls(screen):
         x += size + gap
 
     return buttons
+

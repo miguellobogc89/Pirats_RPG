@@ -1,4 +1,4 @@
-from game.data.object_definition_repository import (
+﻿from game.data.object_definition_repository import (
     delete_object_definition,
     find_duplicate_definition_ids,
     get_unique_object_id,
@@ -10,3 +10,4 @@ from game.data.object_definition_repository import (
     normalize_object_definition,
     save_object_definition,
 )
+

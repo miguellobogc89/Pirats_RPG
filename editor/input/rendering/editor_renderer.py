@@ -1,4 +1,4 @@
-import pygame
+﻿import pygame
 
 from editor.editor_ui import PANEL_WIDTH
 
@@ -211,3 +211,4 @@ def draw_editor_scene(screen, scene_data, object_definitions, sprites, camera):
         sprites,
         camera,
     )
+

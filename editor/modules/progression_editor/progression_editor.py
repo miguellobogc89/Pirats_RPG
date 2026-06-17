@@ -35,3 +35,4 @@ class ProgressionEditorModule:
             text = font_body.render(line, True, MUTED)
             screen.blit(text, (rect.x + 28, y))
             y += 26
+

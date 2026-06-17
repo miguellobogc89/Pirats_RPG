@@ -1,4 +1,4 @@
-import os
+﻿import os
 import pygame
 import subprocess
 import sys
@@ -43,7 +43,7 @@ from editor.object_editor.object_definition_writer import (
     delete_object_definition,
     save_object_definition,
 )
-from editor.widgets.text_edit_state import (
+from editor.ui.widgets.text_edit_state import (
     TextEditState,
     copy_to_clipboard,
     paste_from_clipboard,
@@ -1973,7 +1973,7 @@ class EditorInputManager:
 
             if renamed:
                 self.mark_dirty()
-                self.set_status("Nombre de área actualizado")
+                self.set_status("Nombre de Ã¡rea actualizado")
 
             self.show_area_name_dialog = False
             return None
@@ -2213,3 +2213,4 @@ class EditorInputManager:
             return None
 
         return None
+

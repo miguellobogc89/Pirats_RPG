@@ -1,4 +1,4 @@
-import pygame
+﻿import pygame
 
 from editor.modules.database_editor.database_framework import DatabaseCategory
 from editor.modules.database_editor.database_theme import (
@@ -14,7 +14,10 @@ from editor.modules.database_editor.database_views import (
     CategoryNavigator,
     MasterDetailView,
 )
-from editor.modules.database_editor.database_widgets import draw_database_save_button
+from editor.modules.database_editor.database_widgets import (
+    draw_database_discard_button,
+    draw_database_save_button,
+)
 from editor.modules.database_editor.object_provider import ObjectDefinitionsProvider
 
 
@@ -33,6 +36,7 @@ class DatabaseEditorModule:
         self.status_message = "Click en un valor para editar. Enter confirma. Ctrl+S guarda."
         self.status_color = MUTED
         self.save_button_rect = None
+        self.discard_button_rect = None
 
     def handle_event(self, screen, event):
         if event.type == pygame.KEYDOWN:
@@ -53,12 +57,18 @@ class DatabaseEditorModule:
             self.save_selected_record()
             return True
 
-        if self.edit_state is None:
-            return True
-
         if event.key == pygame.K_ESCAPE:
-            self.edit_state = None
-            self.set_status("Edicion cancelada.", MUTED)
+            if self.edit_state is not None:
+                self.edit_state = None
+                self.set_status("Edicion cancelada.", MUTED)
+                return True
+
+            if self.dropdown_state is not None:
+                self.dropdown_state = None
+                self.set_status("Lista cerrada.", MUTED)
+                return True
+
+        if self.edit_state is None:
             return True
 
         if event.key in (pygame.K_RETURN, pygame.K_KP_ENTER):
@@ -77,6 +87,10 @@ class DatabaseEditorModule:
     def handle_click(self, pos):
         if self.save_button_rect and self.save_button_rect.collidepoint(pos):
             self.save_selected_record()
+            return True
+
+        if self.discard_button_rect and self.discard_button_rect.collidepoint(pos):
+            self.discard_selected_record()
             return True
 
         category_id = self.category_nav.handle_click(pos)
@@ -147,7 +161,11 @@ class DatabaseEditorModule:
                 return
 
             category = self.get_selected_category()
-            new_value = "false" if row.get("raw_value") else "true"
+            new_value = "true"
+
+            if row.get("raw_value"):
+                new_value = "false"
+
             success, message = category.update_record_field(
                 action["record_id"],
                 row.get("path"),
@@ -170,8 +188,9 @@ class DatabaseEditorModule:
         if success:
             self.edit_state = None
             self.set_status(message, SUCCESS)
-        else:
-            self.set_status(message, ERROR)
+            return
+
+        self.set_status(message, ERROR)
 
     def save_selected_record(self):
         if self.edit_state is not None:
@@ -187,6 +206,19 @@ class DatabaseEditorModule:
             return
 
         success, message = category.save_record(view.selected_record_id)
+        self.set_status(message, SUCCESS if success else ERROR)
+
+    def discard_selected_record(self):
+        self.edit_state = None
+        self.dropdown_state = None
+
+        category = self.get_selected_category()
+        view = self.get_active_master_detail_view()
+
+        if view is None or view.selected_record_id is None:
+            return
+
+        success, message = category.discard_record(view.selected_record_id)
         self.set_status(message, SUCCESS if success else ERROR)
 
     def set_status(self, message, color):
@@ -225,7 +257,7 @@ class DatabaseEditorModule:
         screen.blit(title, (rect.x + 28, rect.y + 28))
 
         subtitle = font_body.render(
-            "Placeholder para bases de datos editables del proyecto.",
+            "Editor de bases de datos del proyecto. Los cambios se guardan solo al pulsar Guardar.",
             True,
             MUTED,
         )
@@ -245,7 +277,7 @@ class DatabaseEditorModule:
         )
         self.draw_selected_category(screen, detail_rect, font_label, font_body)
         self.draw_status(screen, rect, font_body)
-        self.draw_save_action(screen, font_body)
+        self.draw_record_actions(screen)
 
     def draw_selected_category(self, screen, rect, font_label, font_body):
         category = self.get_selected_category()
@@ -274,32 +306,45 @@ class DatabaseEditorModule:
         status = font_body.render(self.status_message, True, self.status_color)
         screen.blit(status, (rect.x + 28, rect.bottom - 30))
 
-    def draw_save_action(self, screen, font_body):
+    def draw_record_actions(self, screen):
+        self.save_button_rect = None
+        self.discard_button_rect = None
+
         view = self.get_active_master_detail_view()
         category = self.get_selected_category()
-        can_save = (
+
+        can_act = (
             view is not None
             and view.selected_record_id is not None
             and category.is_record_dirty(view.selected_record_id)
         )
 
-        if not can_save:
-            self.save_button_rect = None
+        if not can_act:
             return
 
         anchor_rect = view.detail_rect
         if anchor_rect is None:
-            self.save_button_rect = None
             return
 
         button_width = 110
         button_height = 28
+        gap = 10
+
         self.save_button_rect = pygame.Rect(
             anchor_rect.right - button_width - 16,
             anchor_rect.y + 12,
             button_width,
             button_height,
         )
+
+        self.discard_button_rect = pygame.Rect(
+            self.save_button_rect.x - button_width - gap,
+            self.save_button_rect.y,
+            button_width,
+            button_height,
+        )
+
+        draw_database_discard_button(screen, self.discard_button_rect, enabled=True)
         draw_database_save_button(screen, self.save_button_rect, enabled=True)
 
 

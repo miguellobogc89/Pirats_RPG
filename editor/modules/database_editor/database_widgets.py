@@ -1,9 +1,9 @@
-import pygame
+﻿import pygame
 
-from editor.widgets.checkbox import draw_checkbox
-from editor.widgets.editor_button import draw_editor_button
-from editor.widgets.floating_dropdown import draw_dropdown_field, draw_floating_dropdown
-from editor.widgets.text_input import draw_text_input
+from editor.ui.widgets.checkbox import draw_checkbox
+from editor.ui.widgets.editor_button import draw_editor_button
+from editor.ui.widgets.floating_dropdown import draw_dropdown_field, draw_floating_dropdown
+from editor.ui.widgets.text_input import draw_text_input
 
 
 def draw_database_field(screen, rect, row, edit_state=None, record_id=None, dropdown_state=None):
@@ -54,7 +54,9 @@ def draw_database_field(screen, rect, row, edit_state=None, record_id=None, drop
         and edit_state.get("path") == row.get("path")
     )
 
-    value = edit_state.get("text") if is_editing else row.get("value", "")
+    value = row.get("value", "")
+    if is_editing:
+        value = edit_state.get("text")
 
     return draw_clipped_text_input(
         screen,
@@ -74,6 +76,17 @@ def draw_database_save_button(screen, rect, enabled=True):
         rect,
         "Guardar",
         "database_save",
+        compact=True,
+        disabled=not enabled,
+    )
+
+
+def draw_database_discard_button(screen, rect, enabled=True):
+    return draw_editor_button(
+        screen,
+        rect,
+        "Descartar",
+        "database_discard",
         compact=True,
         disabled=not enabled,
     )

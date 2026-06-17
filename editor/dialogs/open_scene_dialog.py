@@ -1,4 +1,4 @@
-from editor.widgets.list_dialog import (
+﻿from editor.ui.widgets.list_dialog import (
     draw_list_dialog,
     draw_list_row_background,
     draw_row_text,
@@ -31,3 +31,4 @@ def draw_scene_row(screen, row, scene_info):
             "scene_id": scene_info["id"],
         }
     ]
+

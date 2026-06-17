@@ -1,4 +1,4 @@
-import pygame
+﻿import pygame
 
 from game.world.object_sprite_layout import (
     get_object_footprint_rect,
@@ -231,3 +231,4 @@ def draw_selection_status(screen, rect, state):
     )
     surface = font.render(text, True, TEXT_COLOR)
     screen.blit(surface, (status_rect.x + 10, status_rect.y + 7))
+

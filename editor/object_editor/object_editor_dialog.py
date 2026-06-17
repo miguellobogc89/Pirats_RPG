@@ -1,17 +1,17 @@
-import re
+﻿import re
 from pathlib import Path
 
 import pygame
 
 from editor.object_editor.object_preview_renderer import draw_object_preview
 from editor.object_editor.functional_type_forms import draw_functional_type_form
-from editor.widgets.checkbox import draw_checkbox
-from editor.widgets.editor_button import draw_editor_button
-from editor.widgets.floating_dropdown import (
+from editor.ui.widgets.checkbox import draw_checkbox
+from editor.ui.widgets.editor_button import draw_editor_button
+from editor.ui.widgets.floating_dropdown import (
     draw_dropdown_field,
     draw_floating_dropdown,
 )
-from editor.widgets.inspector_panel import (
+from editor.ui.widgets.inspector_panel import (
     GODOT_BG,
     GODOT_BORDER,
     GODOT_DANGER,
@@ -21,9 +21,9 @@ from editor.widgets.inspector_panel import (
     draw_inspector_panel,
     draw_text,
 )
-from editor.widgets.modal_dialog import draw_modal_dialog
-from editor.widgets.property_group import draw_property_group
-from editor.widgets.text_input import draw_text_input
+from editor.ui.widgets.modal_dialog import draw_modal_dialog
+from editor.ui.widgets.property_group import draw_property_group
+from editor.ui.widgets.text_input import draw_text_input
 
 
 COLOR_OVERLAY = (0, 0, 0)
@@ -416,3 +416,4 @@ def draw_interaction_points_group(screen, state, x, y, width):
     y += 34
 
     return y, buttons
+

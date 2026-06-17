@@ -50,3 +50,4 @@ class SceneEditorModule:
             self.camera,
             self.input_manager,
         )
+

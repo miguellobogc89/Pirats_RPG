@@ -1,6 +1,6 @@
-import pygame
+﻿import pygame
 
-from editor.widgets.inspector_panel import (
+from editor.ui.widgets.inspector_panel import (
     GODOT_ACCENT,
     GODOT_BORDER,
     GODOT_FIELD,
@@ -35,3 +35,4 @@ def draw_checkbox(screen, rect, label, checked, action, tooltip=None, disabled=F
         "rect": rect,
         "action": None if disabled else action,
     }
+

@@ -1,4 +1,4 @@
-import json
+﻿import json
 import re
 from pathlib import Path
 
@@ -18,7 +18,7 @@ DEFAULT_TILE_SIZE = TILE_SIZE
 
 def slugify_scene_name(scene_name):
     value = scene_name.strip().lower()
-    value = value.replace("ñ", "n")
+    value = value.replace("Ã±", "n")
     value = re.sub(r"[^a-z0-9]+", "_", value)
     value = value.strip("_")
 
@@ -218,3 +218,4 @@ def normalize_terrain(raw_scene):
         "default": terrain.get("default", "grass"),
         "tiles": normalize_list(terrain.get("tiles")),
     }
+

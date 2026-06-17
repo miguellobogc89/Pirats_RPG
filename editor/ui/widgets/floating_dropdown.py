@@ -1,6 +1,6 @@
-import pygame
+﻿import pygame
 
-from editor.widgets.inspector_panel import (
+from editor.ui.widgets.inspector_panel import (
     GODOT_BORDER,
     GODOT_FIELD,
     GODOT_MUTED,
@@ -172,3 +172,4 @@ def draw_dropdown_scrollbar(screen, rect, scroll_y, max_scroll):
     thumb_y = track.y + int((track.h - thumb_h) * scroll_y / max(1, max_scroll))
     thumb = pygame.Rect(track.x, thumb_y, track.w, thumb_h)
     pygame.draw.rect(screen, GODOT_BORDER, thumb, border_radius=2)
+

@@ -1,6 +1,6 @@
-import pygame
+﻿import pygame
 
-from editor.widgets.modal_dialog import (
+from editor.ui.widgets.modal_dialog import (
     draw_modal_dialog,
     draw_modal_footer_buttons,
     draw_modal_label,
@@ -41,3 +41,4 @@ def draw_area_name_dialog(screen, title, text_value):
         )
     )
     return buttons
+

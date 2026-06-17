@@ -1,5 +1,5 @@
-from editor.widgets.inspector_panel import GODOT_TEXT
-from editor.widgets.modal_dialog import (
+﻿from editor.ui.widgets.inspector_panel import GODOT_TEXT
+from editor.ui.widgets.modal_dialog import (
     draw_modal_dialog,
     draw_modal_footer_buttons,
     draw_wrapped_text,
@@ -35,3 +35,4 @@ def draw_confirm_dialog(screen, title, message, confirm_action, cancel_action):
         )
     )
     return buttons
+

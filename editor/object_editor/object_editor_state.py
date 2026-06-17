@@ -1,4 +1,4 @@
-from copy import deepcopy
+﻿from copy import deepcopy
 
 from game.objects.object_normalizer import normalize_object_definition
 from game.objects.object_schema import FUNCTIONAL_BLOCK_DEFAULTS
@@ -215,4 +215,5 @@ class ObjectEditorState:
         errors, warnings = validate_object_definition(self.to_definition(), self.object_id)
         self.validation_errors = errors
         self.validation_warnings = warnings
+
 

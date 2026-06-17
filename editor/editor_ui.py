@@ -1,9 +1,9 @@
-import pygame
+﻿import pygame
 
 from editor.ui.editor_menu_bar import MENU_BAR_HEIGHT
 from editor.ui.editor_status_bar import STATUS_BAR_HEIGHT
 from editor.terrain.terrain_palette import TERRAIN_PALETTE
-from editor.widgets.section import draw_section_header
+from editor.ui.widgets.section import draw_section_header
 
 
 PANEL_WIDTH = 320
@@ -233,7 +233,7 @@ def draw_editor_side_panel(
                 x,
                 y,
                 width,
-                "+ Añadir propiedad",
+                "+ AÃ±adir propiedad",
                 {"action": "instance_property_add"},
             )
             y += 6
@@ -401,3 +401,4 @@ def get_clicked_panel_action(mouse_pos, buttons):
             return button
 
     return None
+

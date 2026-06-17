@@ -1,4 +1,4 @@
-TERRAIN_PALETTE = {
+﻿TERRAIN_PALETTE = {
     "grass": {
         "name": "Grass",
         "color": (92, 150, 82),

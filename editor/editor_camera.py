@@ -1,4 +1,4 @@
-from game.world.grid_manager import TILE_SIZE
+﻿from game.world.grid_manager import TILE_SIZE
 
 
 class EditorCamera:
@@ -71,3 +71,4 @@ class EditorCamera:
         self.y -= dy
 
         self.last_mouse_pos = mouse_pos
+

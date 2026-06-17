@@ -1,4 +1,4 @@
-import ast
+﻿import ast
 
 from editor.editor_assets import load_object_definitions
 from editor.object_editor.object_definition_repository import save_object_definition
@@ -275,7 +275,7 @@ def parse_text_value(text_value, current_value):
     if isinstance(current_value, bool):
         lowered = text_value.lower()
 
-        if lowered in ("true", "1", "yes", "si", "sí"):
+        if lowered in ("true", "1", "yes", "si", "sÃ­"):
             return True
 
         if lowered in ("false", "0", "no"):
@@ -335,3 +335,4 @@ def get_relevant_definition_info(definition):
         return f"npc: {data.get('npc_id', '')} dialogue: {data.get('dialogue_id', '')}"
 
     return ""
+

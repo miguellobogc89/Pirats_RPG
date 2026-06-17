@@ -1,4 +1,4 @@
-import pygame
+﻿import pygame
 
 COLOR_OVERLAY = (0, 0, 0)
 COLOR_DIALOG = (38, 41, 46)
@@ -49,7 +49,7 @@ def draw_edit_button(screen, rect, visible):
     pygame.draw.rect(screen, COLOR_BORDER, rect, 1)
 
     font = pygame.font.SysFont("segoe ui symbol", 15)
-    text = font.render("✎", True, COLOR_TEXT)
+    text = font.render("âœŽ", True, COLOR_TEXT)
     screen.blit(
         text,
         (
@@ -241,3 +241,4 @@ def draw_relations_dialog(
     })
 
     return buttons
+

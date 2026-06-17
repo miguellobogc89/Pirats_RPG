@@ -1,5 +1,5 @@
-from editor.widgets.inspector_panel import GODOT_MUTED
-from editor.widgets.modal_dialog import (
+﻿from editor.ui.widgets.inspector_panel import GODOT_MUTED
+from editor.ui.widgets.modal_dialog import (
     draw_modal_dialog,
     draw_modal_footer_buttons,
     draw_wrapped_text,
@@ -22,7 +22,7 @@ def draw_unsaved_changes_dialog(screen):
     message_rect.h = 72
     draw_wrapped_text(
         screen,
-        "Hay cambios sin guardar. ¿Quieres guardarlos antes de continuar?",
+        "Hay cambios sin guardar. Â¿Quieres guardarlos antes de continuar?",
         message_rect,
         GODOT_MUTED,
         13,
@@ -42,3 +42,4 @@ def draw_unsaved_changes_dialog(screen):
         )
     )
     return buttons
+

@@ -159,3 +159,4 @@ class EditorShell:
 
 def main():
     EditorShell().run()
+

@@ -1,4 +1,4 @@
-import pygame
+﻿import pygame
 
 from editor.editor_ui import PANEL_WIDTH
 from editor.terrain.terrain_renderer import draw_editor_terrain
@@ -327,3 +327,4 @@ def draw_editor_scene(
         selected_scene_object_id,
     )
     draw_area_tooltip(screen, scene_data, camera)
+

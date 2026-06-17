@@ -1,4 +1,4 @@
-class DatabaseRecord:
+﻿class DatabaseRecord:
     def __init__(self, record_id, title, summary_parts, detail_rows, flags=None):
         self.id = record_id
         self.title = title
@@ -34,6 +34,12 @@ class DatabaseCategory:
             return False, "Categoria sin proveedor."
 
         return self.provider.save_record(record_id)
+
+    def discard_record(self, record_id):
+        if self.provider is None:
+            return False, "Categoria sin proveedor."
+
+        return self.provider.discard_record(record_id)
 
     def is_record_dirty(self, record_id):
         if self.provider is None:

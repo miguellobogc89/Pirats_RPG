@@ -1,4 +1,4 @@
-from editor.terrain.terrain_palette import DEFAULT_TERRAIN_ID
+﻿from editor.terrain.terrain_palette import DEFAULT_TERRAIN_ID
 
 
 def ensure_terrain_data(scene_data):

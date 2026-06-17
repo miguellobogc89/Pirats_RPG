@@ -162,3 +162,4 @@ def draw_scene_dialogs(screen, object_definitions, input_manager):
 
         input_manager.object_editor_preview_layout = object_editor_result["preview_layout"]
         input_manager.set_dialog_buttons(object_editor_result["buttons"])
+
