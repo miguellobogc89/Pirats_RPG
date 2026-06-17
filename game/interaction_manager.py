@@ -2,7 +2,11 @@ import random
 
 from core.save_manager import save_state
 from game.inventory.hotbar_manager import get_active_tool
-from game.scenes.scene_state import get_current_scene_state
+from game.scenes.scene_state import (
+    get_current_scene_state,
+    mark_object_removed,
+    update_object_state,
+)
 from game.collectable_manager import spawn_collectables_from_drops
 from game.npcs import interact_with_npc
 from game.story_events import dispatch_story_event
@@ -14,13 +18,18 @@ def get_nearby_object(state, game_data, interaction_range, world_objects=None):
     closest_object = None
     closest_distance = interaction_range
 
-    removed_objects = set(get_current_scene_state(state).get("removed_objects", []))
+    scene_state = get_current_scene_state(state)
+    removed_objects = set(scene_state.get("removed_objects", []))
+    object_states = scene_state.get("object_states", {})
     destroyed_objects = set(state.get("destroyed_world_objects", []))
     if world_objects is None:
         world_objects = []
 
     for world_object in world_objects:
-        if world_object["id"] in removed_objects or world_object["id"] in destroyed_objects:
+        object_state = object_states.get(world_object["id"], {})
+        object_removed = isinstance(object_state, dict) and object_state.get("removed")
+
+        if world_object["id"] in removed_objects or world_object["id"] in destroyed_objects or object_removed:
             continue
 
         dx = world_object["x"] - player["x"]
@@ -140,6 +149,8 @@ def interact_with_resource_object(app, world_object):
 
     app.state["energy"]["current"] -= energy_cost
     world_object["hp"] -= 1
+    world_object["current_hp"] = world_object["hp"]
+    update_object_state(app.state, world_object["id"], {"current_hp": world_object["hp"]})
 
     app.add_log(f"Golpeas {world_object['name']}. Energía -{energy_cost}.")
 
@@ -156,10 +167,7 @@ def interact_with_resource_object(app, world_object):
             app.skill_manager.register_action("tree_destroyed")
 
 
-        scene_state = get_current_scene_state(app.state)
-
-        if world_object["id"] not in scene_state["removed_objects"]:
-            scene_state["removed_objects"].append(world_object["id"])
+        mark_object_removed(app.state, world_object["id"])
 
         if "destroyed_world_objects" not in app.state:
             app.state["destroyed_world_objects"] = []
@@ -243,10 +251,7 @@ def pickup_world_object(app, world_object):
         app.add_log("Inventario lleno.")
         return
 
-    scene_state = get_current_scene_state(app.state)
-
-    if world_object["id"] not in scene_state["removed_objects"]:
-        scene_state["removed_objects"].append(world_object["id"])
+    mark_object_removed(app.state, world_object["id"])
 
     app.add_log(f"Recoges {world_object.get('name', item_id)} x{amount}.")
     dispatch_story_event(

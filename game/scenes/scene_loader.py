@@ -125,6 +125,10 @@ def normalize_objects(raw_scene):
             f"{object_type}_{cell[0]}_{cell[1]}",
         )
         normalized_object["type"] = object_type
+        normalized_object["definition_id"] = normalized_object.get(
+            "definition_id",
+            object_type,
+        )
         normalized_object["cell"] = [cell[0], cell[1]]
         normalized_object["properties"] = {
             str(key): str(value)

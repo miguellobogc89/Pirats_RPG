@@ -350,6 +350,15 @@
         14
       ],
       "properties": {}
+    },
+    {
+      "id": "bed_001",
+      "type": "bed",
+      "cell": [
+        16,
+        13
+      ],
+      "properties": {}
     }
   ],
   "collisions": [

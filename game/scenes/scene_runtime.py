@@ -19,8 +19,8 @@ def build_scene_world_objects(scene_data):
     scene_objects = []
 
     for object_data in scene_data.get("objects", []):
-        object_type = object_data.get("type")
-        object_definition = object_definitions.get(object_type)
+        definition_id = object_data.get("definition_id", object_data.get("type"))
+        object_definition = object_definitions.get(definition_id)
 
         if object_definition is None:
             continue
@@ -40,6 +40,63 @@ def build_scene_world_objects(scene_data):
     return scene_objects
 
 
+def build_scene_runtime_world_objects(scene_data, scene_state=None):
+    scene_objects = build_scene_world_objects(scene_data)
+
+    if scene_state is None:
+        return scene_objects
+
+    object_states = scene_state.get("object_states", {})
+    if not isinstance(object_states, dict):
+        object_states = {}
+
+    removed_objects = set(scene_state.get("removed_objects", []))
+    modified_objects = scene_state.get("modified_objects", {})
+    if not isinstance(modified_objects, dict):
+        modified_objects = {}
+
+    runtime_objects = []
+
+    for scene_object in scene_objects:
+        object_id = scene_object["id"]
+        object_state = object_states.get(object_id, {})
+
+        if not isinstance(object_state, dict):
+            object_state = {}
+
+        if object_id in removed_objects or object_state.get("removed"):
+            continue
+
+        if object_id in modified_objects and isinstance(modified_objects[object_id], dict):
+            scene_object.update(modified_objects[object_id])
+
+        apply_object_state_to_runtime(scene_object, object_state)
+        runtime_objects.append(scene_object)
+
+    return runtime_objects
+
+
+def apply_object_state_to_runtime(scene_object, object_state):
+    for key, value in object_state.items():
+        if key in ("removed", "current_hp", "hp"):
+            continue
+
+        scene_object[key] = value
+
+    current_hp = object_state.get("current_hp", object_state.get("hp"))
+
+    if current_hp is None:
+        return
+
+    try:
+        current_hp = max(0, int(current_hp))
+    except (TypeError, ValueError):
+        return
+
+    scene_object["current_hp"] = current_hp
+    scene_object["hp"] = current_hp
+
+
 def build_scene_world_object(object_data, object_definition, scene_tile_size):
     cell = object_data.get("cell")
 
@@ -47,6 +104,7 @@ def build_scene_world_object(object_data, object_definition, scene_tile_size):
         return None
 
     object_type = object_data.get("type", "object")
+    definition_id = object_data.get("definition_id", object_type)
     visual = object_definition["visual"]
     collision = object_definition["collision"]
     functional_type = object_definition["functional_type"]
@@ -56,10 +114,13 @@ def build_scene_world_object(object_data, object_definition, scene_tile_size):
     world_x = cell[0] * scene_tile_size + footprint[0] * scene_tile_size / 2
     world_y = cell[1] * scene_tile_size + footprint[1] * scene_tile_size / 2
     radius = max(16, int(max(visual_size) * scene_tile_size / 2))
-    hp = get_runtime_hp(functional_type, functional_data, object_data)
+    base_hp = get_base_hp(functional_type, functional_data, object_data)
+    current_hp = get_instance_current_hp(object_data, base_hp)
 
     return {
         "id": object_data.get("id", f"{object_type}_{cell[0]}_{cell[1]}"),
+        "instance_id": object_data.get("id", f"{object_type}_{cell[0]}_{cell[1]}"),
+        "definition_id": definition_id,
         "name": object_data.get("name", object_definition.get("name", object_type)),
         "type": object_type,
         "functional_type": functional_type,
@@ -75,8 +136,10 @@ def build_scene_world_object(object_data, object_definition, scene_tile_size):
         "solid": collision["solid"],
         "scene_cell": cell,
         "scene_tile_size": scene_tile_size,
-        "hp": hp,
-        "max_hp": hp,
+        "hp": current_hp,
+        "current_hp": current_hp,
+        "base_hp": base_hp,
+        "max_hp": base_hp,
     }
 
 
@@ -97,7 +160,7 @@ def get_visual_size(visual, footprint, scene_tile_size):
     return footprint
 
 
-def get_runtime_hp(functional_type, functional_data, object_data):
+def get_base_hp(functional_type, functional_data, object_data):
     if functional_type != "destructible":
         return 1
 
@@ -107,6 +170,15 @@ def get_runtime_hp(functional_type, functional_data, object_data):
         return max(1, int(hp))
     except (TypeError, ValueError):
         return 1
+
+
+def get_instance_current_hp(object_data, base_hp):
+    hp = object_data.get("current_hp", object_data.get("hp", base_hp))
+
+    try:
+        return max(0, int(hp))
+    except (TypeError, ValueError):
+        return base_hp
 
 
 def build_scene_collision_rects(scene_data, scene_objects):

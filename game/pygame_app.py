@@ -35,7 +35,7 @@ from game.scenes.scene_manager import SceneManager, ensure_scene_state
 from game.scenes.scene_exit_resolver import get_exit_transition_for_player
 from game.scenes.scene_runtime import (
     build_scene_collision_rects,
-    build_scene_world_objects,
+    build_scene_runtime_world_objects,
 )
 from game.scenes.scene_state import get_current_scene_state
 from game.notifications import (
@@ -222,21 +222,10 @@ class PygameApp:
 
         self.scene_npcs = load_npcs_from_scene(self.scene_data)
         scene_state = get_current_scene_state(self.state)
-        removed_objects = set(scene_state.get("removed_objects", []))
-        modified_objects = scene_state.get("modified_objects", {})
-        scene_world_objects = build_scene_world_objects(self.scene_data)
-        self.scene_world_objects = []
-
-        for scene_object in scene_world_objects:
-            object_id = scene_object["id"]
-
-            if object_id in removed_objects:
-                continue
-
-            if object_id in modified_objects:
-                scene_object.update(modified_objects[object_id])
-
-            self.scene_world_objects.append(scene_object)
+        self.scene_world_objects = build_scene_runtime_world_objects(
+            self.scene_data,
+            scene_state,
+        )
 
         set_scene_collision_rects(
             build_scene_collision_rects(
@@ -525,13 +514,7 @@ class PygameApp:
             self.get_scene_world_height(),
         )
 
-        removed_objects = set(get_current_scene_state(self.state).get("removed_objects", []))
-
         for world_object in self.get_active_world_objects():
-
-            if world_object["id"] in removed_objects:
-                continue
-
             x = int(world_object["x"] - camera_x)
             y = int(world_object["y"] - camera_y)
             selected = self.nearby_object is not None and world_object["id"] == self.nearby_object["id"]
