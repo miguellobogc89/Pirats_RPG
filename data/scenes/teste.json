@@ -1,0 +1,19 @@
+{
+  "id": "teste",
+  "name": "Teste",
+  "width": 80,
+  "height": 60,
+  "tile_size": 32,
+  "player_spawn": {
+    "x": 0,
+    "y": 0
+  },
+  "objects": [],
+  "collisions": [],
+  "spawns": [],
+  "exits": [],
+  "terrain": {
+    "default": "grass",
+    "tiles": []
+  }
+}

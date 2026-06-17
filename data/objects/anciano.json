@@ -1,10 +1,10 @@
 {
   "id": "anciano",
   "name": "anciano",
-  "category": "other",
+  "category": "npc",
   "functional_type": "npc",
   "visual": {
-    "sprite": "assets/icons/other/anciano.png",
+    "sprite": "assets/icons/npc/anciano.png",
     "sprite_offset": [
       -11,
       -95
