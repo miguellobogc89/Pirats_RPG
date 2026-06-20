@@ -31,3 +31,18 @@ class TextEditState:
 
         self.text = self.text[:self.cursor_index - 1] + self.text[self.cursor_index:]
         self.cursor_index -= 1
+
+def copy_to_clipboard(text):
+    try:
+        import pyperclip
+        pyperclip.copy(str(text))
+    except Exception:
+        pass
+
+
+def paste_from_clipboard():
+    try:
+        import pyperclip
+        return pyperclip.paste()
+    except Exception:
+        return ""

@@ -10,6 +10,7 @@ GODOT_MUTED = (158, 166, 178)
 GODOT_ACCENT = (80, 130, 160)
 GODOT_WARNING = (220, 170, 80)
 GODOT_ERROR = (220, 90, 90)
+GODOT_DANGER = (180, 70, 70)
 
 
 def get_inspector_font(size=13, bold=False):
