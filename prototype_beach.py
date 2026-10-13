@@ -47,6 +47,8 @@ class BeachTest:
         self.boss_hp = 999
         self.attack_timer = 0
         self.boss_timer = 0
+        self.boss_charge = 0
+        self.invulnerability_timer = 0
         self.hit_flash = 0
         self.boss_attack_flash = 0
         self.knockback = pygame.Vector2()
@@ -98,6 +100,7 @@ class BeachTest:
         self.boss_timer = max(0, self.boss_timer - dt)
         self.hit_flash = max(0, self.hit_flash - dt)
         self.stun_timer = max(0, self.stun_timer - dt)
+        self.invulnerability_timer = max(0, self.invulnerability_timer - dt)
         self.boss_attack_flash = max(0, self.boss_attack_flash - dt)
         if self.state == "intro":
             self.intro_timer -= dt
@@ -119,13 +122,21 @@ class BeachTest:
         self.knockback *= max(0, 1 - 5 * dt)
         self.player.x = clamp(self.player.x, CELL / 2, WIDTH - CELL / 2)
         self.player.y = clamp(self.player.y, CELL / 2, HEIGHT - CELL / 2)
-        boss_speed = (60, 38, 38)[self.mode]
+        boss_speed = (42, 27, 27)[self.mode]
         boss_range = (77, 92, 68)[self.mode]
-        move_towards(self.boss, self.player, boss_speed, dt)
-        if distance(self.boss, self.player) < boss_range and self.boss_timer <= 0:
-            self.boss_attack_flash = 0.24
-            self.damage(20, self.boss)
-            self.boss_timer = 1.15
+        if self.boss_charge > 0:
+            # La criatura se detiene para cargar el ataque durante 0.5 s.
+            self.boss_charge = max(0, self.boss_charge - dt)
+            if self.boss_charge == 0:
+                self.boss_timer = 1.6
+                self.boss_attack_flash = 0.24
+                # Se comprueba el alcance al finalizar la carga: se puede esquivar.
+                if distance(self.boss, self.player) < boss_range:
+                    self.damage(20, self.boss)
+        else:
+            move_towards(self.boss, self.player, boss_speed, dt)
+            if distance(self.boss, self.player) < boss_range and self.boss_timer <= 0:
+                self.boss_charge = 0.5
         if self.mode == 2:
             self.spawn_timer -= dt
             if self.spawn_timer <= 0 and len(self.minions) < 5:
@@ -138,11 +149,12 @@ class BeachTest:
                     self.damage(15, m)
 
     def damage(self, amount, attacker):
-        if self.state != "play":
+        if self.state != "play" or self.invulnerability_timer > 0:
             return
         self.hp = max(0, self.hp - amount)
         self.hit_flash = 0.55
-        self.stun_timer = 1.5
+        self.stun_timer = 1.0
+        self.invulnerability_timer = 1.4
         away = self.player - attacker
         if away.length_squared():
             self.knockback = away.normalize() * 480
@@ -170,7 +182,8 @@ class BeachTest:
             pygame.draw.line(s, (229, 229, 229), (0, y), (WIDTH, y), 1)
         # Jugador: capsula de 1 x 1 celda.
         px, py = round(self.player.x), round(self.player.y)
-        pygame.draw.circle(s, (155, 155, 155), (px, py), CELL//2, 1)
+        if self.stun_timer <= 0 or int(self.stun_timer * 10) % 2 == 0:
+            pygame.draw.circle(s, (155, 155, 155), (px, py), CELL//2, 1)
         self.draw_health_bar(px, py - CELL//2 - 13, self.hp, 100, CELL)
         # Enemigo: cuadrado de 2 x 2 celdas.
         bx, by = round(self.boss.x), round(self.boss.y)
@@ -179,6 +192,11 @@ class BeachTest:
         pygame.draw.rect(s, (155, 155, 155),
                          (bx-CELL, by-CELL, CELL*2, CELL*2), 1)
         self.draw_health_bar(bx, by - CELL - 13, self.boss_hp, 999, CELL * 2)
+        if self.boss_charge > 0:
+            inset = 10
+            pygame.draw.rect(s, (135, 135, 135),
+                             (bx-CELL+inset, by-CELL+inset,
+                              CELL*2-inset*2, CELL*2-inset*2), 1)
         if self.boss_attack_flash > 0:
             pygame.draw.circle(s, (145, 145, 145), (bx, by),
                                round((77, 92, 68)[self.mode]), 1)
