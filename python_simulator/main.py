@@ -353,7 +353,10 @@ class Game:
         if self.name in ("casa_almarin", "taller_almarin"):
             if self.player.distance_to(world) > 115:
                 return
-            if world.distance_to(pygame.Vector2(self.data["exit"])) < 55:
+            if world.distance_to(pygame.Vector2(400, 125)) < 65:
+                destination = "taller_almarin" if self.name == "casa_almarin" else "casa_almarin"
+                self.transition(destination, [400, 175])
+            elif world.distance_to(pygame.Vector2(self.data["exit"])) < 55:
                 self.transition("granja", [260, 310] if self.name == "casa_almarin" else [465, 310])
             elif self.name == "casa_almarin" and world.distance_to(pygame.Vector2(self.data["bed"])) < 65:
                 if self.prologue_finished:
@@ -770,21 +773,19 @@ class Game:
             for x in (350,450): pygame.draw.line(s,LINE,(x-cx,-cy),(x-cx,360-cy),1)
             self.label("PLAYA DE BRUMAZUL / "+self.time_of_day.upper(),22,18)
         elif self.name in ("casa_almarin", "taller_almarin"):
-            pygame.draw.rect(s,(235,226,207),(105-cx,105-cy,590,465))
-            pygame.draw.rect(s,INK,(105-cx,105-cy,590,465),3)
-            pygame.draw.line(s,(255,255,255),(345-cx,570-cy),(455-cx,570-cy),8)
+            pygame.draw.rect(s,LINE,(105-cx,105-cy,590,465),1)
+            pygame.draw.line(s,(255,255,255),(355-cx,105-cy),(445-cx,105-cy),3)
+            self.label("IR AL " + ("TALLER" if self.name == "casa_almarin" else "CASA") + " [CLIC]",325-cx,125-cy)
+            pygame.draw.line(s,(255,255,255),(345-cx,570-cy),(455-cx,570-cy),3)
             self.label("SALIDA A LA GRANJA",345-cx,520-cy)
             if self.name == "casa_almarin":
-                pygame.draw.rect(s,(171,137,108),(180-cx,180-cy,130,105))
-                pygame.draw.rect(s,(244,240,219),(193-cx,190-cy,104,76))
+                pygame.draw.rect(s,LINE,(180-cx,180-cy,130,105),1)
                 self.label("CAMA [CLIC]",193-cx,150-cy)
                 self.label("CASA DE ALMARIN",22,18)
             else:
-                pygame.draw.rect(s,(143,101,65),(205-cx,220-cy,120,75))
-                pygame.draw.rect(s,INK,(205-cx,220-cy,120,75),3)
+                pygame.draw.rect(s,LINE,(205-cx,220-cy,120,75),1)
                 self.label("BAUL [CLIC]",210-cx,185-cy)
-                pygame.draw.rect(s,(168,142,102),(475-cx,215-cy,135,85))
-                pygame.draw.rect(s,INK,(475-cx,215-cy,135,85),2)
+                pygame.draw.rect(s,LINE,(475-cx,215-cy,135,85),1)
                 self.label("MAPAS [CLIC]",478-cx,180-cy)
                 self.label("TALLER DE ALMARIN",22,18)
         elif self.name == "habitacion_posada":
