@@ -969,15 +969,19 @@ class Game:
                 if self.tools_collected:
                     items.extend((tool, 1) for tool in ("axe","hoe","pickaxe","scythe","watering_can"))
                 visible = [(item,qty) for item,qty in items if qty > 0]
+                # Cuadricula visual fija de 16 huecos; el estado de las misiones
+                # sigue siendo la fuente de verdad hasta migrar los objetos.
+                for i in range(16):
+                    x,y = 155+(i%4)*164,215+(i//4)*74
+                    pygame.draw.rect(s,(255,255,255),(x,y,150,66))
+                    pygame.draw.rect(s,LINE,(x,y,150,66),1)
+                    if i < len(visible):
+                        item,qty = visible[i]
+                        title = {"axe":"Hacha","hoe":"Azada","pickaxe":"Pico","scythe":"Guadana","watering_can":"Regadera"}.get(item,self.chapter["items"].get(item,{}).get("title",item))
+                        self.label(str(title)[:19],x+7,y+10)
+                        self.label("x%d" % qty,x+7,y+37)
                 if not visible:
-                    self.label("No tienes objetos todavia.",160,240)
-                for i,(item,qty) in enumerate(visible):
-                    x,y = 155+(i%4)*164,225+(i//4)*115
-                    pygame.draw.rect(s,(255,255,255),(x,y,150,100))
-                    pygame.draw.rect(s,LINE,(x,y,150,100),1)
-                    self.label({"axe":"Hacha","hoe":"Azada","pickaxe":"Pico","scythe":"Guadana","watering_can":"Regadera"}.get(item,self.chapter["items"].get(item,{}).get("title",item)),x+10,y+15)
-                    self.label("Cantidad: %d" % qty,x+10,y+55)
-                self.label("Los materiales gastados desaparecen del inventario.",150,530)
+                    self.label("No tienes objetos todavia.",160,530)
             else:
                 self.label("MISIONES PRINCIPALES",150,182)
                 self.label("M1  LAS TIERRAS DE ALMARIN",155,220)
