@@ -1,16 +1,13 @@
+"""Fondo neutro provisional: sin hierba, texturas ni color."""
 import pygame
 
 from game.world.world_config import WORLD_WIDTH, WORLD_HEIGHT
-from game.art.terrain_textures import create_grass_texture
 
-
-_grass_texture = None
+BACKGROUND = (248, 248, 248)
+BOUNDARY = (193, 193, 193)
 
 
 def draw_world_background(screen, camera_x, camera_y):
-    global _grass_texture
-
-    if _grass_texture is None:
-        _grass_texture = create_grass_texture(WORLD_WIDTH, WORLD_HEIGHT, seed=10)
-
-    screen.blit(_grass_texture, (-camera_x, -camera_y))
+    screen.fill(BACKGROUND)
+    bounds = pygame.Rect(-camera_x, -camera_y, WORLD_WIDTH, WORLD_HEIGHT)
+    pygame.draw.rect(screen, BOUNDARY, bounds, 1)
