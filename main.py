@@ -15,12 +15,11 @@ def main():
         state = normalize_state(saved_state, game_data)
         start_in_game = True
 
-    # Prueba visual temporal: no sobrescribe ni elimina la partida guardada.
-    # Evita cargar la granja/molino desde un save anterior.
-    state["current_scene"] = "escenario_limpio"
-    state["player"]["x"] = 320
-    state["player"]["y"] = 256
-    start_in_game = True
+    # El escenario de prueba solo se fuerza al iniciar una partida sin guardar.
+    # Una partida guardada en la posada debe reanudarse alli.
+    if saved_state is None:
+        state["current_scene"] = "escenario_limpio"
+        start_in_game = True
 
     app = PygameApp(state, game_data)
 
