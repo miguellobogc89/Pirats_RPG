@@ -114,7 +114,7 @@ class BrumazulScene(FarmScene):
         self.app.stash_open = False
         self.app.state.setdefault("brumazul", {})
         self.progress = self.app.state["brumazul"]
-        self.boss = pygame.Vector2(550, 630)
+        self.boss = pygame.Vector2(490, 560)
         self.boss_awake = False
         self.boss_timer = 0.0
         self.attack_timer = 0.0
@@ -141,7 +141,7 @@ class BrumazulScene(FarmScene):
         item_id = next((i for i in ("wood", "driftwood", "stone") if get_item_data(i)), None)
         if not item_id:
             return
-        for i, (x, y) in enumerate(((315, 575), (485, 725), (560, 560))):
+        for i, (x, y) in enumerate(((265, 510), (420, 620), (540, 420))):
             self.app.state["collectables"].append({
                 "id": "brumazul_" + str(i), "item_id": item_id,
                 "amount": 1, "x": x, "y": y, "radius": 10,
@@ -286,7 +286,7 @@ class BrumazulScene(FarmScene):
             return
         self.attack_timer = 0.42
         p = self.app.state["player"]
-        cx, cy = get_camera_position(p["x"], p["y"], WIDTH, HEIGHT, 800, 800)
+        cx, cy = get_camera_position(p["x"], p["y"], WIDTH, HEIGHT, 704 if self.beach else 800, 704 if self.beach else 800)
         direction = pygame.Vector2(mouse[0] + cx - p["x"], mouse[1] + cy - p["y"])
         target = self.boss - pygame.Vector2(p["x"], p["y"])
         if direction.length_squared() and target.length_squared() and target.length() < 105:
@@ -308,9 +308,13 @@ class BrumazulScene(FarmScene):
         cx, cy = get_camera_position(p["x"], p["y"], WIDTH, HEIGHT, 800, 800)
         if self.beach:
             pygame.draw.rect(s, PAPER, (0, 0, WIDTH, HEIGHT))
-            pygame.draw.rect(s, LINE, pygame.Rect(-cx, -cy, 800, 800), 1)
-            pygame.draw.rect(s, PALE, pygame.Rect(-cx, -cy, 800, 165))
-            pygame.draw.line(s, LINE, (-cx, 165 - cy), (800 - cx, 165 - cy), 1)
+            pygame.draw.rect(s, (239, 239, 239), pygame.Rect(-cx, -cy, 704, 704))
+            pygame.draw.rect(s, LINE, pygame.Rect(-cx, -cy, 704, 704), 1)
+            from game.world.collision_manager import get_scene_collision_rects
+            for collision in get_scene_collision_rects():
+                pygame.draw.rect(s, (194, 194, 194), pygame.Rect(collision.x - cx, collision.y - cy, collision.width, collision.height), 1)
+            pygame.draw.rect(s, PALE, pygame.Rect(-cx, -cy, 704, 165))
+            pygame.draw.line(s, LINE, (-cx, 165 - cy), (704 - cx, 165 - cy), 1)
             # Sin cuadricula: solo limites del mapa y del sendero.
             for x in (350, 450):
                 pygame.draw.line(s, LIGHT, (x - cx, -cy), (x - cx, 360 - cy), 1)
