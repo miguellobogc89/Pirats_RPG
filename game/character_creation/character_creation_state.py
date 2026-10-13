@@ -1,5 +1,5 @@
 GENDER_OPTIONS = ["male", "female", "neutral"]
-INITIAL_SCENE_ID = "brumazul_playa"
+INITIAL_SCENE_ID = "escenario_limpio"
 INITIAL_SPAWN_ID = "inicio"
 FALLBACK_SCENE_ID = "farm"
 
