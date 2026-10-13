@@ -1,0 +1,79 @@
+{
+  "id": "habitacion_posada",
+  "width": 800,
+  "height": 800,
+  "spawn": [
+    400,
+    440
+  ],
+  "background": [
+    255,
+    255,
+    255
+  ],
+  "collisions": [
+    {
+      "x": 200,
+      "y": 200,
+      "width": 400,
+      "height": 1
+    },
+    {
+      "x": 200,
+      "y": 200,
+      "width": 1,
+      "height": 400
+    },
+    {
+      "x": 599,
+      "y": 200,
+      "width": 1,
+      "height": 400
+    },
+    {
+      "x": 200,
+      "y": 599,
+      "width": 230,
+      "height": 1
+    },
+    {
+      "x": 540,
+      "y": 599,
+      "width": 60,
+      "height": 1
+    }
+  ],
+  "npcs": [
+    {
+      "id": "posadera",
+      "position": [
+        250,
+        220
+      ],
+      "dialogue": [
+        "Vaya, has despertado. Pensabamos que no lo contarias."
+      ]
+    },
+    {
+      "id": "anciano",
+      "position": [
+        440,
+        210
+      ],
+      "dialogue": [
+        "Asi que eres el hijo de Almarin Velhart."
+      ]
+    }
+  ],
+  "room": {
+    "x": 200,
+    "y": 200,
+    "width": 400,
+    "height": 400,
+    "door": {
+      "x": 430,
+      "y": 600,
+      "width": 110
+    }
+  }
+}
