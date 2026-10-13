@@ -7,9 +7,9 @@ import pygame
 WIDTH, HEIGHT = 1000, 650
 FPS = 60
 ROOT = Path(__file__).resolve().parent
-SAND = (113, 109, 91)
-SEA = (29, 65, 85)
-INK = (224, 225, 205)
+SAND = (245, 245, 245)
+SEA = (226, 226, 226)
+INK = (20, 20, 20)
 MODES = ["Rapida y alcance", "Lenta y alcance", "Lenta con esbirros"]
 
 
@@ -35,14 +35,6 @@ class BeachTest:
         self.clock = pygame.time.Clock()
         self.font = pygame.font.SysFont("consolas", 19)
         self.small = pygame.font.SysFont("consolas", 15)
-        path = ROOT / "assets" / "player" / "player_idle.png"
-        self.sprite = None
-        if path.exists():
-            try:
-                self.sprite = pygame.image.load(str(path)).convert_alpha()
-                self.sprite = pygame.transform.smoothscale(self.sprite, (40, 48))
-            except pygame.error:
-                pass
         self.reset(0)
 
     def reset(self, mode):
@@ -146,56 +138,53 @@ class BeachTest:
 
     def draw(self):
         s = self.screen
-        s.fill(SAND)
-        pygame.draw.rect(s, SEA, (0, 0, WIDTH, 150))
-        for i in range(11):
-            x = i * 105
-            pygame.draw.arc(s, (73, 106, 117), (x, 124, 125, 54), 0.1, 2.8, 2)
-        pygame.draw.polygon(s, (72, 73, 65), [(WIDTH-150, 150), (WIDTH, 150), (WIDTH, HEIGHT), (WIDTH-115, HEIGHT), (WIDTH-185, 455)])
-        for i in range(32):
-            x = 55 + (i * 163) % 860
-            y = 175 + (i * 97) % 420
-            pygame.draw.circle(s, (137, 130, 108), (x, y), 3)
-        for i in range(9):
-            x = 70 + i * 97
-            pygame.draw.line(s, (60, 86, 69), (x, 590), (x-6, 571), 3)
-            pygame.draw.line(s, (60, 86, 69), (x, 590), (x+7, 575), 3)
-        pygame.draw.circle(s, (32, 37, 43), self.boss, 33)
-        pygame.draw.circle(s, (71, 79, 77), self.boss, 28)
-        for off in (-11, 11):
-            pygame.draw.circle(s, (214, 83, 70), (int(self.boss.x + off), int(self.boss.y - 7)), 5)
+        s.fill((248, 248, 248))
+        # Plano abstracto de pruebas: geometria monocroma, sin texturas ni sprites.
+        pygame.draw.rect(s, (232, 232, 232), (0, 75, WIDTH, 75))
+        pygame.draw.line(s, (65, 65, 65), (0, 150), (WIDTH, 150), 2)
+        pygame.draw.polygon(s, (220, 220, 220),
+                            [(WIDTH-150, 150), (WIDTH, 150), (WIDTH, HEIGHT-75),
+                             (WIDTH-115, HEIGHT-75), (WIDTH-185, 455)])
+        pygame.draw.lines(s, (80, 80, 80), False,
+                          [(WIDTH-150, 150), (WIDTH-185, 455),
+                           (WIDTH-115, HEIGHT-75)], 2)
+        # El protagonista es una capsula vertical.
+        px, py = round(self.player.x), round(self.player.y)
+        pygame.draw.rect(s, (35, 35, 35), (px-12, py-22, 24, 44), border_radius=12)
+        pygame.draw.circle(s, (255, 255, 255), (px, py-8), 3)
+        # La criatura es un circulo grande con contorno, no un personaje.
+        bx, by = round(self.boss.x), round(self.boss.y)
+        pygame.draw.circle(s, (35, 35, 35), (bx, by), 32, 3)
+        pygame.draw.circle(s, (35, 35, 35), (bx, by), 8)
         for m in self.minions:
-            pygame.draw.circle(s, (51, 54, 59), m, 14)
-            pygame.draw.circle(s, (220, 104, 86), m + pygame.Vector2(3, -4), 3)
-        if self.sprite:
-            s.blit(self.sprite, (self.player.x - 20, self.player.y - 39))
-        else:
-            pygame.draw.circle(s, (95, 175, 180), self.player, 17)
+            pygame.draw.circle(s, (95, 95, 95), (round(m.x), round(m.y)), 12, 2)
         if self.attack_timer > 0.24 and self.state == "play":
-            pygame.draw.circle(s, (245, 215, 142), self.player, 55, 3)
+            pygame.draw.circle(s, (110, 110, 110), (px, py), 55, 2)
         if self.hit_flash > 0:
-            overlay = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
-            overlay.fill((180, 35, 32, int(self.hit_flash * 70)))
-            s.blit(overlay, (0, 0))
-        pygame.draw.rect(s, (22, 29, 33), (0, 0, WIDTH, 74))
-        s.blit(self.font.render("BRUMAZUL | ENCUENTRO NOCTURNO", True, INK), (20, 10))
-        s.blit(self.small.render(f"Modo {self.mode+1}: {MODES[self.mode]}   |   1/2/3 cambiar   R reiniciar", True, INK), (20, 40))
-        pygame.draw.rect(s, (57, 51, 51), (WIDTH-250, 19, 212, 22))
-        pygame.draw.rect(s, (186, 68, 63), (WIDTH-246, 23, int(204 * self.hp / 100), 14))
-        s.blit(self.small.render(f"VIDA {self.hp}/100", True, INK), (WIDTH-244, 45))
-        pygame.draw.rect(s, (22, 29, 33), (0, HEIGHT-75, WIDTH, 75))
+            pygame.draw.rect(s, (40, 40, 40), (0, 0, WIDTH, HEIGHT), 5)
+        pygame.draw.rect(s, (245, 245, 245), (0, 0, WIDTH, 75))
+        pygame.draw.line(s, (50, 50, 50), (0, 74), (WIDTH, 74), 1)
+        s.blit(self.font.render("TEST / PERSECUCION", True, INK), (20, 10))
+        s.blit(self.small.render(f"Variante {self.mode+1}: {MODES[self.mode]}   |   1/2/3 cambiar   R reiniciar", True, INK), (20, 40))
+        pygame.draw.rect(s, (255, 255, 255), (WIDTH-250, 19, 212, 22))
+        pygame.draw.rect(s, (40, 40, 40), (WIDTH-250, 19, 212, 22), 1)
+        pygame.draw.rect(s, (50, 50, 50), (WIDTH-247, 22, int(206*self.hp/100), 16))
+        s.blit(self.small.render(f"HP {self.hp}/100", True, INK), (WIDTH-245, 45))
+        pygame.draw.rect(s, (245, 245, 245), (0, HEIGHT-75, WIDTH, 75))
+        pygame.draw.line(s, (50, 50, 50), (0, HEIGHT-75), (WIDTH, HEIGHT-75), 1)
         for i, message in enumerate(self.messages[-2:]):
             s.blit(self.small.render(message, True, INK), (20, HEIGHT-67+i*22))
-        s.blit(self.small.render("WASD/flechas mover | Clic izquierdo golpear | ESC salir", True, (170, 186, 183)), (WIDTH-480, HEIGHT-25))
+        s.blit(self.small.render("WASD / flechas: mover | Clic: golpe | ESC: salir", True, INK), (WIDTH-485, HEIGHT-25))
         if self.state in ("intro", "dead"):
-            shade = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
-            shade.fill((8, 12, 20, 150))
-            s.blit(shade, (0, 0))
-            lines = (["Oyes pasos pesados en la arena...", "No estas solo."] if self.state == "intro" else
-                     ["HAS CAIDO", "La criatura te da por muerto.", "Pulsa R para repetir o 1/2/3 para probar otra variante."])
+            overlay = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
+            overlay.fill((255, 255, 255, 218))
+            s.blit(overlay, (0, 0))
+            lines = (["SE DETECTA UNA PRESENCIA", "La persecucion comienza..."] if self.state == "intro" else
+                     ["FIN DE LA PRUEBA", "El jugador ha sido derrotado.",
+                      "R: repetir  |  1/2/3: cambiar variante"])
             for i, line in enumerate(lines):
-                img = self.font.render(line, True, (248, 235, 212))
-                s.blit(img, img.get_rect(center=(WIDTH//2, HEIGHT//2 + i*34)))
+                img = self.font.render(line, True, (25, 25, 25))
+                s.blit(img, img.get_rect(center=(WIDTH//2, HEIGHT//2+i*34)))
         pygame.display.flip()
 
     def run(self):
