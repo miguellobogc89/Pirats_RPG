@@ -114,7 +114,7 @@ class BrumazulScene(FarmScene):
         self.app.stash_open = False
         self.app.state.setdefault("brumazul", {})
         self.progress = self.app.state["brumazul"]
-        self.boss = pygame.Vector2(600, 640)
+        self.boss = pygame.Vector2(550, 630)
         self.boss_awake = False
         self.boss_timer = 0.0
         self.attack_timer = 0.0
@@ -308,18 +308,20 @@ class BrumazulScene(FarmScene):
         cx, cy = get_camera_position(p["x"], p["y"], WIDTH, HEIGHT, 800, 800)
         if self.beach:
             pygame.draw.rect(s, PAPER, (0, 0, WIDTH, HEIGHT))
+            pygame.draw.rect(s, LINE, pygame.Rect(-cx, -cy, 800, 800), 1)
             pygame.draw.rect(s, PALE, pygame.Rect(-cx, -cy, 800, 165))
             pygame.draw.line(s, LINE, (-cx, 165 - cy), (800 - cx, 165 - cy), 1)
-            # Camino a Brumazul, delimitado sin cuadricula.
+            # Sin cuadricula: solo limites del mapa y del sendero.
             for x in (350, 450):
                 pygame.draw.line(s, LIGHT, (x - cx, -cy), (x - cx, 360 - cy), 1)
             for obj in self.app.state.get("collectables", []):
                 if obj.get("id", "").startswith("brumazul_"):
                     pygame.draw.circle(s, LINE, (int(obj["x"] - cx), int(obj["y"] - cy)), 7, 1)
             bx, by = int(self.boss.x - cx), int(self.boss.y - cy)
-            pygame.draw.circle(s, LINE, (bx, by), 39, 2)
-            pygame.draw.circle(s, INK, (bx - 12, by - 8), 4, 1)
-            pygame.draw.circle(s, INK, (bx + 12, by - 8), 4, 1)
+            pygame.draw.circle(s, INK, (bx, by), 40, 2)
+            pygame.draw.circle(s, INK, (bx - 13, by - 9), 6, 2)
+            pygame.draw.circle(s, INK, (bx + 13, by - 9), 6, 2)
+            pygame.draw.arc(s, LINE, (bx - 28, by - 14, 56, 48), 0.25, 2.85, 2)
             self.label("PLAYA DE BRUMAZUL  /  NOCHE", 22, 18)
         elif self.tavern:
             self.draw_tavern(cx, cy)
