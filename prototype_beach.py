@@ -5,13 +5,13 @@ from pathlib import Path
 import pygame
 
 CELL = 40
-COLS, ROWS = 20, 10
+COLS, ROWS = 20, 20
 WIDTH, HEIGHT = CELL * COLS, CELL * ROWS
 FPS = 60
-CORRIDOR_LEFT = WIDTH // 2 - CELL * 2
-CORRIDOR_RIGHT = WIDTH // 2 + CELL * 2
-CORRIDOR_TOP = -CELL * 5
-CORRIDOR_BOTTOM = CELL * 3
+CORRIDOR_LEFT = WIDTH // 2 - CELL * 1.5
+CORRIDOR_RIGHT = WIDTH // 2 + CELL * 1.5
+CORRIDOR_TOP = 0
+CORRIDOR_BOTTOM = CELL * 10
 ROOT = Path(__file__).resolve().parent
 SAND = (245, 245, 245)
 SEA = (226, 226, 226)
@@ -45,8 +45,8 @@ class BeachTest:
 
     def reset(self, mode):
         self.mode = mode
-        self.player = pygame.Vector2(CELL * 2.5, CELL * 5.5)
-        self.boss = pygame.Vector2(CELL * 17, CELL * 5)
+        self.player = pygame.Vector2(CELL * 10, CELL * 17)
+        self.boss = pygame.Vector2(CELL * 15, CELL * 16)
         self.hp = 100
         self.boss_hp = 999
         self.attack_timer = 0
@@ -65,6 +65,7 @@ class BeachTest:
         self.boss_awake = False
         self.in_corridor = False
         self.gate_reached = False
+        self.boss_in_corridor = False
         self.messages = ["Algo se mueve entre las sombras..."]
         self.random = random.Random(17)
 
@@ -128,29 +129,42 @@ class BeachTest:
         self.knockback *= max(0, 1 - 5 * dt)
         self.player.x = clamp(self.player.x, CELL / 2, WIDTH - CELL / 2)
         self.player.y = clamp(self.player.y, CELL / 2, HEIGHT - CELL / 2)
-        # Entrada central: el pasillo continua por encima de la playa.
-        if self.player.y < CORRIDOR_BOTTOM:
+        # Pasillo estrecho: los laterales son paredes reales.
+        if self.player.y < CORRIDOR_BOTTOM + CELL / 2:
             self.player.x = clamp(self.player.x, CORRIDOR_LEFT + CELL / 2,
                                   CORRIDOR_RIGHT - CELL / 2)
             self.in_corridor = True
-            if self.player.y <= CELL / 2:
+            if self.player.y <= CELL / 2 and not self.gate_reached:
                 self.gate_reached = True
                 self.say("La puerta esta cerrada. No hay salida.")
         else:
             self.in_corridor = False
         boss_speed = (42, 27, 27)[self.mode]
         boss_range = (77, 92, 68)[self.mode]
+        # En el pasillo actua como portero: iguala la X del jugador
+        # mientras avanza lentamente hacia la puerta para cerrarle el paso.
+        if self.in_corridor or self.boss.y < CORRIDOR_BOTTOM:
+            self.boss_in_corridor = True
         if self.boss_charge > 0:
-            # La criatura se detiene para cargar el ataque durante 0.5 s.
             self.boss_charge = max(0, self.boss_charge - dt)
             if self.boss_charge == 0:
                 self.boss_timer = 1.6
                 self.boss_attack_flash = 0.24
-                # Se comprueba el alcance al finalizar la carga: se puede esquivar.
                 if distance(self.boss, self.player) < boss_range:
                     self.damage(20, self.boss)
         else:
-            move_towards(self.boss, self.player, boss_speed, dt)
+            if self.boss_in_corridor:
+                target_x = clamp(self.player.x, CORRIDOR_LEFT + CELL,
+                                 CORRIDOR_RIGHT - CELL)
+                shift = target_x - self.boss.x
+                self.boss.x += clamp(shift, -boss_speed * 1.6 * dt,
+                                     boss_speed * 1.6 * dt)
+                if self.boss.y > self.player.y:
+                    self.boss.y -= min(self.boss.y - self.player.y, boss_speed * dt)
+                elif self.boss.y < self.player.y:
+                    self.boss.y += min(self.player.y - self.boss.y, boss_speed * dt)
+            else:
+                move_towards(self.boss, self.player, boss_speed, dt)
             if distance(self.boss, self.player) < boss_range and self.boss_timer <= 0:
                 self.boss_charge = 0.5
         if self.mode == 2:
@@ -198,14 +212,14 @@ class BeachTest:
             pygame.draw.line(s, (229, 229, 229), (0, y), (WIDTH, y), 1)
         # Pasillo vertical de cuatro celdas, con muros y puerta cerrada.
         pygame.draw.rect(s, (238, 238, 238),
-                         (CORRIDOR_LEFT, 0, CORRIDOR_RIGHT - CORRIDOR_LEFT, CORRIDOR_BOTTOM))
+                         (round(CORRIDOR_LEFT), 0, round(CORRIDOR_RIGHT - CORRIDOR_LEFT), CORRIDOR_BOTTOM))
         pygame.draw.line(s, (125, 125, 125), (CORRIDOR_LEFT, 0),
                          (CORRIDOR_LEFT, CORRIDOR_BOTTOM), 2)
         pygame.draw.line(s, (125, 125, 125), (CORRIDOR_RIGHT, 0),
                          (CORRIDOR_RIGHT, CORRIDOR_BOTTOM), 2)
         pygame.draw.line(s, (95, 95, 95), (CORRIDOR_LEFT, 4),
                          (CORRIDOR_RIGHT, 4), 3)
-        # Jugador: capsula de 1 x 1 celda.
+        # Jugador: circulo de 1 x 1 celda.
         px, py = round(self.player.x), round(self.player.y)
         if self.stun_timer <= 0 or int(self.stun_timer * 10) % 2 == 0:
             pygame.draw.circle(s, (155, 155, 155), (px, py), CELL//2, 1)
