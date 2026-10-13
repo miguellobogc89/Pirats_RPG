@@ -1,0 +1,29 @@
+{
+  "id": "brumazul_posada",
+  "name": "Posada de Brumazul",
+  "width": 50,
+  "height": 50,
+  "tile_size": 16,
+  "player_spawn": {
+    "x": 400,
+    "y": 440
+  },
+  "objects": [],
+  "collisions": [],
+  "spawns": [
+    {
+      "id": "despertar",
+      "cells": [
+        [
+          25,
+          27
+        ]
+      ],
+      "spawn_cell": [
+        25,
+        27
+      ]
+    }
+  ],
+  "exits": []
+}
