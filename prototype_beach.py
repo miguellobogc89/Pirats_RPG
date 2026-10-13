@@ -7,6 +7,7 @@ import pygame
 CELL = 40
 COLS, ROWS = 20, 20
 WIDTH, HEIGHT = CELL * COLS, CELL * ROWS
+VIEW_WIDTH, VIEW_HEIGHT = 720, 520
 FPS = 60
 CORRIDOR_LEFT = WIDTH // 2 - CELL * 1.5
 CORRIDOR_RIGHT = WIDTH // 2 + CELL * 1.5
@@ -36,7 +37,8 @@ def move_towards(a, b, speed, dt):
 class BeachTest:
     def __init__(self):
         pygame.init()
-        self.screen = pygame.display.set_mode((WIDTH, HEIGHT))
+        self.screen = pygame.display.set_mode((VIEW_WIDTH, VIEW_HEIGHT))
+        self.world_surface = pygame.Surface((WIDTH, HEIGHT))
         pygame.display.set_caption("Pirats RPG | Prueba de persecucion nocturna")
         self.clock = pygame.time.Clock()
         self.font = pygame.font.SysFont("consolas", 19)
@@ -77,7 +79,7 @@ class BeachTest:
         if self.state != "play" or self.attack_timer > 0 or self.stun_timer > 0:
             return
         self.attack_timer = 0.42
-        target = pygame.Vector2(mouse)
+        target = pygame.Vector2(mouse) - self.camera_offset()
         delta = target - self.player
         if delta.length_squared() == 0:
             return
@@ -193,17 +195,22 @@ class BeachTest:
             self.reset(self.mode)
             self.say("Derrota: reaparicion inmediata en el inicio.")
 
+    def camera_offset(self):
+        # Camara centrada en el jugador, independiente de los limites del mapa.
+        return pygame.Vector2(VIEW_WIDTH / 2 - self.player.x,
+                              VIEW_HEIGHT / 2 - self.player.y)
+
     def draw_health_bar(self, center_x, top_y, current, maximum, width):
         # Contorno gris y relleno tenue, sin colores intensos.
         x = round(center_x - width / 2)
         y = round(top_y)
-        pygame.draw.rect(self.screen, (185, 185, 185), (x, y, width, 6), 1)
+        pygame.draw.rect(self.world_surface, (185, 185, 185), (x, y, width, 6), 1)
         fill = max(0, round((width - 2) * current / maximum))
         if fill:
-            pygame.draw.rect(self.screen, (218, 218, 218), (x + 1, y + 1, fill, 4))
+            pygame.draw.rect(self.world_surface, (218, 218, 218), (x + 1, y + 1, fill, 4))
 
     def draw(self):
-        s = self.screen
+        s = self.world_surface
         s.fill((250, 250, 250))
         # Playa rectangular: 20 x 10 celdas. Solo lineas monocromas.
         for x in range(0, WIDTH + 1, CELL):
@@ -246,12 +253,17 @@ class BeachTest:
             pygame.draw.circle(s, (155, 155, 155), (px, py), 55, 1)
         if self.hit_flash > 0:
             pygame.draw.rect(s, (30, 30, 30), (0, 0, WIDTH, HEIGHT), 5)
-        pygame.draw.rect(s, (255, 255, 255), (4, 4, WIDTH-8, 45))
-        s.blit(self.small.render(
-            f"TEST 20x10 | Jugador 1x1 | Enemigo 2x2 | Variante {self.mode+1}: {MODES[self.mode]}",
+        # La escena se desplaza bajo una camara fija sobre el jugador.
+        self.screen.fill((225, 225, 225))
+        offset = self.camera_offset()
+        self.screen.blit(s, (round(offset.x), round(offset.y)))
+        hud = self.screen
+        pygame.draw.rect(hud, (255, 255, 255), (4, 4, VIEW_WIDTH-8, 45))
+        hud.blit(self.small.render(
+            f"TEST 20x20 | Jugador 1x1 | Enemigo 2x2 | Variante {self.mode+1}: {MODES[self.mode]}",
             True, INK), (12, 8))
-        s.blit(self.small.render(
-            f"HP {self.hp}/100 | {'ATURDIDO' if self.stun_timer > 0 else 'LIBRE'} | WASD mover | Clic golpear | 1/2/3 variantes | R reiniciar",
+        hud.blit(self.small.render(
+            f"HP {self.hp}/100 | {'ATURDIDO' if self.stun_timer > 0 else 'LIBRE'} | WASD | Clic atacar | 1/2/3 | R | Esc salir",
             True, INK), (12, 28))
         pygame.display.flip()
 
