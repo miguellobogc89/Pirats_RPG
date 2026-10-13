@@ -1,5 +1,6 @@
 """Prototipo aislado: encuentro nocturno en la playa. Ejecutar: python prototype_beach.py"""
 import math
+import argparse
 import random
 from pathlib import Path
 import pygame
@@ -78,9 +79,50 @@ class BeachTest:
         self.state = "inn"
         self.hp = 100
         self.player = pygame.Vector2(WIDTH / 2, HEIGHT / 2 + CELL)
-        self.elder = pygame.Vector2(WIDTH / 2 + CELL * 2, HEIGHT / 2)
+        self.innkeeper = pygame.Vector2(WIDTH / 2 + CELL * 2, HEIGHT / 2)
+        self.elder = pygame.Vector2(CELL * 12, CELL * 15)
+        self.inn_phase = "dialogue"
+        self.dialogue_index = 0
+        self.choice_index = 0
+        self.choices = ["Era enorme y avanzaba lentamente.", "Vi sus ojos brillando en la oscuridad.", "Parecia conocer el camino al pueblo."]
+        self.dialogue = [
+            ("POSADERA", "Vaya, has despertado. Pensabamos que no lo contarias."),
+            ("POSADERA", "Te encontraron al amanecer junto al camino. Apenas respirabas."),
+            ("POSADERA", "No quiero asustarte, pero... ¿que ocurrio anoche?"),
+            ("TU", "Algo me siguio desde la playa. Era una criatura enorme."),
+            ("POSADERA", "En Brumazul hay alimañas, pero nunca habia oido algo asi."),
+            ("POSADERA", "Espera. Hay un hombre que lleva horas preguntando por ti."),
+            ("ENTRADA", ""),
+            ("ANCIANO", "Asi que has sobrevivido. Eso ya es mas de lo que esperaba."),
+            ("ANCIANO", "Dicen que viste una criatura cerca del camino de la playa."),
+            ("ANCIANO", "Dime una cosa. ¿Que recuerdas de ella?"),
+            ("ELECCION", ""),
+            ("ANCIANO", "Ya veo... (El anciano baja la mirada.)"),
+            ("POSADERA", "¿La conoceis? Habeis palidecido."),
+            ("ANCIANO", "No he dicho tal cosa. Mejor no alarmar a los vecinos."),
+            ("ANCIANO", "Escuchame bien: no vuelvas a la playa despues del anochecer."),
+            ("ANCIANO", "Conoci a tu padre. Almarin Velhart. Hace muchos años."),
+            ("ANCIANO", "Te dejo algo aqui: una finca a las afueras de Brumazul."),
+            ("ANCIANO", "Cuando puedas caminar, ven a buscarme a la entrada. Tenemos que hablar."),
+            ("POSADERA", "Y antes comeras. No pienso recoger otro desmayado del suelo."),
+        ]
         self.fade_timer = 1.4
         self.messages = ["Amanece en la posada de Brumazul.", "Un anciano espera junto a tu cama."]
+
+    def advance_dialogue(self):
+        if self.state != "inn" or self.inn_phase != "dialogue":
+            return
+        if self.dialogue[self.dialogue_index][0] == "ELECCION":
+            self.dialogue[11] = ("ANCIANO", [
+                "Tan grande... (Aprieta los labios, inquieto.)",
+                "Esos ojos... (Por un momento parece reconocerlos.)",
+                "Ese camino... (El anciano guarda un silencio demasiado largo.)",
+            ][self.choice_index])
+        self.dialogue_index += 1
+        if self.dialogue_index >= len(self.dialogue):
+            self.inn_phase = "free"
+        elif self.dialogue[self.dialogue_index][0] == "ENTRADA":
+            self.inn_phase = "entrance"
 
     def say(self, message):
         self.messages.append(message)
@@ -130,15 +172,20 @@ class BeachTest:
             return
         if self.state == "inn":
             self.fade_timer = max(0, self.fade_timer - dt)
-            keys = pygame.key.get_pressed()
-            movement = pygame.Vector2(
-                int(keys[pygame.K_d] or keys[pygame.K_RIGHT]) - int(keys[pygame.K_a] or keys[pygame.K_LEFT]),
-                int(keys[pygame.K_s] or keys[pygame.K_DOWN]) - int(keys[pygame.K_w] or keys[pygame.K_UP]),
-            )
-            if movement.length_squared():
-                self.player += movement.normalize() * 220 * dt
-            self.player.x = clamp(self.player.x, CELL * 5.5, CELL * 14.5)
-            self.player.y = clamp(self.player.y, CELL * 5.5, CELL * 14.5)
+            if self.inn_phase == "entrance":
+                target = pygame.Vector2(CELL * 11.5, CELL * 11)
+                move_towards(self.elder, target, 100, dt)
+                if distance(self.elder, target) < 1:
+                    self.inn_phase = "dialogue"
+                    self.dialogue_index += 1
+            elif self.inn_phase == "free":
+                keys = pygame.key.get_pressed()
+                movement = pygame.Vector2(int(keys[pygame.K_d] or keys[pygame.K_RIGHT]) - int(keys[pygame.K_a] or keys[pygame.K_LEFT]),
+                                          int(keys[pygame.K_s] or keys[pygame.K_DOWN]) - int(keys[pygame.K_w] or keys[pygame.K_UP]))
+                if movement.length_squared():
+                    self.player += movement.normalize() * 220 * dt
+                self.player.x = clamp(self.player.x, CELL * 5.5, CELL * 14.5)
+                self.player.y = clamp(self.player.y, CELL * 5.5, CELL * 14.5)
             return
         if self.state != "play":
             return
@@ -255,18 +302,47 @@ class BeachTest:
         pygame.draw.rect(s, (165, 165, 165), (CELL * 12, CELL * 7, CELL * 2, CELL * 2), 1)
         pygame.draw.line(s, (250, 250, 250), (CELL * 11, room.bottom), (CELL * 13, room.bottom), 5)
         pygame.draw.arc(s, (145, 145, 145), (CELL * 11, room.bottom - CELL * 2, CELL * 2, CELL * 2), math.pi, math.pi * 1.5, 1)
-        pygame.draw.circle(s, (110, 110, 110), (round(self.elder.x), round(self.elder.y)), CELL // 2, 2)
-        label = self.small.render("ANCIANO", True, INK)
-        s.blit(label, (round(self.elder.x) - label.get_width() // 2, round(self.elder.y) - 40))
+        pygame.draw.circle(s, (110, 110, 110), (round(self.innkeeper.x), round(self.innkeeper.y)), CELL // 2, 2)
+        s.blit(self.small.render("POSADERA", True, INK), (round(self.innkeeper.x) - 34, round(self.innkeeper.y) - 40))
+        if self.dialogue_index >= 7 or self.inn_phase == "entrance":
+            pygame.draw.circle(s, (75, 75, 75), (round(self.elder.x), round(self.elder.y)), CELL // 2, 2)
+            s.blit(self.small.render("ANCIANO", True, INK), (round(self.elder.x) - 30, round(self.elder.y) - 40))
         pygame.draw.circle(s, (155, 155, 155), (round(self.player.x), round(self.player.y)), CELL // 2, 1)
         self.screen.fill((225, 225, 225))
         offset = self.camera_offset()
         self.screen.blit(s, (round(offset.x), round(offset.y)))
-        pygame.draw.rect(self.screen, (255, 255, 255), (4, 4, VIEW_WIDTH - 8, 67))
-        self.screen.blit(self.small.render("CAPITULO 1 | BRUMAZUL - POSADA | AMANECER", True, INK), (12, 9))
-        self.screen.blit(self.small.render("Despiertas en una cama. Un anciano te observa. WASD mover | Esc salir", True, INK), (12, 30))
-        if distance(self.player, self.elder) < CELL * 2:
-            self.screen.blit(self.small.render("El anciano: Por fin despiertas... [Dialogo pendiente]", True, INK), (12, 50))
+        self.screen.blit(self.small.render("BRUMAZUL | POSADA | AMANECER", True, INK), (12, 10))
+        if self.inn_phase == "dialogue":
+            speaker, line = self.dialogue[self.dialogue_index]
+            panel = pygame.Rect(18, VIEW_HEIGHT - 180, VIEW_WIDTH - 36, 160)
+            pygame.draw.rect(self.screen, (252, 252, 252), panel)
+            pygame.draw.rect(self.screen, (100, 100, 100), panel, 2)
+            self.screen.blit(self.font.render("¿Que recuerdas?" if speaker == "ELECCION" else speaker, True, INK), (36, panel.y + 12))
+            if speaker == "ELECCION":
+                for i, option in enumerate(self.choices):
+                    prefix = "> " if i == self.choice_index else "  "
+                    self.screen.blit(self.small.render(prefix + option, True, INK), (36, panel.y + 43 + i * 27))
+                hint = "ARRIBA/ABAJO elegir | ENTER confirmar"
+            else:
+                words, lines, current = line.split(), [], ""
+                for word in words:
+                    candidate = (current + " " + word).strip()
+                    if self.small.size(candidate)[0] > panel.width - 40:
+                        lines.append(current)
+                        current = word
+                    else:
+                        current = candidate
+                if current:
+                    lines.append(current)
+                for i, part in enumerate(lines):
+                    self.screen.blit(self.small.render(part, True, INK), (36, panel.y + 46 + i * 22))
+                hint = "ENTER / ESPACIO / CLIC - Siguiente >"
+            self.screen.blit(self.small.render(hint, True, INK), (36, panel.bottom - 22))
+        elif self.inn_phase == "entrance":
+            self.screen.blit(self.small.render("La puerta se abre. Un anciano entra en la habitacion...", True, INK), (18, VIEW_HEIGHT - 35))
+        else:
+            self.screen.blit(self.small.render("MISION: LAS TIERRAS DE ALMARIN | Busca al anciano en la finca", True, INK), (12, 34))
+            self.screen.blit(self.small.render("WASD mover | Esc salir | R reiniciar escena", True, INK), (12, 54))
         if self.fade_timer > 0:
             overlay = pygame.Surface((VIEW_WIDTH, VIEW_HEIGHT))
             overlay.fill((0, 0, 0))
@@ -343,16 +419,34 @@ class BeachTest:
                 if event.type == pygame.QUIT or (event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE):
                     running = False
                 elif event.type == pygame.KEYDOWN:
+                    if self.state == "inn" and self.inn_phase == "dialogue":
+                        if self.dialogue[self.dialogue_index][0] == "ELECCION" and event.key in (pygame.K_UP, pygame.K_DOWN, pygame.K_w, pygame.K_s):
+                            self.choice_index = (self.choice_index + (1 if event.key in (pygame.K_DOWN, pygame.K_s) else -1)) % len(self.choices)
+                        elif event.key in (pygame.K_RETURN, pygame.K_SPACE):
+                            self.advance_dialogue()
                     if event.key == pygame.K_r:
-                        self.reset(self.mode)
+                        if self.state == "inn":
+                            self.enter_inn()
+                        else:
+                            self.reset(self.mode)
                     elif event.key in (pygame.K_1, pygame.K_2, pygame.K_3):
                         self.reset(event.key - pygame.K_1)
                 elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                    self.attack(event.pos)
+                    if self.state == "inn":
+                        if self.inn_phase == "dialogue":
+                            self.advance_dialogue()
+                    else:
+                        self.attack(event.pos)
             self.update(dt)
             self.draw()
         pygame.quit()
 
 
 if __name__ == "__main__":
-    BeachTest().run()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--scene", choices=["beach", "inn"], default="beach")
+    args = parser.parse_args()
+    game = BeachTest()
+    if args.scene == "inn":
+        game.enter_inn()
+    game.run()
