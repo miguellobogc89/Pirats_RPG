@@ -110,7 +110,7 @@ class BeachTest:
         self.knockback *= max(0, 1 - 9 * dt)
         self.player.x = clamp(self.player.x, CELL / 2, WIDTH - CELL / 2)
         self.player.y = clamp(self.player.y, CELL / 2, HEIGHT - CELL / 2)
-        boss_speed = (165, 105, 105)[self.mode]
+        boss_speed = (115, 75, 75)[self.mode]
         boss_range = (77, 92, 68)[self.mode]
         move_towards(self.boss, self.player, boss_speed, dt)
         if distance(self.boss, self.player) < boss_range and self.boss_timer <= 0:
@@ -141,6 +141,15 @@ class BeachTest:
             self.reset(self.mode)
             self.say("Derrota: reaparicion inmediata en el inicio.")
 
+    def draw_health_bar(self, center_x, top_y, current, maximum, width):
+        # Contorno gris y relleno tenue, sin colores intensos.
+        x = round(center_x - width / 2)
+        y = round(top_y)
+        pygame.draw.rect(self.screen, (185, 185, 185), (x, y, width, 6), 1)
+        fill = max(0, round((width - 2) * current / maximum))
+        if fill:
+            pygame.draw.rect(self.screen, (218, 218, 218), (x + 1, y + 1, fill, 4))
+
     def draw(self):
         s = self.screen
         s.fill((250, 250, 250))
@@ -152,12 +161,14 @@ class BeachTest:
         # Jugador: capsula de 1 x 1 celda.
         px, py = round(self.player.x), round(self.player.y)
         pygame.draw.circle(s, (155, 155, 155), (px, py), CELL//2, 1)
+        self.draw_health_bar(px, py - CELL//2 - 13, self.hp, 100, CELL)
         # Enemigo: cuadrado de 2 x 2 celdas.
         bx, by = round(self.boss.x), round(self.boss.y)
         pygame.draw.rect(s, (255, 255, 255),
                          (bx-CELL, by-CELL, CELL*2, CELL*2))
         pygame.draw.rect(s, (155, 155, 155),
                          (bx-CELL, by-CELL, CELL*2, CELL*2), 1)
+        self.draw_health_bar(bx, by - CELL - 13, self.boss_hp, 999, CELL * 2)
         if self.boss_attack_flash > 0:
             pygame.draw.circle(s, (145, 145, 145), (bx, by),
                                round((77, 92, 68)[self.mode]), 1)
