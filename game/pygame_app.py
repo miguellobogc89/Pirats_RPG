@@ -464,16 +464,7 @@ class PygameApp:
         draw_tilled_cells(self.screen, self.state, camera_x, camera_y)
         draw_watered_cells(self.screen, self.state, camera_x, camera_y)
         draw_crops(self.screen, self.state, camera_x, camera_y)
-        draw_world_grid(
-            self.screen,
-            camera_x,
-            camera_y,
-            self.get_scene_world_width(),
-            self.get_scene_world_height(),
-        )
         draw_placed_objects(self.screen,self.state,camera_x,camera_y)
-        draw_occupied_cells_debug(self.screen,self.state,camera_x,camera_y)
-        draw_collision_debug(self.screen, camera_x, camera_y)
 
         self.draw_map()
 
@@ -503,13 +494,6 @@ class PygameApp:
             player["y"],
             WIDTH,
             HEIGHT,
-            self.get_scene_world_width(),
-            self.get_scene_world_height(),
-        )
-        draw_world_grid(
-            self.screen,
-            camera_x,
-            camera_y,
             self.get_scene_world_width(),
             self.get_scene_world_height(),
         )
@@ -589,24 +573,6 @@ class PygameApp:
 
         pygame.draw.circle(self.screen, DARK, (px, py), 13)
         pygame.draw.circle(self.screen, WHITE, (px, py - 18), 9)
-
-        foot_x = player["x"]
-        foot_y = player["y"] + 6
-
-        foot_grid_x, foot_grid_y = world_to_grid(foot_x, foot_y)
-        foot_world_x, foot_world_y = grid_to_world(foot_grid_x, foot_grid_y)
-
-        foot_screen_x = int(foot_world_x - camera_x)
-        foot_screen_y = int(foot_world_y - camera_y)
-
-        foot_rect = pygame.Rect(
-            foot_screen_x,
-            foot_screen_y,
-            TILE_SIZE,
-            TILE_SIZE,
-        )
-
-        pygame.draw.rect(self.screen, (220, 80, 80), foot_rect, 2)
 
         direction = player.get("direction", "down")
 
