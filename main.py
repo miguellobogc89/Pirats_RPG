@@ -1,3 +1,4 @@
+# Test de escritura desde ChatGPT
 from core.data_loader import load_game_data
 from core.game_state import create_initial_state, normalize_state
 from core.save_manager import load_latest_saved_state
