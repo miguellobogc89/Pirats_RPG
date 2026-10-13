@@ -8,6 +8,10 @@ CELL = 40
 COLS, ROWS = 20, 10
 WIDTH, HEIGHT = CELL * COLS, CELL * ROWS
 FPS = 60
+CORRIDOR_LEFT = WIDTH // 2 - CELL * 2
+CORRIDOR_RIGHT = WIDTH // 2 + CELL * 2
+CORRIDOR_TOP = -CELL * 5
+CORRIDOR_BOTTOM = CELL * 3
 ROOT = Path(__file__).resolve().parent
 SAND = (245, 245, 245)
 SEA = (226, 226, 226)
@@ -59,6 +63,8 @@ class BeachTest:
         self.state = "play"
         self.intro_timer = 0
         self.boss_awake = False
+        self.in_corridor = False
+        self.gate_reached = False
         self.messages = ["Algo se mueve entre las sombras..."]
         self.random = random.Random(17)
 
@@ -122,6 +128,16 @@ class BeachTest:
         self.knockback *= max(0, 1 - 5 * dt)
         self.player.x = clamp(self.player.x, CELL / 2, WIDTH - CELL / 2)
         self.player.y = clamp(self.player.y, CELL / 2, HEIGHT - CELL / 2)
+        # Entrada central: el pasillo continua por encima de la playa.
+        if self.player.y < CORRIDOR_BOTTOM:
+            self.player.x = clamp(self.player.x, CORRIDOR_LEFT + CELL / 2,
+                                  CORRIDOR_RIGHT - CELL / 2)
+            self.in_corridor = True
+            if self.player.y <= CELL / 2:
+                self.gate_reached = True
+                self.say("La puerta esta cerrada. No hay salida.")
+        else:
+            self.in_corridor = False
         boss_speed = (42, 27, 27)[self.mode]
         boss_range = (77, 92, 68)[self.mode]
         if self.boss_charge > 0:
@@ -180,6 +196,15 @@ class BeachTest:
             pygame.draw.line(s, (229, 229, 229), (x, 0), (x, HEIGHT), 1)
         for y in range(0, HEIGHT + 1, CELL):
             pygame.draw.line(s, (229, 229, 229), (0, y), (WIDTH, y), 1)
+        # Pasillo vertical de cuatro celdas, con muros y puerta cerrada.
+        pygame.draw.rect(s, (238, 238, 238),
+                         (CORRIDOR_LEFT, 0, CORRIDOR_RIGHT - CORRIDOR_LEFT, CORRIDOR_BOTTOM))
+        pygame.draw.line(s, (125, 125, 125), (CORRIDOR_LEFT, 0),
+                         (CORRIDOR_LEFT, CORRIDOR_BOTTOM), 2)
+        pygame.draw.line(s, (125, 125, 125), (CORRIDOR_RIGHT, 0),
+                         (CORRIDOR_RIGHT, CORRIDOR_BOTTOM), 2)
+        pygame.draw.line(s, (95, 95, 95), (CORRIDOR_LEFT, 4),
+                         (CORRIDOR_RIGHT, 4), 3)
         # Jugador: capsula de 1 x 1 celda.
         px, py = round(self.player.x), round(self.player.y)
         if self.stun_timer <= 0 or int(self.stun_timer * 10) % 2 == 0:
