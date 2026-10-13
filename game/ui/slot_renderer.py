@@ -14,8 +14,8 @@ from game.ui.ui_components import (
 from game.ui.ui_theme import BORDER_RADIUS_SMALL
 
 
-SLOT_HOVER_BORDER = (218, 173, 77)
-SLOT_SELECTED_BORDER = (255, 220, 100)
+SLOT_HOVER_BORDER = (175, 175, 175)
+SLOT_SELECTED_BORDER = (155, 155, 155)
 
 
 def draw_slot(
@@ -104,11 +104,11 @@ def draw_slot_background(
     base_fill_color = fill_color or PARCHMENT_LIGHT
     selected_color = selected_fill_color or base_fill_color
     current_border_color = border_color or WOOD_DARK
-    border_width = 2
+    border_width = 1
 
     if selected:
         base_fill_color = selected_color
-        border_width = 4
+        border_width = 1
 
     if disabled:
         base_fill_color = PARCHMENT_DISABLED
@@ -116,11 +116,11 @@ def draw_slot_background(
 
     if hovered:
         current_border_color = SLOT_HOVER_BORDER
-        border_width = 3
+        border_width = 1
 
     if selected:
         current_border_color = border_color or SLOT_SELECTED_BORDER
-        border_width = 4
+        border_width = 1
 
     pygame.draw.rect(
         screen,
