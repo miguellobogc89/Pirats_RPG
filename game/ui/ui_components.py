@@ -6,19 +6,19 @@ from game.ui.ui_theme import (
 )
 
 
-WOOD_DARK = (76, 49, 31)
-WOOD_MID = (126, 82, 45)
-WOOD_LIGHT = (163, 112, 61)
+WOOD_DARK = (165, 165, 165)
+WOOD_MID = (200, 200, 200)
+WOOD_LIGHT = (225, 225, 225)
 
-PARCHMENT = (232, 205, 151)
-PARCHMENT_LIGHT = (252, 232, 176)
-PARCHMENT_DISABLED = (145, 125, 95)
+PARCHMENT = (250, 250, 250)
+PARCHMENT_LIGHT = (253, 253, 253)
+PARCHMENT_DISABLED = (243, 243, 243)
 
-TEXT_DARK = (48, 38, 28)
-TEXT_LIGHT = (252, 232, 176)
-TEXT_DISABLED = (95, 82, 62)
+TEXT_DARK = (110, 110, 110)
+TEXT_LIGHT = (110, 110, 110)
+TEXT_DISABLED = (175, 175, 175)
 
-BAR_BACKGROUND = (70, 48, 34)
+BAR_BACKGROUND = (242, 242, 242)
 
 
 def draw_text(screen, font, text, x, y, color):
@@ -27,34 +27,8 @@ def draw_text(screen, font, text, x, y, color):
 
 
 def draw_panel(screen, rect):
-    pygame.draw.rect(
-        screen,
-        WOOD_DARK,
-        rect,
-        border_radius=BORDER_RADIUS_MEDIUM,
-    )
-
-    inner_rect = pygame.Rect(
-        rect.x + 4,
-        rect.y + 4,
-        rect.width - 8,
-        rect.height - 8,
-    )
-
-    pygame.draw.rect(
-        screen,
-        PARCHMENT,
-        inner_rect,
-        border_radius=BORDER_RADIUS_MEDIUM,
-    )
-
-    pygame.draw.rect(
-        screen,
-        WOOD_MID,
-        inner_rect,
-        2,
-        border_radius=BORDER_RADIUS_MEDIUM,
-    )
+    pygame.draw.rect(screen, PARCHMENT, rect)
+    pygame.draw.rect(screen, WOOD_MID, rect, 1)
 
 
 def get_content_panel_rect(content_rect, padding=12):
@@ -99,7 +73,7 @@ def draw_window(screen, rect, title, font, title_font):
         screen,
         WOOD_DARK,
         header_rect,
-        2,
+        1,
         border_radius=BORDER_RADIUS_SMALL,
     )
 
@@ -114,42 +88,9 @@ def draw_window(screen, rect, title, font, title_font):
 
 
 def draw_button(screen, rect, enabled=True, pressed=False):
-    color = PARCHMENT_LIGHT
-
-    if pressed:
-        color = WOOD_LIGHT
-
-    if not enabled:
-        color = PARCHMENT_DISABLED
-
-    shadow_rect = pygame.Rect(
-        rect.x + 3,
-        rect.y + 3,
-        rect.width,
-        rect.height,
-    )
-
-    pygame.draw.rect(
-        screen,
-        WOOD_DARK,
-        shadow_rect,
-        border_radius=BORDER_RADIUS_SMALL,
-    )
-
-    pygame.draw.rect(
-        screen,
-        color,
-        rect,
-        border_radius=BORDER_RADIUS_SMALL,
-    )
-
-    pygame.draw.rect(
-        screen,
-        WOOD_MID,
-        rect,
-        2,
-        border_radius=BORDER_RADIUS_SMALL,
-    )
+    color = PARCHMENT_DISABLED if not enabled else (PARCHMENT if not pressed else PARCHMENT_LIGHT)
+    pygame.draw.rect(screen, color, rect)
+    pygame.draw.rect(screen, WOOD_MID, rect, 1)
 
 
 def draw_button_text(screen, font, text, rect, enabled=True):
@@ -364,7 +305,7 @@ def draw_tab(screen, rect, text, font, selected=False):
         screen,
         WOOD_DARK,
         rect,
-        2,
+        1,
         border_top_left_radius=BORDER_RADIUS_SMALL,
         border_top_right_radius=BORDER_RADIUS_SMALL,
     )
