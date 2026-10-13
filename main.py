@@ -6,7 +6,7 @@ from game.pygame_app import PygameApp
 
 def main():
     game_data = load_game_data()
-    saved_state = None
+    saved_state = load_latest_saved_state()
 
     if saved_state is None:
         state = create_initial_state(game_data)
