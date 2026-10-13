@@ -48,6 +48,7 @@ class BeachTest:
         self.attack_timer = 0
         self.boss_timer = 0
         self.hit_flash = 0
+        self.boss_attack_flash = 0
         self.knockback = pygame.Vector2()
         self.minions = []
         self.spawn_timer = 2.5
@@ -88,6 +89,7 @@ class BeachTest:
         self.attack_timer = max(0, self.attack_timer - dt)
         self.boss_timer = max(0, self.boss_timer - dt)
         self.hit_flash = max(0, self.hit_flash - dt)
+        self.boss_attack_flash = max(0, self.boss_attack_flash - dt)
         if self.state == "intro":
             self.intro_timer -= dt
             if self.intro_timer <= 0:
@@ -112,6 +114,7 @@ class BeachTest:
         boss_range = (77, 92, 68)[self.mode]
         move_towards(self.boss, self.player, boss_speed, dt)
         if distance(self.boss, self.player) < boss_range and self.boss_timer <= 0:
+            self.boss_attack_flash = 0.24
             self.damage(48, self.boss)
             self.boss_timer = 1.15
         if self.mode == 2:
@@ -148,20 +151,21 @@ class BeachTest:
             pygame.draw.line(s, (229, 229, 229), (0, y), (WIDTH, y), 1)
         # Jugador: capsula de 1 x 1 celda.
         px, py = round(self.player.x), round(self.player.y)
-        pygame.draw.rect(s, (25, 25, 25),
-                         (px - CELL//2, py - CELL//2, CELL, CELL),
-                         border_radius=CELL//2)
+        pygame.draw.circle(s, (155, 155, 155), (px, py), CELL//2, 1)
         # Enemigo: cuadrado de 2 x 2 celdas.
         bx, by = round(self.boss.x), round(self.boss.y)
         pygame.draw.rect(s, (255, 255, 255),
                          (bx-CELL, by-CELL, CELL*2, CELL*2))
-        pygame.draw.rect(s, (25, 25, 25),
-                         (bx-CELL, by-CELL, CELL*2, CELL*2), 4)
+        pygame.draw.rect(s, (155, 155, 155),
+                         (bx-CELL, by-CELL, CELL*2, CELL*2), 1)
+        if self.boss_attack_flash > 0:
+            pygame.draw.circle(s, (145, 145, 145), (bx, by),
+                               round((77, 92, 68)[self.mode]), 1)
         for m in self.minions:
             pygame.draw.circle(s, (60, 60, 60),
                                (round(m.x), round(m.y)), CELL//4, 2)
         if self.attack_timer > 0.24:
-            pygame.draw.circle(s, (90, 90, 90), (px, py), 55, 2)
+            pygame.draw.circle(s, (155, 155, 155), (px, py), 55, 1)
         if self.hit_flash > 0:
             pygame.draw.rect(s, (30, 30, 30), (0, 0, WIDTH, HEIGHT), 5)
         pygame.draw.rect(s, (255, 255, 255), (4, 4, WIDTH-8, 45))
