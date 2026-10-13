@@ -65,6 +65,7 @@ class BeachTest:
         self.state = "play"
         self.intro_timer = 0
         self.boss_awake = False
+        self.boss_activation_range = CELL * 4
         self.in_corridor = False
         self.gate_reached = False
         self.boss_in_corridor = False
@@ -141,6 +142,12 @@ class BeachTest:
                 self.say("La puerta esta cerrada. No hay salida.")
         else:
             self.in_corridor = False
+        if not self.boss_awake:
+            if distance(self.player, self.boss) <= self.boss_activation_range:
+                self.boss_awake = True
+                self.say("La criatura despierta y comienza a perseguirte.")
+            else:
+                return
         boss_speed = (42, 27, 27)[self.mode]
         boss_range = (77, 92, 68)[self.mode]
         # En el pasillo actua como portero: iguala la X del jugador
