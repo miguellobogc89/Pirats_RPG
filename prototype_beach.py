@@ -50,6 +50,7 @@ class BeachTest:
         self.hit_flash = 0
         self.boss_attack_flash = 0
         self.knockback = pygame.Vector2()
+        self.stun_timer = 0
         self.minions = []
         self.spawn_timer = 2.5
         self.elapsed = 0
@@ -64,7 +65,7 @@ class BeachTest:
         self.messages = self.messages[-3:]
 
     def attack(self, mouse):
-        if self.state != "play" or self.attack_timer > 0:
+        if self.state != "play" or self.attack_timer > 0 or self.stun_timer > 0:
             return
         self.attack_timer = 0.42
         target = pygame.Vector2(mouse)
@@ -96,6 +97,7 @@ class BeachTest:
         self.attack_timer = max(0, self.attack_timer - dt)
         self.boss_timer = max(0, self.boss_timer - dt)
         self.hit_flash = max(0, self.hit_flash - dt)
+        self.stun_timer = max(0, self.stun_timer - dt)
         self.boss_attack_flash = max(0, self.boss_attack_flash - dt)
         if self.state == "intro":
             self.intro_timer -= dt
@@ -111,10 +113,10 @@ class BeachTest:
             int(keys[pygame.K_d] or keys[pygame.K_RIGHT]) - int(keys[pygame.K_a] or keys[pygame.K_LEFT]),
             int(keys[pygame.K_s] or keys[pygame.K_DOWN]) - int(keys[pygame.K_w] or keys[pygame.K_UP]),
         )
-        if movement.length_squared():
+        if movement.length_squared() and self.stun_timer <= 0:
             self.player += movement.normalize() * 220 * dt
         self.player += self.knockback * dt
-        self.knockback *= max(0, 1 - 9 * dt)
+        self.knockback *= max(0, 1 - 5 * dt)
         self.player.x = clamp(self.player.x, CELL / 2, WIDTH - CELL / 2)
         self.player.y = clamp(self.player.y, CELL / 2, HEIGHT - CELL / 2)
         boss_speed = (75, 48, 48)[self.mode]
@@ -140,9 +142,10 @@ class BeachTest:
             return
         self.hp = max(0, self.hp - amount)
         self.hit_flash = 0.55
+        self.stun_timer = 1.5
         away = self.player - attacker
         if away.length_squared():
-            self.knockback = away.normalize() * 140
+            self.knockback = away.normalize() * 480
         self.say(f"Recibes {amount} de dano. Vida: {self.hp}/100")
         if self.hp == 0:
             self.reset(self.mode)
@@ -191,7 +194,7 @@ class BeachTest:
             f"TEST 20x10 | Jugador 1x1 | Enemigo 2x2 | Variante {self.mode+1}: {MODES[self.mode]}",
             True, INK), (12, 8))
         s.blit(self.small.render(
-            f"HP {self.hp}/100 | WASD mover | Clic golpear | 1/2/3 variantes | R reiniciar | ESC salir",
+            f"HP {self.hp}/100 | {'ATURDIDO' if self.stun_timer > 0 else 'LIBRE'} | WASD mover | Clic golpear | 1/2/3 variantes | R reiniciar",
             True, INK), (12, 28))
         pygame.display.flip()
 
