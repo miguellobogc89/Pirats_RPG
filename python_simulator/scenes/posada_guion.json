@@ -1,0 +1,198 @@
+{
+  "script": [
+    [
+      "POSADERA",
+      "Vaya, has despertado. Pensabamos que no lo contarias."
+    ],
+    [
+      "POSADERA",
+      "Un pescador te encontro al amanecer, tendido junto al camino."
+    ],
+    [
+      "POSADERA",
+      "Llevabas arena en la ropa y no reaccionabas a nada."
+    ],
+    [
+      "TU",
+      "Recuerdo la playa. Y algo enorme moviendose en la oscuridad."
+    ],
+    [
+      "POSADERA",
+      "Aqui conocemos las tormentas y las alimañas. Pero aquello..."
+    ],
+    [
+      "POSADERA",
+      "Hay alguien que lleva horas esperando a que despiertes."
+    ],
+    [
+      "@elder_enters",
+      ""
+    ],
+    [
+      "ANCIANO",
+      "Asi que eres el hijo de Almarin Velhart."
+    ],
+    [
+      "ANCIANO",
+      "He visto muchos naufragos. Pocos llegan vivos desde esa playa."
+    ],
+    [
+      "ANCIANO",
+      "Dime, ¿que recuerdas exactamente de la criatura?"
+    ],
+    [
+      "@choice",
+      ""
+    ],
+    [
+      "ANCIANO",
+      "Lo que describes confirma mis temores."
+    ],
+    [
+      "POSADERA",
+      "¿Que ocurre? ¿Acaso sabeis que hay ahi fuera?"
+    ],
+    [
+      "ANCIANO",
+      "Os agradezco que le hayais cuidado. ¿Nos dejaria a solas?"
+    ],
+    [
+      "POSADERA",
+      "Por supuesto. Os traere algo de comer mas tarde."
+    ],
+    [
+      "@innkeeper_exits",
+      ""
+    ],
+    [
+      "TU",
+      "Ahora que estamos solos, ¿que sabes de esa criatura?"
+    ],
+    [
+      "ANCIANO",
+      "Mas de lo que me gustaria. Y menos de lo necesario."
+    ],
+    [
+      "ANCIANO",
+      "Hace años comenzaron a aparecer rastros en la costa."
+    ],
+    [
+      "ANCIANO",
+      "Animales desaparecidos, marcas en la roca, noches sin aves."
+    ],
+    [
+      "ANCIANO",
+      "Algunos lo atribuyeron a las mareas. Otros dejaron de salir."
+    ],
+    [
+      "TU",
+      "¿La habias visto antes?"
+    ],
+    [
+      "ANCIANO",
+      "No con mis propios ojos. Pero reconozco lo que has contado."
+    ],
+    [
+      "ANCIANO",
+      "Y lo mas extraño de todo es que hayas sobrevivido."
+    ],
+    [
+      "ANCIANO",
+      "Una criatura de ese tamaño no suele dejar escapar a su presa."
+    ],
+    [
+      "TU",
+      "Entonces, ¿por que sigo aqui?"
+    ],
+    [
+      "ANCIANO",
+      "Esa es precisamente la pregunta que no puedo responder."
+    ],
+    [
+      "ANCIANO",
+      "Y no pienso inventar una respuesta para tranquilizarte."
+    ],
+    [
+      "TU",
+      "Has dicho que conocias a mi padre."
+    ],
+    [
+      "ANCIANO",
+      "Almarin Velhart no era un hombre que buscara reconocimiento."
+    ],
+    [
+      "ANCIANO",
+      "Era paciente, reservado y mas obstinado que cualquier marinero."
+    ],
+    [
+      "ANCIANO",
+      "Construyo una finca a las afueras. Trabajaba la tierra con sus manos."
+    ],
+    [
+      "ANCIANO",
+      "Pero tambien tenia un taller. Alli guardaba sus herramientas y notas."
+    ],
+    [
+      "ANCIANO",
+      "Nunca me explico del todo en que trabajaba durante las noches."
+    ],
+    [
+      "TU",
+      "¿Que le ocurrio?"
+    ],
+    [
+      "ANCIANO",
+      "Su historia no cabe en una conversacion junto a una cama."
+    ],
+    [
+      "ANCIANO",
+      "Y hay cosas que prefiero comprobar antes de contartelas."
+    ],
+    [
+      "ANCIANO",
+      "La finca sigue en pie, aunque nadie la cuida desde hace tiempo."
+    ],
+    [
+      "ANCIANO",
+      "Te pertenece por derecho. Tengo documentos que debes ver."
+    ],
+    [
+      "ANCIANO",
+      "Cuando hayas descansado, ven a la entrada de la finca."
+    ],
+    [
+      "TU",
+      "¿Y la criatura?"
+    ],
+    [
+      "ANCIANO",
+      "No vuelvas a la playa de noche. Ni siquiera por curiosidad."
+    ],
+    [
+      "ANCIANO",
+      "No puedo protegerte de algo que aun no comprendo."
+    ],
+    [
+      "ANCIANO",
+      "Por ahora descansa. Hablaremos cuando recuperes fuerzas."
+    ],
+    [
+      "@elder_exits",
+      ""
+    ],
+    [
+      "@fade",
+      ""
+    ]
+  ],
+  "choices": [
+    "Era enorme y avanzaba lentamente.",
+    "Vi unos ojos brillando entre las sombras.",
+    "Parecia conocer el camino al pueblo."
+  ],
+  "responses": [
+    "Entonces era tan grande como cuentan los viejos relatos...",
+    "Esos ojos... esperaba no volver a oir hablar de ellos.",
+    "Si buscaba el camino al pueblo, estamos ante algo peor."
+  ]
+}
