@@ -468,6 +468,26 @@ class PygameApp:
 
         self.draw_map()
 
+        # Contornos de colision: gris suave, 1 px, sin cuadricula.
+        from game.world.collision_manager import get_scene_collision_rects, BLOCKED_CELLS
+        from game.world.grid_manager import TILE_SIZE
+        collision_color = (190, 190, 190)
+        for rect in get_scene_collision_rects():
+            visible = pygame.Rect(
+                round(rect.x - camera_x), round(rect.y - camera_y),
+                rect.width, rect.height,
+            )
+            if visible.colliderect(self.screen.get_rect()):
+                pygame.draw.rect(self.screen, collision_color, visible, 1)
+        for grid_x, grid_y in BLOCKED_CELLS:
+            visible = pygame.Rect(
+                round(grid_x * TILE_SIZE - camera_x),
+                round(grid_y * TILE_SIZE - camera_y),
+                TILE_SIZE, TILE_SIZE,
+            )
+            if visible.colliderect(self.screen.get_rect()):
+                pygame.draw.rect(self.screen, collision_color, visible, 1)
+
         if self.hud_visible:
             draw_hud(self)
 
