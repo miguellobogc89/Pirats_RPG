@@ -1,0 +1,42 @@
+{
+  "id": "escenario_limpio",
+  "name": "Escenario limpio",
+  "width": 40,
+  "height": 32,
+  "tile_size": 16,
+  "player_spawn": {
+    "x": 320,
+    "y": 256
+  },
+  "objects": [],
+  "collisions": [
+    {
+      "x": 105,
+      "y": 90,
+      "w": 115,
+      "h": 48
+    },
+    {
+      "x": 420,
+      "y": 250,
+      "w": 95,
+      "h": 120
+    }
+  ],
+  "spawns": [
+    {
+      "id": "inicio",
+      "cells": [
+        [
+          20,
+          16
+        ]
+      ],
+      "spawn_cell": [
+        20,
+        16
+      ]
+    }
+  ],
+  "exits": []
+}
