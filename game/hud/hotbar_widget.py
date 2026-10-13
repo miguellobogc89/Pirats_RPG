@@ -1,40 +1,22 @@
 import pygame
 
 from game.hud.ui_helpers import DARK, PANEL, WHITE
-from game.inventory.hotbar_manager import (
-    get_active_hotbar_index,
-    get_hotbar_slots,
-)
-from game.ui.slot_renderer import draw_slot
+from game.inventory.hotbar_manager import get_active_hotbar_index, get_hotbar_slots
+from game.data.item_database import get_item_data
 
 
 def draw_hotbar_widget(app):
     slots = get_hotbar_slots(app.state)
-    active_index = get_active_hotbar_index(app.state)
-
-    slot_size = 58
-    gap = 10
-    total_width = len(slots) * slot_size + (len(slots) - 1) * gap
-
-    start_x = (960 - total_width) // 2
-    y = 565
-
-    for index, slot in enumerate(slots):
-        x = start_x + index * (slot_size + gap)
-        selected = active_index == index
-        slot_rect = pygame.Rect(x, y, slot_size, slot_size)
-
-        draw_slot(
-            app.screen,
-            slot_rect,
-            slot,
-            app.font,
-            app.small_font,
-            selected=selected,
-            hotkey_label=str(index + 1),
-            fill_color=PANEL,
-            selected_fill_color=WHITE,
-            border_color=DARK,
-            text_color=DARK,
-            hotkey_position="bottom",
-        )
+    active = get_active_hotbar_index(app.state)
+    size, gap = 42, 7
+    start = (app.screen.get_width() - len(slots) * (size + gap) + gap) // 2
+    y = app.screen.get_height() - 55
+    for i, stack in enumerate(slots):
+        x = start + i * (size + gap)
+        border = (155, 155, 155) if i == active else (218, 218, 218)
+        pygame.draw.rect(app.screen, border, (x, y, size, size), 1)
+        app.screen.blit(app.small_font.render(str(i + 1), True, DARK), (x + 3, y + 2))
+        if isinstance(stack, dict) and stack.get("item_id"):
+            item = get_item_data(stack["item_id"]) or {}
+            symbol = str(item.get("icon") or stack["item_id"][:1])[:2]
+            app.screen.blit(app.font.render(symbol, True, DARK), (x + 15, y + 15))
