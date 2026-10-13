@@ -86,7 +86,7 @@ def create_default_upgrades_state(game_data):
 
 def create_initial_state(game_data):
     initial_day = get_config_value(game_data, "initial_day")
-    initial_scene_id = "brumazul_playa"
+    initial_scene_id = "escenario_limpio"
     initial_spawn_id = "inicio"
     initial_scene = load_scene_data(initial_scene_id)
     player_spawn = {"x": 400, "y": 300}
