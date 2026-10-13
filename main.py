@@ -15,11 +15,13 @@ def main():
         state = normalize_state(saved_state, game_data)
         start_in_game = True
 
-    # El escenario de prueba solo se fuerza al iniciar una partida sin guardar.
-    # Una partida guardada en la posada debe reanudarse alli.
-    if saved_state is None:
+    # Los guardados antiguos no deben devolvernos a la playa o la granja.
+    # Solo se respeta la posada si el combate ya se completo.
+    if state.get("current_scene") != "brumazul_posada":
         state["current_scene"] = "escenario_limpio"
-        start_in_game = True
+        state["player"]["x"] = 320
+        state["player"]["y"] = 256
+    start_in_game = True
 
     app = PygameApp(state, game_data)
 
