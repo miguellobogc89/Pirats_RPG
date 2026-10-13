@@ -57,7 +57,7 @@ def get_menu_tab_labels():
 
 def draw_menu(app):
     overlay = pygame.Surface((app.screen.get_width(), app.screen.get_height()), pygame.SRCALPHA)
-    overlay.fill((0, 0, 0, 120))
+    overlay.fill((235, 235, 235, 115))
     app.screen.blit(overlay, (0, 0))
 
     draw_panel(app.screen, MENU_RECT)
