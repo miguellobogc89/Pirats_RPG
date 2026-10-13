@@ -13,7 +13,7 @@ from game.hud.hud_renderer import draw_hud
 from game.hud.menu_overlay import draw_menu
 from game.notifications import draw_notifications
 from game.world.camera import get_camera_position
-from game.pygame_app import WIDTH, HEIGHT
+WIDTH, HEIGHT = 960, 640
 
 INK = (35, 39, 40)
 PAPER = (245, 245, 242)
