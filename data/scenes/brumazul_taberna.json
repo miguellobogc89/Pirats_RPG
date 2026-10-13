@@ -1,0 +1,42 @@
+{
+  "id": "brumazul_taberna",
+  "name": "Posada de Brumazul - salon",
+  "width": 50,
+  "height": 50,
+  "tile_size": 16,
+  "player_spawn": {
+    "x": 485,
+    "y": 170
+  },
+  "objects": [],
+  "collisions": [],
+  "spawns": [
+    {
+      "id": "desde_habitacion",
+      "cells": [
+        [
+          30,
+          9
+        ]
+      ],
+      "spawn_cell": [
+        30,
+        9
+      ]
+    },
+    {
+      "id": "desde_pueblo",
+      "cells": [
+        [
+          30,
+          43
+        ]
+      ],
+      "spawn_cell": [
+        30,
+        43
+      ]
+    }
+  ],
+  "exits": []
+}
