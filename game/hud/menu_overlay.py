@@ -421,9 +421,9 @@ def draw_skills_tab(app):
             pygame.Rect(bar_x, bar_y, bar_width, bar_height),
             percent,
             100,
-            app.WARN,
-            background_color=(70, 48, 34),
-            border_color=WOOD_DARK,
+            (190, 190, 190),
+            background_color=(55, 55, 55),
+            border_color=(150, 150, 150),
         )
 
         y += 48
