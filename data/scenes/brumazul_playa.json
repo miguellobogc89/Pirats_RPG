@@ -1,0 +1,29 @@
+{
+  "id": "brumazul_playa",
+  "name": "Playa de Brumazul",
+  "width": 50,
+  "height": 50,
+  "tile_size": 16,
+  "player_spawn": {
+    "x": 400,
+    "y": 680
+  },
+  "objects": [],
+  "collisions": [],
+  "spawns": [
+    {
+      "id": "inicio",
+      "cells": [
+        [
+          25,
+          42
+        ]
+      ],
+      "spawn_cell": [
+        25,
+        42
+      ]
+    }
+  ],
+  "exits": []
+}
