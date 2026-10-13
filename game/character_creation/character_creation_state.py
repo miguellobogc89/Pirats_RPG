@@ -1,6 +1,6 @@
 GENDER_OPTIONS = ["male", "female", "neutral"]
-INITIAL_SCENE_ID = "intro_port"
-INITIAL_SPAWN_ID = "spawn_001"
+INITIAL_SCENE_ID = "brumazul_playa"
+INITIAL_SPAWN_ID = "inicio"
 FALLBACK_SCENE_ID = "farm"
 
 
