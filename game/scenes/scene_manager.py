@@ -117,6 +117,9 @@ class SceneManager:
         )
 
     def get_scene_class(self, scene_id):
+        if scene_id in ("brumazul_playa", "brumazul_posada"):
+            from game.scenes.brumazul_scene import BrumazulScene
+            return BrumazulScene
         return FarmScene
 
     def change_scene(self, scene_id, payload=None):
