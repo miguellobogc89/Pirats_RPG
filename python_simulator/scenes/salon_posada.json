@@ -1,0 +1,48 @@
+{
+  "id": "salon_posada",
+  "width": 800,
+  "height": 800,
+  "spawn": [
+    480,
+    180
+  ],
+  "walkable": [
+    [
+      100,
+      100,
+      600,
+      650
+    ]
+  ],
+  "doors": [
+    {
+      "rect": [
+        430,
+        100,
+        110,
+        10
+      ],
+      "to": "habitacion_posada",
+      "spawn": [
+        485,
+        560
+      ],
+      "label": "HABITACION"
+    },
+    {
+      "rect": [
+        430,
+        740,
+        110,
+        10
+      ],
+      "to": "pueblo",
+      "spawn": [
+        1060,
+        410
+      ],
+      "label": "SALIR AL PUEBLO"
+    }
+  ],
+  "npcs": []
+}
