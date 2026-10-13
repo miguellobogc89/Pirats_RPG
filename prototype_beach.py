@@ -117,7 +117,7 @@ class BeachTest:
         self.knockback *= max(0, 1 - 9 * dt)
         self.player.x = clamp(self.player.x, CELL / 2, WIDTH - CELL / 2)
         self.player.y = clamp(self.player.y, CELL / 2, HEIGHT - CELL / 2)
-        boss_speed = (115, 75, 75)[self.mode]
+        boss_speed = (75, 48, 48)[self.mode]
         boss_range = (77, 92, 68)[self.mode]
         move_towards(self.boss, self.player, boss_speed, dt)
         if distance(self.boss, self.player) < boss_range and self.boss_timer <= 0:
