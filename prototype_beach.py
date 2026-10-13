@@ -119,12 +119,12 @@ class BeachTest:
         self.knockback *= max(0, 1 - 5 * dt)
         self.player.x = clamp(self.player.x, CELL / 2, WIDTH - CELL / 2)
         self.player.y = clamp(self.player.y, CELL / 2, HEIGHT - CELL / 2)
-        boss_speed = (75, 48, 48)[self.mode]
+        boss_speed = (60, 38, 38)[self.mode]
         boss_range = (77, 92, 68)[self.mode]
         move_towards(self.boss, self.player, boss_speed, dt)
         if distance(self.boss, self.player) < boss_range and self.boss_timer <= 0:
             self.boss_attack_flash = 0.24
-            self.damage(48, self.boss)
+            self.damage(20, self.boss)
             self.boss_timer = 1.15
         if self.mode == 2:
             self.spawn_timer -= dt
