@@ -72,10 +72,17 @@ class BeachTest:
         if delta.length_squared() == 0:
             return
         direction = delta.normalize()
-        towards = self.boss - self.player
-        if towards.length() <= 76 and towards.length_squared() > 0 and direction.dot(towards.normalize()) > 0.35:
-            self.boss_hp -= 1
-            self.say("Golpeas a la criatura. Apenas reacciona. (-1)")
+        # Distancia al borde del cuerpo 2x2, no al centro.
+        closest = pygame.Vector2(
+            clamp(self.player.x, self.boss.x - CELL, self.boss.x + CELL),
+            clamp(self.player.y, self.boss.y - CELL, self.boss.y + CELL),
+        )
+        towards = closest - self.player
+        if towards.length() <= 76 and (
+            towards.length_squared() == 0 or direction.dot(towards.normalize()) > 0.35
+        ):
+            self.boss_hp = max(0, self.boss_hp - 25)
+            self.say("Golpeas a la criatura. (-25)")
             return
         for m in self.minions[:]:
             towards = m - self.player
