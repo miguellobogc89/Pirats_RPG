@@ -109,6 +109,7 @@ class BrumazulScene(FarmScene):
     def enter(self):
         self.beach = self.scene_id == "brumazul_playa"
         self.tavern = self.scene_id == "brumazul_taberna"
+        self.village = self.scene_id == "brumazul_pueblo"
         self.app.menu_open = False
         self.app.stash_open = False
         self.app.state.setdefault("brumazul", {})
@@ -121,7 +122,7 @@ class BrumazulScene(FarmScene):
         self.index = 0
         self.choice = 0
         self.response = RESPONSES[0]
-        self.phase = "free" if self.beach or self.tavern or self.progress.get("intro_finished") else "dialogue"
+        self.phase = "free" if self.beach or self.tavern or self.village or self.progress.get("intro_finished") else "dialogue"
         self.keeper = pygame.Vector2(480, 395)
         self.elder = pygame.Vector2(470, 625)
         self.show_elder = False
@@ -171,7 +172,7 @@ class BrumazulScene(FarmScene):
             if event.type == pygame.KEYDOWN and event.key in (pygame.K_RETURN, pygame.K_SPACE, pygame.K_e, pygame.K_ESCAPE):
                 self.npc_dialogue = None
             return True
-        if self.tavern and event.type == pygame.KEYDOWN and event.key in (pygame.K_e, pygame.K_RETURN):
+        if self.tavern and not self.app.menu_open and event.type == pygame.KEYDOWN and event.key in (pygame.K_e, pygame.K_RETURN):
             if self.talk_to_nearby():
                 return True
         if self.beach and event.type == pygame.MOUSEBUTTONDOWN and event.button == 1 and not self.app.menu_open:
@@ -262,6 +263,9 @@ class BrumazulScene(FarmScene):
                     self.transition("brumazul_posada", "retorno")
                 elif p["y"] > 745 and 425 < p["x"] < 550:
                     self.transition("brumazul_pueblo", "entrada")
+            elif self.village:
+                if p["y"] < 105 and 425 < p["x"] < 550:
+                    self.transition("brumazul_taberna", "desde_pueblo")
             else:
                 if p["y"] > 575 and 430 < p["x"] < 540:
                     self.transition("brumazul_taberna", "desde_habitacion")
