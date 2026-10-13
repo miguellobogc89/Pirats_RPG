@@ -71,6 +71,16 @@ class BeachTest:
         self.boss_in_corridor = False
         self.messages = ["Algo se mueve entre las sombras..."]
         self.random = random.Random(17)
+        self.fade_timer = 0
+
+    def enter_inn(self):
+        """Primer nodo de progresion: la derrota nocturna lleva a la posada."""
+        self.state = "inn"
+        self.hp = 100
+        self.player = pygame.Vector2(WIDTH / 2, HEIGHT / 2 + CELL)
+        self.elder = pygame.Vector2(WIDTH / 2 + CELL * 2, HEIGHT / 2)
+        self.fade_timer = 1.4
+        self.messages = ["Amanece en la posada de Brumazul.", "Un anciano espera junto a tu cama."]
 
     def say(self, message):
         self.messages.append(message)
@@ -117,6 +127,18 @@ class BeachTest:
             if self.intro_timer <= 0:
                 self.state = "play"
                 self.say("La criatura te ha visto.")
+            return
+        if self.state == "inn":
+            self.fade_timer = max(0, self.fade_timer - dt)
+            keys = pygame.key.get_pressed()
+            movement = pygame.Vector2(
+                int(keys[pygame.K_d] or keys[pygame.K_RIGHT]) - int(keys[pygame.K_a] or keys[pygame.K_LEFT]),
+                int(keys[pygame.K_s] or keys[pygame.K_DOWN]) - int(keys[pygame.K_w] or keys[pygame.K_UP]),
+            )
+            if movement.length_squared():
+                self.player += movement.normalize() * 220 * dt
+            self.player.x = clamp(self.player.x, CELL * 5.5, CELL * 14.5)
+            self.player.y = clamp(self.player.y, CELL * 5.5, CELL * 14.5)
             return
         if self.state != "play":
             return
@@ -199,8 +221,7 @@ class BeachTest:
             self.knockback = away.normalize() * 480
         self.say(f"Recibes {amount} de dano. Vida: {self.hp}/100")
         if self.hp == 0:
-            self.reset(self.mode)
-            self.say("Derrota: reaparicion inmediata en el inicio.")
+            self.enter_inn()
 
     def camera_offset(self):
         # Camara centrada en el jugador, independiente de los limites del mapa.
@@ -216,7 +237,47 @@ class BeachTest:
         if fill:
             pygame.draw.rect(self.world_surface, (218, 218, 218), (x + 1, y + 1, fill, 4))
 
+    def draw_inn(self):
+        s = self.world_surface
+        s.fill((250, 250, 250))
+        # Habitacion de posada en el mismo estilo de lineas finas.
+        room = pygame.Rect(CELL * 5, CELL * 5, CELL * 10, CELL * 10)
+        pygame.draw.rect(s, (245, 245, 245), room)
+        for x in range(room.left, room.right + 1, CELL):
+            pygame.draw.line(s, (231, 231, 231), (x, room.top), (x, room.bottom), 1)
+        for y in range(room.top, room.bottom + 1, CELL):
+            pygame.draw.line(s, (231, 231, 231), (room.left, y), (room.right, y), 1)
+        pygame.draw.rect(s, (110, 110, 110), room, 2)
+        # Cama, mesilla, mesa, sillas y puerta.
+        pygame.draw.rect(s, (195, 195, 195), (CELL * 7, CELL * 10, CELL * 2, CELL * 3), 1)
+        pygame.draw.rect(s, (215, 215, 215), (CELL * 7 + 5, CELL * 10 + 5, CELL * 2 - 10, CELL - 10), 1)
+        pygame.draw.rect(s, (165, 165, 165), (CELL * 9, CELL * 11, CELL, CELL), 1)
+        pygame.draw.rect(s, (165, 165, 165), (CELL * 12, CELL * 7, CELL * 2, CELL * 2), 1)
+        pygame.draw.line(s, (250, 250, 250), (CELL * 11, room.bottom), (CELL * 13, room.bottom), 5)
+        pygame.draw.arc(s, (145, 145, 145), (CELL * 11, room.bottom - CELL * 2, CELL * 2, CELL * 2), math.pi, math.pi * 1.5, 1)
+        pygame.draw.circle(s, (110, 110, 110), (round(self.elder.x), round(self.elder.y)), CELL // 2, 2)
+        label = self.small.render("ANCIANO", True, INK)
+        s.blit(label, (round(self.elder.x) - label.get_width() // 2, round(self.elder.y) - 40))
+        pygame.draw.circle(s, (155, 155, 155), (round(self.player.x), round(self.player.y)), CELL // 2, 1)
+        self.screen.fill((225, 225, 225))
+        offset = self.camera_offset()
+        self.screen.blit(s, (round(offset.x), round(offset.y)))
+        pygame.draw.rect(self.screen, (255, 255, 255), (4, 4, VIEW_WIDTH - 8, 67))
+        self.screen.blit(self.small.render("CAPITULO 1 | BRUMAZUL - POSADA | AMANECER", True, INK), (12, 9))
+        self.screen.blit(self.small.render("Despiertas en una cama. Un anciano te observa. WASD mover | Esc salir", True, INK), (12, 30))
+        if distance(self.player, self.elder) < CELL * 2:
+            self.screen.blit(self.small.render("El anciano: Por fin despiertas... [Dialogo pendiente]", True, INK), (12, 50))
+        if self.fade_timer > 0:
+            overlay = pygame.Surface((VIEW_WIDTH, VIEW_HEIGHT))
+            overlay.fill((0, 0, 0))
+            overlay.set_alpha(round(255 * min(1, self.fade_timer / 1.4)))
+            self.screen.blit(overlay, (0, 0))
+        pygame.display.flip()
+
     def draw(self):
+        if self.state == "inn":
+            self.draw_inn()
+            return
         s = self.world_surface
         s.fill((250, 250, 250))
         # Playa rectangular: 20 x 10 celdas. Solo lineas monocromas.
