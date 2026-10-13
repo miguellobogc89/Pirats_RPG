@@ -117,6 +117,9 @@ class SceneManager:
         )
 
     def get_scene_class(self, scene_id):
+        if scene_id == "escenario_limpio":
+            from game.scenes.escenario_limpio_scene import EscenarioLimpioScene
+            return EscenarioLimpioScene
         if scene_id in ("brumazul_playa", "brumazul_posada", "brumazul_taberna", "brumazul_pueblo"):
             from game.scenes.brumazul_scene import BrumazulScene
             return BrumazulScene
