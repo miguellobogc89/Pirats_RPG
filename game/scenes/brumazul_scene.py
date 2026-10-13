@@ -1,138 +1,216 @@
-"""Capitulo 1: escenas integradas en el motor principal de Pirats RPG.
+"""Brumazul, capitulo 1. Escenas narrativas integradas en Pirats RPG.
 
-La logica de inventario, hotbar, movimiento y recoleccion sigue en PygameApp.
-prototype_beach.py se conserva como referencia visual y narrativa.
+El estado del personaje, inventario, recoleccion y menu siguen siendo los del motor.
+El prototipo independiente no se modifica.
 """
 import math
 import pygame
 
+from core.save_manager import save_state
 from game.scenes.farm_scene import FarmScene
-from game.collectable_manager import update_collectables
-from game.data.item_database import get_item_data
-from game.hud.hud_renderer import draw_hud
 from game.hud.menu_overlay import draw_menu
-from game.notifications import draw_notifications
+from game.hud.stash_overlay import draw_stash_overlay
+from game.inventory.hotbar_manager import get_hotbar_slots, get_active_hotbar_index
 from game.world.camera import get_camera_position
+from game.data.item_database import get_item_data
+
 WIDTH, HEIGHT = 960, 640
+WHITE = (250, 250, 249)
+PAPER = (245, 245, 244)
+PALE = (231, 231, 230)
+LIGHT = (208, 208, 207)
+LINE = (166, 166, 166)
+INK = (105, 105, 105)
 
-INK = (35, 39, 40)
-PAPER = (245, 245, 242)
-LINE = (175, 180, 181)
-
-DIALOGUE = [
+# La conversacion tiene indicaciones de escena en vez de lineas pronunciadas.
+SCRIPT = [
     ("POSADERA", "Vaya, has despertado. Pensabamos que no lo contarias."),
-    ("POSADERA", "Te encontraron al amanecer junto al camino. Apenas respirabas."),
-    ("POSADERA", "No quiero asustarte, pero... ¿que ocurrio anoche?"),
-    ("TU", "Algo me siguio desde la playa. Era una criatura enorme."),
-    ("POSADERA", "En Brumazul hay alimanas, pero nunca habia oido algo asi."),
-    ("POSADERA", "Espera. Hay un hombre que lleva horas preguntando por ti."),
-    ("ENTRADA", ""),
-    ("ANCIANO", "Asi que has sobrevivido. Eso ya es mas de lo que esperaba."),
-    ("ANCIANO", "Dicen que viste una criatura cerca del camino de la playa."),
-    ("ANCIANO", "Dime una cosa. ¿Que recuerdas de ella?"),
-    ("ELECCION", ""),
-    ("ANCIANO", "Ya veo..."),
-    ("POSADERA", "La conoceis? Habeis palidecido."),
-    ("ANCIANO", "No he dicho tal cosa. Mejor no alarmar a los vecinos."),
-    ("ANCIANO", "Escuchame bien: no vuelvas a la playa despues del anochecer."),
-    ("ANCIANO", "Conoci a tu padre. Almarin Velhart. Hace muchos anos."),
-    ("ANCIANO", "Te dejo algo aqui: una finca a las afueras de Brumazul."),
-    ("ANCIANO", "Cuando puedas caminar, ven a buscarme a la entrada."),
-    ("POSADERA", "Y antes comeras. No pienso recoger otro desmayado del suelo."),
+    ("POSADERA", "Un pescador te encontro al amanecer, tendido junto al camino."),
+    ("POSADERA", "Llevabas arena en la ropa y no reaccionabas a nada."),
+    ("TU", "Recuerdo la playa. Y algo enorme moviendose en la oscuridad."),
+    ("POSADERA", "Aqui conocemos las tormentas y las alimañas. Pero aquello..."),
+    ("POSADERA", "Hay alguien que lleva horas esperando a que despiertes."),
+    ("@elder_enters", ""),
+    ("ANCIANO", "Asi que eres el hijo de Almarin Velhart."),
+    ("ANCIANO", "He visto muchos naufragos. Pocos llegan vivos desde esa playa."),
+    ("ANCIANO", "Dime, ¿que recuerdas exactamente de la criatura?"),
+    ("@choice", ""),
+    ("ANCIANO", "Lo que describes confirma mis temores."),
+    ("POSADERA", "¿Que ocurre? ¿Acaso sabeis que hay ahi fuera?"),
+    ("ANCIANO", "Os agradezco que le hayais cuidado. ¿Nos dejaria a solas?"),
+    ("POSADERA", "Por supuesto. Os traere algo de comer mas tarde."),
+    ("@innkeeper_exits", ""),
+    ("TU", "Ahora que estamos solos, ¿que sabes de esa criatura?"),
+    ("ANCIANO", "Mas de lo que me gustaria. Y menos de lo necesario."),
+    ("ANCIANO", "Hace años comenzaron a aparecer rastros en la costa."),
+    ("ANCIANO", "Animales desaparecidos, marcas en la roca, noches sin aves."),
+    ("ANCIANO", "Algunos lo atribuyeron a las mareas. Otros dejaron de salir."),
+    ("TU", "¿La habias visto antes?"),
+    ("ANCIANO", "No con mis propios ojos. Pero reconozco lo que has contado."),
+    ("ANCIANO", "Y lo mas extraño de todo es que hayas sobrevivido."),
+    ("ANCIANO", "Una criatura de ese tamaño no suele dejar escapar a su presa."),
+    ("TU", "Entonces, ¿por que sigo aqui?"),
+    ("ANCIANO", "Esa es precisamente la pregunta que no puedo responder."),
+    ("ANCIANO", "Y no pienso inventar una respuesta para tranquilizarte."),
+    ("TU", "Has dicho que conocias a mi padre."),
+    ("ANCIANO", "Almarin Velhart no era un hombre que buscara reconocimiento."),
+    ("ANCIANO", "Era paciente, reservado y mas obstinado que cualquier marinero."),
+    ("ANCIANO", "Construyo una finca a las afueras. Trabajaba la tierra con sus manos."),
+    ("ANCIANO", "Pero tambien tenia un taller. Alli guardaba sus herramientas y notas."),
+    ("ANCIANO", "Nunca me explico del todo en que trabajaba durante las noches."),
+    ("TU", "¿Que le ocurrio?"),
+    ("ANCIANO", "Su historia no cabe en una conversacion junto a una cama."),
+    ("ANCIANO", "Y hay cosas que prefiero comprobar antes de contartelas."),
+    ("ANCIANO", "La finca sigue en pie, aunque nadie la cuida desde hace tiempo."),
+    ("ANCIANO", "Te pertenece por derecho. Tengo documentos que debes ver."),
+    ("ANCIANO", "Cuando hayas descansado, ven a la entrada de la finca."),
+    ("TU", "¿Y la criatura?"),
+    ("ANCIANO", "No vuelvas a la playa de noche. Ni siquiera por curiosidad."),
+    ("ANCIANO", "No puedo protegerte de algo que aun no comprendo."),
+    ("ANCIANO", "Por ahora descansa. Hablaremos cuando recuperes fuerzas."),
+    ("@elder_exits", ""),
+    ("@fade", ""),
 ]
 CHOICES = [
     "Era enorme y avanzaba lentamente.",
-    "Vi sus ojos brillando en la oscuridad.",
+    "Vi unos ojos brillando entre las sombras.",
     "Parecia conocer el camino al pueblo.",
 ]
 RESPONSES = [
-    "Tan grande... (Aprieta los labios, inquieto.)",
-    "Esos ojos... (Por un momento parece reconocerlos.)",
-    "Ese camino... (Guarda un silencio demasiado largo.)",
+    "Entonces era tan grande como cuentan los viejos relatos...",
+    "Esos ojos... esperaba no volver a oir hablar de ellos.",
+    "Si buscaba el camino al pueblo, estamos ante algo peor.",
+]
+TAVERN_NPCS = [
+    ("GORATHUN", "gorathun", (280, 280), [
+        "Soy Gorathun. Trabajo el hierro. En Brumazul hasta las bisagras se oxidan.",
+        "Si necesitas una herramienta de verdad, pregunta por la herreria.",
+    ]),
+    ("SYLVARIN", "sylvarin", (570, 330), [
+        "Me llaman Sylvarin. Escucho el viento antes de decidir donde trabajar.",
+        "Hay cosas que los metales no pueden decir y la madera si.",
+    ]),
+    ("MARINERA", "human", (370, 450), [
+        "La costa parecia tranquila ayer. Esta manana nadie quiere salir a faenar.",
+        "No te acerques a la playa cuando caiga la noche.",
+    ]),
+    ("VIAJERO", "human", (675, 440), [
+        "He recorrido tres islas y ninguna posada sirve un caldo como esta.",
+        "Si buscas la finca Velhart, pregunta en el camino del pueblo.",
+    ]),
+    ("POSADERA", "human", (480, 215), [
+        "Me alegro de verte en pie. Come algo antes de salir.",
+        "La puerta principal da al pueblo. La habitacion esta al fondo.",
+    ]),
 ]
 
 
 class BrumazulScene(FarmScene):
     def enter(self):
         self.beach = self.scene_id == "brumazul_playa"
-        self.boss = pygame.Vector2(600, 640)
-        self.boss_awake = False
-        self.boss_timer = 0.0
-        self.invulnerable = 0.0
-        self.attack_timer = 0.0
-        self.boss_hp = 999
-        self.entrance_timer = 0.0
-        self.elder_y = 640.0
-        self.dialogue_index = 0
-        self.choice_index = 0
-        self.inn_phase = "dialogue"
+        self.tavern = self.scene_id == "brumazul_taberna"
         self.app.menu_open = False
         self.app.stash_open = False
         self.app.state.setdefault("brumazul", {})
+        self.progress = self.app.state["brumazul"]
+        self.boss = pygame.Vector2(600, 640)
+        self.boss_awake = False
+        self.boss_timer = 0.0
+        self.attack_timer = 0.0
+        self.boss_hp = 999
+        self.index = 0
+        self.choice = 0
+        self.response = RESPONSES[0]
+        self.phase = "free" if self.beach or self.tavern or self.progress.get("intro_finished") else "dialogue"
+        self.keeper = pygame.Vector2(480, 395)
+        self.elder = pygame.Vector2(470, 625)
+        self.show_elder = False
+        self.show_keeper = not self.progress.get("intro_finished", False)
+        self.fade = 0.0
+        self.npc_dialogue = None
         if self.beach:
-            self.app.state["brumazul"]["chapter_started"] = True
+            self.progress["chapter_started"] = True
             self.seed_collectables()
 
     def seed_collectables(self):
-        """Los objetos se recogen mediante el gestor de recoleccion real."""
-        from game.data.item_database import get_item_data
         from game.collectable_manager import ensure_collectables_state
         ensure_collectables_state(self.app.state)
-        flag = self.app.state["brumazul"]
-        if flag.get("beach_drops_spawned"):
+        if self.progress.get("beach_drops_spawned"):
             return
-        for item_id in ("wood", "madera", "stone", "piedra"):
-            if get_item_data(item_id) is not None:
-                for i, (x, y) in enumerate(((315, 575), (485, 725), (560, 560))):
-                    self.app.state["collectables"].append({
-                        "id": "brumazul_" + item_id + "_" + str(i),
-                        "item_id": item_id, "amount": 1, "x": x, "y": y, "radius": 10,
-                    })
-                flag["beach_drops_spawned"] = True
-                break
+        item_id = next((i for i in ("wood", "driftwood", "stone") if get_item_data(i)), None)
+        if not item_id:
+            return
+        for i, (x, y) in enumerate(((315, 575), (485, 725), (560, 560))):
+            self.app.state["collectables"].append({
+                "id": "brumazul_" + str(i), "item_id": item_id,
+                "amount": 1, "x": x, "y": y, "radius": 10,
+            })
+        self.progress["beach_drops_spawned"] = True
 
     def handle_event(self, event):
-        if not self.beach and self.inn_phase != "free":
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                raise SystemExit
-            if self.inn_phase == "dialogue":
-                if event.type == pygame.KEYDOWN and self.dialogue_index == 10:
-                    if event.key in (pygame.K_UP, pygame.K_w):
-                        self.choice_index = (self.choice_index - 1) % 3
-                        return True
-                    if event.key in (pygame.K_DOWN, pygame.K_s):
-                        self.choice_index = (self.choice_index + 1) % 3
-                        return True
-                if (event.type == pygame.KEYDOWN and event.key in (pygame.K_RETURN, pygame.K_SPACE, pygame.K_e)) or (event.type == pygame.MOUSEBUTTONDOWN and event.button == 1):
-                    if self.dialogue_index == 10:
-                        DIALOGUE[11] = ("ANCIANO", RESPONSES[self.choice_index])
-                    self.dialogue_index += 1
-                    if self.dialogue_index >= len(DIALOGUE):
-                        self.inn_phase = "free"
-                        self.app.state["brumazul"]["mission"] = "las_tierras_de_almarin"
-                        self.app.add_log("MISION: LAS TIERRAS DE ALMARIN | Busca al anciano en la finca")
-                    elif self.dialogue_index == 6:
-                        self.inn_phase = "entrance"
-                    return True
+        if event.type == pygame.QUIT:
+            pygame.quit()
+            raise SystemExit
+        if self.phase == "fade" or self.phase in ("elder_enters", "keeper_exits", "elder_exits"):
             return True
+        if self.phase == "dialogue":
+            if event.type == pygame.KEYDOWN and self.index == 10:
+                if event.key in (pygame.K_UP, pygame.K_w):
+                    self.choice = (self.choice - 1) % len(CHOICES)
+                    return True
+                if event.key in (pygame.K_DOWN, pygame.K_s):
+                    self.choice = (self.choice + 1) % len(CHOICES)
+                    return True
+            if (event.type == pygame.KEYDOWN and event.key in (pygame.K_RETURN, pygame.K_SPACE, pygame.K_e)) or (event.type == pygame.MOUSEBUTTONDOWN and event.button == 1):
+                if self.index == 10:
+                    self.response = RESPONSES[self.choice]
+                self.index += 1
+                self.process_script()
+            return True
+        if self.npc_dialogue is not None:
+            if event.type == pygame.KEYDOWN and event.key in (pygame.K_RETURN, pygame.K_SPACE, pygame.K_e, pygame.K_ESCAPE):
+                self.npc_dialogue = None
+            return True
+        if self.tavern and event.type == pygame.KEYDOWN and event.key in (pygame.K_e, pygame.K_RETURN):
+            if self.talk_to_nearby():
+                return True
         if self.beach and event.type == pygame.MOUSEBUTTONDOWN and event.button == 1 and not self.app.menu_open:
             self.attack(event.pos)
             return True
         return super().handle_event(event)
 
-    def attack(self, mouse):
-        if self.attack_timer > 0:
+    def process_script(self):
+        if self.index >= len(SCRIPT):
+            self.finish_intro()
             return
-        self.attack_timer = 0.42
-        player = self.app.state["player"]
-        px, py = player["x"], player["y"]
-        cam_x, cam_y = get_camera_position(px, py, WIDTH, HEIGHT, 800, 800)
-        direction = pygame.Vector2(mouse[0] + cam_x - px, mouse[1] + cam_y - py)
-        target = self.boss - pygame.Vector2(px, py)
-        if direction.length_squared() and target.length() < 105 and target.length_squared() and direction.normalize().dot(target.normalize()) > 0.35:
-            self.boss_hp -= 25
-            self.app.add_log("Golpeas a la criatura (-25).")
+        cue = SCRIPT[self.index][0]
+        if cue == "@elder_enters":
+            self.phase = "elder_enters"
+            self.show_elder = True
+        elif cue == "@innkeeper_exits":
+            self.phase = "keeper_exits"
+        elif cue == "@elder_exits":
+            self.phase = "elder_exits"
+        elif cue == "@fade":
+            self.phase = "fade"
+            self.fade = 0.0
+        else:
+            self.phase = "dialogue"
+
+    def finish_intro(self):
+        self.progress["intro_finished"] = True
+        self.progress["mission"] = "las_tierras_de_almarin"
+        self.app.state["player"]["x"] = 400
+        self.app.state["player"]["y"] = 440
+        self.phase = "free"
+        self.app.add_log("MISION: LAS TIERRAS DE ALMARIN - Busca al anciano en la finca")
+        self.autosave()
+
+    def autosave(self):
+        try:
+            save_state(self.app.state)
+        except (OSError, RuntimeError, TypeError, ValueError) as error:
+            self.app.add_log("No se pudo guardar: " + str(error))
 
     def update(self, dt):
         dt = min(dt, 0.05)
@@ -142,95 +220,216 @@ class BrumazulScene(FarmScene):
                 return
             self.attack_timer = max(0, self.attack_timer - dt)
             self.boss_timer = max(0, self.boss_timer - dt)
-            self.invulnerable = max(0, self.invulnerable - dt)
             p = pygame.Vector2(self.app.state["player"]["x"], self.app.state["player"]["y"])
-            if not self.boss_awake and p.distance_to(self.boss) < 160:
+            if not self.boss_awake and p.distance_to(self.boss) <= 160:
                 self.boss_awake = True
-                self.app.add_log("La criatura despierta y comienza a perseguirte.")
             if self.boss_awake:
                 delta = p - self.boss
                 if delta.length_squared():
                     self.boss += delta.normalize() * min(delta.length(), 42 * dt)
-                if delta.length() < 77 and self.boss_timer <= 0:
-                    self.boss_timer = 1.6
-                    if self.invulnerable <= 0:
-                        health = self.app.state["health"]
-                        health["current"] = max(0, health["current"] - 2)
-                        self.invulnerable = 1.4
-                        if health["current"] <= 0:
-                            self.wake_at_inn()
+                if delta.length() <= 77 and self.boss_timer <= 0:
+                    self.app.state["health"]["current"] = 0
+                    self.wake_at_inn()
+                    return
                 self.boss_timer = max(0, self.boss_timer - dt)
-        elif self.inn_phase == "entrance":
-            self.elder_y -= 100 * dt
-            if self.elder_y <= 450:
-                self.elder_y = 450
-                self.dialogue_index = 7
-                self.inn_phase = "dialogue"
-        elif self.inn_phase == "free":
+        elif self.phase == "elder_enters":
+            self.elder.y -= 100 * dt
+            if self.elder.y <= 465:
+                self.elder.y = 465
+                self.index += 1
+                self.process_script()
+        elif self.phase == "keeper_exits":
+            self.keeper.y += 110 * dt
+            if self.keeper.y >= 620:
+                self.show_keeper = False
+                self.index += 1
+                self.process_script()
+        elif self.phase == "elder_exits":
+            self.elder.y += 100 * dt
+            if self.elder.y >= 625:
+                self.show_elder = False
+                self.index += 1
+                self.process_script()
+        elif self.phase == "fade":
+            self.fade = min(1.0, self.fade + dt * 0.85)
+            if self.fade >= 1:
+                self.finish_intro()
+        elif self.phase == "free" and self.npc_dialogue is None:
             self.app.update_farm_scene(dt)
+            p = self.app.state["player"]
+            if self.tavern:
+                if p["y"] < 115 and 425 < p["x"] < 550:
+                    self.transition("brumazul_posada", "retorno")
+                elif p["y"] > 745 and 425 < p["x"] < 550:
+                    self.transition("brumazul_pueblo", "entrada")
+            else:
+                if p["y"] > 575 and 430 < p["x"] < 540:
+                    self.transition("brumazul_taberna", "desde_habitacion")
 
     def wake_at_inn(self):
         self.app.state["health"]["current"] = self.app.state["health"]["max"]
-        self.app.state["brumazul"]["beach_completed"] = True
-        self.app.scene_manager.change_scene("brumazul_posada", payload={"target_spawn_id": "despertar"})
-        self.app.dispatch_scene_entered_event()
+        self.progress["beach_completed"] = True
+        self.transition("brumazul_posada", "despertar")
+        # Primer punto de control: al reabrir la partida comienza en la posada.
+        self.autosave()
+
+    def transition(self, scene_id, spawn_id):
+        if self.app.scene_manager.change_scene(scene_id, payload={"target_spawn_id": spawn_id}):
+            self.app.dispatch_scene_entered_event()
+
+    def attack(self, mouse):
+        if self.attack_timer > 0:
+            return
+        self.attack_timer = 0.42
+        p = self.app.state["player"]
+        cx, cy = get_camera_position(p["x"], p["y"], WIDTH, HEIGHT, 800, 800)
+        direction = pygame.Vector2(mouse[0] + cx - p["x"], mouse[1] + cy - p["y"])
+        target = self.boss - pygame.Vector2(p["x"], p["y"])
+        if direction.length_squared() and target.length_squared() and target.length() < 105:
+            if direction.normalize().dot(target.normalize()) > 0.35:
+                self.boss_hp = max(0, self.boss_hp - 25)
+
+    def talk_to_nearby(self):
+        p = self.app.state["player"]
+        for name, race, pos, lines in TAVERN_NPCS:
+            if math.dist((p["x"], p["y"]), pos) < 65:
+                self.npc_dialogue = (name, lines)
+                return True
+        return False
 
     def draw(self):
         s = self.app.screen
-        s.fill(PAPER)
+        s.fill(WHITE)
         p = self.app.state["player"]
         cx, cy = get_camera_position(p["x"], p["y"], WIDTH, HEIGHT, 800, 800)
         if self.beach:
-            pygame.draw.rect(s, (230, 230, 228), (0, 0, WIDTH, HEIGHT))
-            for x in range(0, 800, 40):
-                for y in range(0, 800, 40):
-                    sx, sy = x - cx, y - cy
-                    if 0 <= sx < WIDTH and 0 <= sy < HEIGHT:
-                        pygame.draw.rect(s, LINE, (sx, sy, 40, 40), 1)
-            pygame.draw.rect(s, (205, 212, 212), (0 - cx, 0 - cy, 800, 170))
+            pygame.draw.rect(s, PAPER, (0, 0, WIDTH, HEIGHT))
+            pygame.draw.rect(s, PALE, pygame.Rect(-cx, -cy, 800, 165))
+            pygame.draw.line(s, LINE, (-cx, 165 - cy), (800 - cx, 165 - cy), 1)
+            # Camino a Brumazul, delimitado sin cuadricula.
+            for x in (350, 450):
+                pygame.draw.line(s, LIGHT, (x - cx, -cy), (x - cx, 360 - cy), 1)
             for obj in self.app.state.get("collectables", []):
                 if obj.get("id", "").startswith("brumazul_"):
-                    pygame.draw.circle(s, (110, 130, 110), (int(obj["x"] - cx), int(obj["y"] - cy)), 8)
+                    pygame.draw.circle(s, LINE, (int(obj["x"] - cx), int(obj["y"] - cy)), 7, 1)
             bx, by = int(self.boss.x - cx), int(self.boss.y - cy)
-            pygame.draw.circle(s, INK, (bx, by), 40, 3)
-            pygame.draw.circle(s, INK, (bx - 12, by - 8), 5)
-            pygame.draw.circle(s, INK, (bx + 12, by - 8), 5)
-            self.label("PLAYA DE BRUMAZUL - NOCHE", 20, 16)
+            pygame.draw.circle(s, LINE, (bx, by), 39, 2)
+            pygame.draw.circle(s, INK, (bx - 12, by - 8), 4, 1)
+            pygame.draw.circle(s, INK, (bx + 12, by - 8), 4, 1)
+            self.label("PLAYA DE BRUMAZUL  /  NOCHE", 22, 18)
+        elif self.tavern:
+            self.draw_tavern(cx, cy)
+        elif self.scene_id == "brumazul_pueblo":
+            self.draw_village(cx, cy)
         else:
-            room = pygame.Rect(200 - cx, 200 - cy, 400, 400)
-            pygame.draw.rect(s, (235, 235, 233), room)
-            pygame.draw.rect(s, INK, room, 3)
-            pygame.draw.rect(s, LINE, (280 - cx, 400 - cy, 80, 120), 2)
-            pygame.draw.rect(s, LINE, (480 - cx, 280 - cy, 80, 80), 2)
-            pygame.draw.circle(s, INK, (int(480 - cx), int(400 - cy)), 17, 2)
-            self.label("POSADERA", int(445 - cx), int(365 - cy))
-            if self.dialogue_index >= 7 or self.inn_phase == "entrance":
-                pygame.draw.circle(s, INK, (int(470 - cx), int(self.elder_y - cy)), 17, 2)
-                self.label("ANCIANO", int(435 - cx), int(self.elder_y - cy - 35))
-            self.label("POSADA DE BRUMAZUL - AMANECER", 20, 16)
-        pygame.draw.circle(s, INK, (int(p["x"] - cx), int(p["y"] - cy)), 13)
-        pygame.draw.circle(s, PAPER, (int(p["x"] - cx), int(p["y"] - cy - 16)), 8)
-        if self.app.hud_visible:
-            draw_hud(self.app)
+            self.draw_room(cx, cy)
+        if not self.tavern and self.scene_id != "brumazul_pueblo":
+            pygame.draw.circle(s, LINE, (int(p["x"] - cx), int(p["y"] - cy)), 13, 1)
+            pygame.draw.circle(s, LIGHT, (int(p["x"] - cx), int(p["y"] - cy - 15)), 8, 1)
+        else:
+            pygame.draw.circle(s, LINE, (int(p["x"] - cx), int(p["y"] - cy)), 13, 1)
+        self.draw_minimal_hud()
         if self.app.menu_open:
             draw_menu(self.app)
         if self.app.stash_open:
-            from game.hud.stash_overlay import draw_stash_overlay
             draw_stash_overlay(self.app)
-        if not self.beach and self.inn_phase == "dialogue":
-            pygame.draw.rect(s, (252, 251, 247), (30, HEIGHT - 190, WIDTH - 60, 145))
-            pygame.draw.rect(s, INK, (30, HEIGHT - 190, WIDTH - 60, 145), 2)
-            who, line = DIALOGUE[self.dialogue_index]
-            self.label(who, 50, HEIGHT - 174)
-            if who == "ELECCION":
-                for i, choice in enumerate(CHOICES):
-                    self.label(("> " if i == self.choice_index else "  ") + choice, 55, HEIGHT - 150 + i * 26)
+        if self.phase == "dialogue":
+            who, line = SCRIPT[self.index]
+            if who == "@choice":
+                self.draw_dialogue("TU", "¿Que fue lo que viste?", CHOICES, self.choice)
             else:
-                self.label(line, 50, HEIGHT - 140)
-                self.label("ENTER / ESPACIO para continuar", 50, HEIGHT - 76)
-        if not self.beach and self.inn_phase == "free":
-            self.label("MISION: LAS TIERRAS DE ALMARIN", 30, HEIGHT - 65)
-        draw_notifications(self.app)
+                self.draw_dialogue(who, self.response if self.index == 11 else line)
+        if self.npc_dialogue:
+            self.draw_dialogue(self.npc_dialogue[0], "  ".join(self.npc_dialogue[1]))
+        if self.phase == "fade":
+            overlay = pygame.Surface((WIDTH, HEIGHT))
+            overlay.fill(WHITE)
+            overlay.set_alpha(int(self.fade * 255))
+            s.blit(overlay, (0, 0))
+
+    def draw_room(self, cx, cy):
+        s = self.app.screen
+        room = pygame.Rect(200 - cx, 200 - cy, 400, 400)
+        pygame.draw.rect(s, PAPER, room)
+        pygame.draw.rect(s, LINE, room, 1)
+        pygame.draw.rect(s, LIGHT, (280 - cx, 400 - cy, 80, 120), 1)
+        pygame.draw.rect(s, LIGHT, (480 - cx, 280 - cy, 80, 80), 1)
+        pygame.draw.line(s, WHITE, (430 - cx, 600 - cy), (540 - cx, 600 - cy), 5)
+        if self.show_keeper:
+            self.actor("POSADERA", self.keeper, cx, cy)
+        if self.show_elder:
+            self.actor("ANCIANO", self.elder, cx, cy)
+        self.label("POSADA  /  HABITACION", 22, 18)
+        if self.phase == "free":
+            self.label("Puerta al salon: abajo", 24, 43)
+
+    def draw_tavern(self, cx, cy):
+        s = self.app.screen
+        pygame.draw.rect(s, PAPER, pygame.Rect(100 - cx, 100 - cy, 600, 650))
+        pygame.draw.rect(s, LINE, pygame.Rect(100 - cx, 100 - cy, 600, 650), 1)
+        for x, y, w, h in ((225, 210, 105, 65), (480, 460, 110, 75), (410, 250, 105, 65)):
+            pygame.draw.rect(s, LIGHT, (x - cx, y - cy, w, h), 1)
+        for name, race, pos, _ in TAVERN_NPCS:
+            self.actor(name + " / " + race, pygame.Vector2(pos), cx, cy)
+        self.label("POSADA  /  SALON", 22, 18)
+        self.label("E: hablar   |   puerta norte: habitacion   |   sur: pueblo", 22, 43)
+
+    def draw_village(self, cx, cy):
+        s = self.app.screen
+        for x, y, w, h in ((110, 110, 155, 140), (560, 100, 150, 165), (115, 515, 175, 160), (530, 520, 165, 140)):
+            pygame.draw.rect(s, PAPER, (x - cx, y - cy, w, h))
+            pygame.draw.rect(s, LINE, (x - cx, y - cy, w, h), 1)
+        self.label("BRUMAZUL  /  PUEBLO", 22, 18)
+        self.label("La finca de Almarin se encuentra a las afueras.", 22, 43)
+
+    def actor(self, name, pos, cx, cy):
+        x, y = int(pos.x - cx), int(pos.y - cy)
+        pygame.draw.circle(self.app.screen, LINE, (x, y), 15, 1)
+        self.label(name, x - 35, y - 33)
+
+    def draw_minimal_hud(self):
+        s = self.app.screen
+        hp = self.app.state.get("health", {})
+        maximum = max(1, hp.get("max", 10))
+        current = max(0, hp.get("current", maximum))
+        pygame.draw.rect(s, LIGHT, (24, 67, 152, 7), 1)
+        pygame.draw.rect(s, PALE, (25, 68, int(150 * current / maximum), 5))
+        slots = get_hotbar_slots(self.app.state)
+        selected = get_active_hotbar_index(self.app.state)
+        size, gap = 42, 7
+        start = (WIDTH - len(slots) * (size + gap) + gap) // 2
+        for i, item in enumerate(slots):
+            x = start + i * (size + gap)
+            pygame.draw.rect(s, LINE if i == selected else LIGHT, (x, HEIGHT - 54, size, size), 1)
+            self.label(str(i + 1), x + 3, HEIGHT - 51)
+            if item:
+                item_id = item.get("item_id", "") if isinstance(item, dict) else str(item)
+                data = get_item_data(item_id)
+                self.label((data or {}).get("icon", item_id[:1]).upper(), x + 17, HEIGHT - 34)
+
+    def draw_dialogue(self, speaker, message, choices=None, selected=0):
+        s = self.app.screen
+        rect = pygame.Rect(35, HEIGHT - 190, WIDTH - 70, 140)
+        pygame.draw.rect(s, WHITE, rect)
+        pygame.draw.rect(s, LIGHT, rect, 1)
+        self.label(speaker, 55, HEIGHT - 173)
+        if choices:
+            for i, choice in enumerate(choices):
+                self.label(("> " if i == selected else "  ") + choice, 58, HEIGHT - 147 + i * 25)
+        else:
+            # Salto de linea por palabras para textos largos.
+            words, line, y = message.split(), "", HEIGHT - 144
+            for word in words:
+                trial = (line + " " + word).strip()
+                if self.app.small_font.size(trial)[0] > WIDTH - 125 and line:
+                    self.label(line, 58, y)
+                    y += 22
+                    line = word
+                else:
+                    line = trial
+            if line:
+                self.label(line, 58, y)
+        self.label("ENTER / ESPACIO", WIDTH - 175, HEIGHT - 73)
 
     def label(self, value, x, y):
-        self.app.screen.blit(self.app.small_font.render(value, True, INK), (x, y))
+        self.app.screen.blit(self.app.small_font.render(str(value), True, INK), (int(x), int(y)))
