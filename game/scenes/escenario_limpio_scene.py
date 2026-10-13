@@ -113,7 +113,7 @@ class EscenarioLimpioScene(FarmScene):
             self.boss_state = "idle"
             self.boss_timer = 0.45
         if self.boss_state == "charge" and self.boss.distance_to(pos) < 36 and self.player_invulnerable <= 0:
-            self.app.state["health"]["current"] = max(0, self.app.state["health"]["current"] - 3)
+            self.app.state["health"]["current"] = max(0, self.app.state["health"]["current"] - 30)
             self.player_invulnerable = 1.0
             self.player_flash = 0.7
             self.player_stun = 0.45
