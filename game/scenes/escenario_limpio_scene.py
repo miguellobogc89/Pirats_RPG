@@ -119,15 +119,19 @@ class EscenarioLimpioScene(FarmScene):
             self.player_stun = 0.45
             self.knockback = self.boss_charge_dir * 330
         if self.app.state["health"]["current"] <= 0:
-            self.player["x"], self.player["y"] = 320, 256
+            # Cambiar primero de escena; guardar solo el estado ya situado en la posada.
             self.app.state["health"]["current"] = self.app.state["health"]["max"]
-            self.player_invulnerable = 1.5
-            self.player_stun = 0
-            self.knockback = pygame.Vector2()
-            self.boss = self.boss_home.copy()
-            self.boss_hp = 100
-            self.boss_state = "idle"
-            self.boss_timer = 1.2
+            self.app.state.setdefault("brumazul", {})["beach_completed"] = True
+            changed = self.app.scene_manager.change_scene(
+                "brumazul_posada", payload={"target_spawn_id": "despertar"}
+            )
+            if changed:
+                from core.save_manager import save_state
+                try:
+                    save_state(self.app.state)
+                except (OSError, RuntimeError, TypeError, ValueError) as error:
+                    self.app.add_log("No se pudo guardar: " + str(error))
+                self.app.dispatch_scene_entered_event()
 
     def draw(self):
         screen = self.app.screen
