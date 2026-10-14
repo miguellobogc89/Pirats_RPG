@@ -72,6 +72,8 @@ class BrumazulScene(FarmScene):
         self.port_departure_progress = 0.0
         self.door_cooldown = 0.8
 
+        from game.story.chapter_01_encounters import initialize
+        initialize(self)
         self.save_elapsed = 0.0
         if self.beach:
             self.progress["chapter_started"] = True
@@ -188,6 +190,10 @@ class BrumazulScene(FarmScene):
                 return True
             if self.talk_to_nearby(event.pos if event.type == pygame.MOUSEBUTTONDOWN else None):
                 return True
+        if self.chapter_area and not self.app.menu_open and event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
+            from game.story.chapter_01_encounters import attack as attack_encounter
+            if attack_encounter(self):
+                return True
         if self.beach and event.type == pygame.MOUSEBUTTONDOWN and event.button == 1 and not self.app.menu_open:
             self.attack(event.pos)
             return True
@@ -293,6 +299,8 @@ class BrumazulScene(FarmScene):
             if self.fade >= 1:
                 self.finish_intro()
         elif self.phase == "free" and self.npc_dialogue is None:
+            from game.story.chapter_01_encounters import update as update_encounters
+            update_encounters(self, dt)
             p = self.app.state["player"]
             old_position = (p["x"], p["y"])
             self.app.update_farm_scene(dt)
@@ -360,7 +368,23 @@ class BrumazulScene(FarmScene):
             elder = self.area_layout.get("elder", [690, 365])
             if math.dist((p["x"], p["y"]), elder) < 90:
                 stage = self.app.state["quests"]["un_techo_propio"]
-                if stage in ("find_elder_port", "complete"):
+                if stage == "complete":
+                    from game.story.chapter_01_quest_manager import ensure_chapter_quests
+                    quests = ensure_chapter_quests(self.app.state)
+                    if quests["la_ultima_madriguera"] == "ready":
+                        if quantity(self.app.state, "father_sword") == 0:
+                            self.npc_dialogue = get_chapter_dialogue("elder_farm_need_sword")
+                        else:
+                            dispatch_story_event(self.app, "npc_talked", {"npc_id": "anciano_granja"})
+                            self.app.state.setdefault("chapter_encounters", {}).setdefault("farm_ambush", {})["started"] = True
+                            self.npc_dialogue = get_chapter_dialogue("elder_farm_ambush")
+                        self.autosave()
+                        return True
+                    if quests["la_ultima_madriguera"] in ("hunt", "boss", "approach"):
+                        self.npc_dialogue = get_chapter_dialogue("elder_farm_guard")
+                        return True
+                    return False
+                if stage == "find_elder_port":
                     return False
                 if stage == "find_elder":
                     self.npc_dialogue = get_chapter_dialogue("elder_farm_first")
@@ -505,6 +529,8 @@ class BrumazulScene(FarmScene):
             self.draw_village(cx, cy)
         elif self.chapter_area:
             self.draw_chapter_area(cx, cy)
+            from game.story.chapter_01_encounters import draw as draw_encounters
+            draw_encounters(self, cx, cy)
         else:
             self.draw_room(cx, cy)
         if not self.tavern and self.scene_id != "brumazul_pueblo":
@@ -618,7 +644,7 @@ class BrumazulScene(FarmScene):
             self.actor(node.get("label", node["id"]), pygame.Vector2(x, y), cx, cy)
         if "elder" in layout and self.scene_id in ("brumazul_granja", "brumazul_puerto"):
             stage = self.app.state["quests"]["un_techo_propio"]
-            visible = (self.scene_id == "brumazul_granja" and stage in ("find_elder", "repair_fence", "inspect_gate", "get_bolt")) or (self.scene_id == "brumazul_puerto" and (stage == "find_elder_port" or self.port_departure))
+            visible = (self.scene_id == "brumazul_granja" and stage in ("find_elder", "repair_fence", "inspect_gate", "get_bolt", "complete")) or (self.scene_id == "brumazul_puerto" and (stage == "find_elder_port" or self.port_departure))
             if visible:
                 elder_position = pygame.Vector2(layout["elder"])
                 if self.scene_id == "brumazul_puerto" and self.port_departure:
