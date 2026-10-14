@@ -67,6 +67,7 @@ class BrumazulScene(FarmScene):
         self.show_keeper = not self.progress.get("intro_finished", False)
         self.fade = 0.0
         self.npc_dialogue = None
+        self.npc_dialogue_index = 0
         self.door_cooldown = 0.8
 
         self.save_elapsed = 0.0
@@ -177,7 +178,10 @@ class BrumazulScene(FarmScene):
             return True
         if self.npc_dialogue is not None:
             if (event.type == pygame.KEYDOWN and event.key in (pygame.K_RETURN, pygame.K_SPACE, pygame.K_e, pygame.K_ESCAPE)) or (event.type == pygame.MOUSEBUTTONDOWN and event.button == 1):
-                self.npc_dialogue = None
+                self.npc_dialogue_index += 1
+                if self.npc_dialogue_index >= len(self.npc_dialogue[1]):
+                    self.npc_dialogue = None
+                    self.npc_dialogue_index = 0
             return True
         if (self.tavern or self.village or self.chapter_area) and not self.app.menu_open and ((event.type == pygame.KEYDOWN and event.key in (pygame.K_e, pygame.K_RETURN)) or (event.type == pygame.MOUSEBUTTONDOWN and event.button == 1)):
             if self.scene_id == "brumazul_granja" and self.interact_farm(event.pos if event.type == pygame.MOUSEBUTTONDOWN else None):
@@ -325,6 +329,8 @@ class BrumazulScene(FarmScene):
             elder = self.area_layout.get("elder", [690, 365])
             if math.dist((p["x"], p["y"]), elder) < 90:
                 stage = self.app.state["quests"]["un_techo_propio"]
+                if stage in ("find_elder_port", "complete"):
+                    return False
                 if stage == "find_elder":
                     self.npc_dialogue = get_chapter_dialogue("elder_farm_first")
                     dispatch_story_event(self.app, "npc_talked", {"npc_id": "anciano"})
@@ -455,7 +461,7 @@ class BrumazulScene(FarmScene):
             else:
                 self.draw_dialogue(who, self.response if self.index == INTRO["response_index"] else line)
         if self.npc_dialogue:
-            self.draw_dialogue(self.npc_dialogue[0], "  ".join(self.npc_dialogue[1]))
+            self.draw_dialogue(self.npc_dialogue[0], self.npc_dialogue[1][self.npc_dialogue_index])
         if self.phase == "fade":
             overlay = pygame.Surface((WIDTH, HEIGHT))
             overlay.fill(WHITE)
