@@ -50,7 +50,11 @@ class Game:
         self.small_font = pygame.font.SysFont("consolas", 14)
         self.big_font = pygame.font.SysFont(None, 30)
         self.unavailable_menu_tabs = {"routes", "upgrades", "plants", "recipes", "options"}
-        self.state = {"skills": saved.get("skills", {})}
+        self.state = {"skills": saved.get("skills") if isinstance(saved.get("skills"), dict) else {}}
+        from game.skills.skill_database import SKILL_DATABASE
+        from game.skills.skill_state import create_default_skills_state
+        for skill_id, default in create_default_skills_state(SKILL_DATABASE).items():
+            self.state["skills"].setdefault(skill_id, default)
         self.skill_manager = SkillManager(self.state)
         self.WARN = (180, 135, 60)
         self.menu_action_hitboxes = []
