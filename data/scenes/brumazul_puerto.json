@@ -1,0 +1,89 @@
+{
+  "id": "brumazul_puerto",
+  "name": "puerto",
+  "width": 50,
+  "height": 44,
+  "tile_size": 16,
+  "player_spawn": {
+    "x": 400,
+    "y": 145
+  },
+  "objects": [],
+  "collisions": [],
+  "spawns": [],
+  "exits": [],
+  "chapter_layout": {
+    "id": "puerto",
+    "width": 800,
+    "height": 704,
+    "spawn": [
+      400,
+      145
+    ],
+    "walkable": [
+      [
+        350,
+        15,
+        100,
+        280
+      ],
+      [
+        210,
+        270,
+        440,
+        330
+      ],
+      [
+        15,
+        390,
+        220,
+        100
+      ]
+    ],
+    "elder": [
+      420,
+      365
+    ],
+    "nodes": [
+      {
+        "id": "marinero",
+        "label": "MARINERO",
+        "position": [
+          290,
+          475
+        ],
+        "radius": 40
+      }
+    ],
+    "exits": [
+      {
+        "rect": [
+          350,
+          15,
+          100,
+          30
+        ],
+        "to": "pueblo",
+        "spawn": [
+          650,
+          925
+        ],
+        "label": "PUEBLO"
+      },
+      {
+        "rect": [
+          15,
+          390,
+          30,
+          100
+        ],
+        "to": "playa",
+        "spawn": [
+          650,
+          440
+        ],
+        "label": "PLAYA"
+      }
+    ]
+  }
+}
