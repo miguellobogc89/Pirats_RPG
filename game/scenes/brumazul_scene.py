@@ -251,6 +251,11 @@ class BrumazulScene(FarmScene):
                     self.wake_at_inn()
                     return
                 self.boss_timer = max(0, self.boss_timer - dt)
+            if not self.door_cooldown and self.phase == "free" and self.npc_dialogue is None:
+                from game.scenes.chapter_area_navigation import transition_chapter_scene
+                if transition_chapter_scene(self.app, self.scene_id, self.app.state["player"]):
+                    self.autosave()
+                    return
         elif self.phase == "elder_enters":
             self.elder.y -= 100 * dt
             if self.elder.y <= 465:
@@ -505,11 +510,6 @@ class BrumazulScene(FarmScene):
             self.actor(name + " / " + race, pygame.Vector2(pos), cx, cy)
         self.label("POSADA  /  SALON", 22, 18)
         self.label(get_chapter_ui_text("tavern_hint"), 22, 43)
-
-    def update_chapter_exits(self, player):
-        from game.scenes.chapter_area_navigation import transition_chapter_scene
-        if transition_chapter_scene(self.app, self.scene_id, player, self.area_layout):
-            self.autosave()
 
     def draw_chapter_area(self, cx, cy):
         layout = self.area_layout
