@@ -200,6 +200,7 @@ class BrumazulScene(FarmScene):
                 else:
                     from game.inventory.stash_state import ensure_stash_state
                     ensure_stash_state(self.app.state)
+                    self.app.slot_ui_state.clear()
                     self.app.stash_open = True
                 return True
         # A left-click during an active nearby encounter is an attack, not NPC interaction.
