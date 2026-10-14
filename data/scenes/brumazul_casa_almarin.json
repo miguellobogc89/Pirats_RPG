@@ -1,0 +1,40 @@
+{
+  "id": "brumazul_casa_almarin",
+  "name": "casa almarin",
+  "width": 50,
+  "height": 41,
+  "tile_size": 16,
+  "player_spawn": {
+    "x": 400,
+    "y": 535
+  },
+  "objects": [],
+  "collisions": [],
+  "spawns": [],
+  "exits": [],
+  "chapter_layout": {
+    "id": "casa_almarin",
+    "width": 800,
+    "height": 650,
+    "spawn": [
+      400,
+      535
+    ],
+    "walkable": [
+      [
+        105,
+        105,
+        590,
+        465
+      ]
+    ],
+    "bed": [
+      245,
+      235
+    ],
+    "exit": [
+      400,
+      555
+    ]
+  }
+}
