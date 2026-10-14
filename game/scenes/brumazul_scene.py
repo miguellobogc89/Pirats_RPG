@@ -171,7 +171,7 @@ class BrumazulScene(FarmScene):
                     self.choice = (self.choice + 1) % len(CHOICES)
                     return True
             if (event.type == pygame.KEYDOWN and event.key in (pygame.K_RETURN, pygame.K_SPACE, pygame.K_e)) or (event.type == pygame.MOUSEBUTTONDOWN and event.button == 1):
-                if self.index == 10:
+                if self.index == INTRO["choice_index"]:
                     self.response = RESPONSES[self.choice]
                 self.index += 1
                 self.process_script()
