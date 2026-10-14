@@ -1,0 +1,116 @@
+{
+  "quests": {
+    "un_techo_propio": {
+      "requirements": {
+        "fence_wood": 10,
+        "door_wood": 15,
+        "door_metal_bolt": 1
+      }
+    }
+  },
+  "dialogues": {
+    "farm_intro": [
+      "ANCIANO: Bienvenido a las tierras de Almarin.",
+      "ANCIANO: Esta finca necesita reparaciones. Recoge madera y arregla las vallas."
+    ],
+    "farm_fence_end": [
+      "ANCIANO: Buen trabajo con las vallas.",
+      "ANCIANO: Ahora debemos asegurar la entrada con madera y un cerrojo."
+    ],
+    "inn_elder_clue": [
+      "ANCIANO: Nos encontraremos en el puerto. Alli hablaremos de lo que sucede en la granja."
+    ],
+    "port_elder_intro": [
+      "ANCIANO: Hay criaturas merodeando por la finca.",
+      "ANCIANO: Regresa a la granja. Tenemos que investigar."
+    ],
+    "farm_final": [
+      "ANCIANO: Has logrado detener a las criaturas.",
+      "ANCIANO: La casa y el taller vuelven a estar a tu disposicion."
+    ]
+  },
+  "npcs": {
+    "herrero": {
+      "label": "HERRERO",
+      "options": [
+        "Hablar",
+        "Comerciar",
+        "Salir"
+      ],
+      "dialogues": {
+        "intro": [
+          "HERRERO: Bienvenido. ¿En que puedo ayudarte?"
+        ]
+      }
+    },
+    "sylvarin": {
+      "label": "SYLVARIN",
+      "options": [
+        "Hablar",
+        "Comerciar",
+        "Salir"
+      ],
+      "dialogues": {
+        "intro": [
+          "SYLVARIN: Bienvenido. ¿En que puedo ayudarte?"
+        ]
+      }
+    },
+    "botica": {
+      "label": "BOTICA",
+      "options": [
+        "Hablar",
+        "Comerciar",
+        "Salir"
+      ],
+      "dialogues": {
+        "intro": [
+          "BOTICA: Bienvenido. ¿En que puedo ayudarte?"
+        ]
+      }
+    },
+    "mercader": {
+      "label": "MERCADER",
+      "options": [
+        "Hablar",
+        "Comerciar",
+        "Salir"
+      ],
+      "dialogues": {
+        "intro": [
+          "MERCADER: Bienvenido. ¿En que puedo ayudarte?"
+        ]
+      }
+    },
+    "posadera": {
+      "label": "POSADERA",
+      "options": [
+        "Hablar",
+        "Entrar",
+        "Salir"
+      ],
+      "dialogues": {
+        "intro": [
+          "POSADERA: Bienvenido. ¿En que puedo ayudarte?"
+        ]
+      }
+    }
+  },
+  "items": {
+    "wood": {
+      "title": "Madera"
+    },
+    "metal_bolt": {
+      "title": "Cerrojo metalico"
+    },
+    "fathers_sword": {
+      "title": "Espada de tu padre"
+    },
+    "sylvarin_boots": {
+      "title": "Botas de Sylvarin"
+    },
+    "house_key": {
+      "title": "Llave de la casa"
+    }
+  }
+}
