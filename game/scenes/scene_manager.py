@@ -99,6 +99,9 @@ class SceneManager:
             self.app.state["current_scene"] = scene_id
 
         self.notify_scene_data_changed(scene_id)
+        if scene_id.startswith("brumazul_"):
+            from game.scenes.chapter_area_navigation import recover_chapter_position
+            recover_chapter_position(self.app.state, scene_id, load_scene_data(scene_id))
         scene = self.create_scene(scene_id)
         self.scene_stack = [scene]
         scene.enter()
