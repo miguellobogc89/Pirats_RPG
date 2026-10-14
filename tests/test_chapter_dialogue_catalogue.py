@@ -50,6 +50,34 @@ class ChapterDialogueAudit(unittest.TestCase):
                             self.fail(f"Inline dialogue text at line {node.lineno}")
         self.assertNotRegex(self.source, r'(?m)^\s*self\.npc_dialogue\s*=\s*\(\s*["\']')
 
+    def test_npc_dialogue_advances_one_line_at_a_time(self):
+        self.assertIn("self.npc_dialogue_index += 1", self.source)
+        self.assertIn("self.npc_dialogue[1][self.npc_dialogue_index]", self.source)
+        self.assertNotIn('"  ".join(self.npc_dialogue[1])', self.source)
+
+    def test_chapter_quest_conversations_do_not_cascade(self):
+        from game.story.chapter_01_quest_manager import apply_chapter_quest_event
+        state = {"quests": {
+            "un_techo_propio": "get_bolt",
+            "el_hierro_que_canta": "investigate",
+            "cuando_callan_las_campanas": "not_started",
+            "la_ultima_madriguera": "ready",
+        }}
+        result = apply_chapter_quest_event(state, "npc_talked", {"npc_id": "sylvarin"})
+        self.assertEqual([entry["quest_id"] for entry in result], ["el_hierro_que_canta"])
+        self.assertEqual(state["quests"]["cuando_callan_las_campanas"], "not_started")
+        result = apply_chapter_quest_event(state, "npc_talked", {"npc_id": "sylvarin"})
+        self.assertEqual([entry["quest_id"] for entry in result], ["cuando_callan_las_campanas"])
+
+    def test_reward_dialogue_has_matching_inventory_transaction(self):
+        self.assertIn('receive(self.app.state, "metal_bolt"', self.source)
+        self.assertIn('receive(self.app.state, "sylvarin_boots"', self.source)
+
+    def test_narrative_hints_are_catalogued(self):
+        for key in ("mission_started", "room_exit_hint", "tavern_hint", "village_hint"):
+            self.assertIn(key, self.catalogue["ui_text"])
+        self.assertIn("get_chapter_ui_text", self.source)
+
     def test_intro_is_data_driven(self):
         intro = self.catalogue["intro"]
         self.assertTrue(intro["script"])
