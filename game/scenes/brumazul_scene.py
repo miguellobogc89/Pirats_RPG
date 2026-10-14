@@ -430,7 +430,7 @@ class BrumazulScene(FarmScene):
                     ])
                 elif smith_stage == "investigate":
                     self.npc_dialogue = ("HERRERO", ["Habla con Sylvarin. Su almacen esta infestado de ratas."])
-                elif smith_stage == "artisan_explained":
+                elif smith_stage == "artisan_explained" and quests["cuando_callan_las_campanas"] == "completed":
                     dispatch_story_event(self.app, "npc_talked", {"npc_id": "herrero"})
                     progress = self.app.state.setdefault("farm_repairs", {})
                     if not progress.get("smith_bolt_claimed"):
@@ -440,6 +440,8 @@ class BrumazulScene(FarmScene):
                         "Asi que las campanas servian para espantar a las ratas.",
                         "Cumpliste tu parte. Toma el cerrojo que te prometi.",
                     ])
+                elif smith_stage == "artisan_explained":
+                    self.npc_dialogue = ("HERRERO", ["Primero acaba con las ratas del almacen de Sylvarin."])
                 else:
                     self.npc_dialogue = ("HERRERO", ["Ya tienes el cerrojo. Suerte con la finca."])
                 self.autosave()
