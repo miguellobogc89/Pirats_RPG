@@ -1,0 +1,44 @@
+{
+  "id": "brumazul_taller_almarin",
+  "name": "taller almarin",
+  "width": 50,
+  "height": 41,
+  "tile_size": 16,
+  "player_spawn": {
+    "x": 400,
+    "y": 535
+  },
+  "objects": [],
+  "collisions": [],
+  "spawns": [],
+  "exits": [],
+  "chapter_layout": {
+    "id": "taller_almarin",
+    "width": 800,
+    "height": 650,
+    "spawn": [
+      400,
+      535
+    ],
+    "walkable": [
+      [
+        105,
+        105,
+        590,
+        465
+      ]
+    ],
+    "chest": [
+      265,
+      260
+    ],
+    "map_table": [
+      540,
+      255
+    ],
+    "exit": [
+      400,
+      555
+    ]
+  }
+}
