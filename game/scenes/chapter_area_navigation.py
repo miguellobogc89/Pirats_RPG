@@ -28,6 +28,9 @@ def transition_chapter_scene(app, scene_id, player, layout=None):
     if destination is None:
         return False
     target, spawn = destination
+    if target in ("brumazul_casa_almarin", "brumazul_taller_almarin"):
+        app.add_log("El edificio permanece cerrado por ahora.")
+        return False
     if target == "brumazul_madriguera_artesana":
         from game.inventory.inventory_manager import get_item_quantity
         from game.data.item_database import ITEM_DATABASE
