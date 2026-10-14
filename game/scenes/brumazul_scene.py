@@ -172,7 +172,7 @@ class BrumazulScene(FarmScene):
             return False
         for gap in layout.get("fence_gaps", []):
             x, y, w, h = gap["rect"]
-            if gap["id"] in repaired or not (x - 65 <= p["x"] <= x + w + 65 and y - 65 <= p["y"] <= y + h + 65):
+            if gap["id"] in repaired or not (x - 85 <= p["x"] <= x + w + 85 and y - 85 <= p["y"] <= y + h + 85):
                 continue
             cost = gap.get("cost", 10)
             if progress["wood"] < cost:
@@ -355,6 +355,13 @@ class BrumazulScene(FarmScene):
                         "Busca madera por la granja y repara los huecos.",
                     ])
                     dispatch_story_event(self.app, "npc_talked", {"npc_id": "anciano"})
+                elif len(self.app.state.get("farm_repairs", {}).get("repaired_fences", [])) == len(self.area_layout.get("fence_gaps", [])) and self.area_layout.get("fence_gaps"):
+                    if stage == "repair_fence":
+                        dispatch_story_event(self.app, "object_repaired", {"object_id": "fence"})
+                    self.npc_dialogue = ("ANCIANO", [
+                        "He comprobado las tres vallas. Buen trabajo.",
+                        "Ahora examina la puerta principal de la finca. Necesitaremos asegurarla.",
+                    ])
                 else:
                     self.npc_dialogue = ("ANCIANO", [
                         "Las vallas necesitan reparacion. Revisa los huecos de la finca."
@@ -519,7 +526,7 @@ class BrumazulScene(FarmScene):
             for gap in layout.get("fence_gaps", []):
                 x, y, w, h = gap["rect"]
                 done = gap["id"] in repaired
-                pygame.draw.rect(screen, LINE if done else (151, 81, 67), (x - cx, y - cy, w, h), 4 if done else 2)
+                pygame.draw.rect(screen, LINE if done else INK, (x - cx, y - cy, w, h), 4 if done else 2)
                 if not done:
                     self.label("VALLA ROTA [E]", x - cx - 20, y - cy - 23)
             self.label("MADERA: %d  |  VALLAS: %d/3" % (progress.get("wood", 0), len(repaired)), 22, 91)
