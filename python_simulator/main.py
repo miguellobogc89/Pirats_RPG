@@ -44,7 +44,7 @@ class Game:
         self.gate_repaired = saved.get("gate_repaired", saved.get("mission_stage") == "gate_repaired")
         self.journal_open = False
         self.hud_visible = True
-        self.game_clock = saved.get("game_clock", {"hour": 6 if self.time_of_day == "day" else 21, "minute": 0})
+        self.game_clock = saved.get("game_clock", {"hour": 6 if saved.get("time_of_day", "day" if saved.get("intro_finished", False) else "night") == "day" else 21, "minute": 0})
         self.menu_tab = "inventory"
         self.small_font = pygame.font.SysFont("consolas", 14)
         self.big_font = pygame.font.SysFont(None, 30)
