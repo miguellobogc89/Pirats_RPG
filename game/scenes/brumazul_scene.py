@@ -15,7 +15,7 @@ from game.hud.stash_overlay import draw_stash_overlay
 from game.inventory.hotbar_manager import get_hotbar_slots, get_active_hotbar_index
 from game.world.camera import get_camera_position
 from game.data.item_database import get_item_data
-from game.dialogue.chapter_dialogues import get_chapter_dialogue
+from game.dialogue.chapter_dialogues import get_chapter_dialogue, get_chapter_intro, get_chapter_npcs
 
 WIDTH, HEIGHT = 960, 640
 WHITE = (250, 250, 249)
@@ -26,85 +26,15 @@ LINE = (166, 166, 166)
 INK = (105, 105, 105)
 
 # La conversacion tiene indicaciones de escena en vez de lineas pronunciadas.
-SCRIPT = [
-    ("POSADERA", "Vaya, has despertado. Pensabamos que no lo contarias."),
-    ("POSADERA", "Un pescador te encontro al amanecer, tendido junto al camino."),
-    ("POSADERA", "Llevabas arena en la ropa y no reaccionabas a nada."),
-    ("TU", "Recuerdo la playa. Y algo enorme moviendose en la oscuridad."),
-    ("POSADERA", "Aqui conocemos las tormentas y las alimañas. Pero aquello..."),
-    ("POSADERA", "Hay alguien que lleva horas esperando a que despiertes."),
-    ("@elder_enters", ""),
-    ("ANCIANO", "Asi que eres el hijo de Almarin Velhart."),
-    ("ANCIANO", "He visto muchos naufragos. Pocos llegan vivos desde esa playa."),
-    ("ANCIANO", "Dime, ¿que recuerdas exactamente de la criatura?"),
-    ("@choice", ""),
-    ("ANCIANO", "Lo que describes confirma mis temores."),
-    ("POSADERA", "¿Que ocurre? ¿Acaso sabeis que hay ahi fuera?"),
-    ("ANCIANO", "Os agradezco que le hayais cuidado. ¿Nos dejaria a solas?"),
-    ("POSADERA", "Por supuesto. Os traere algo de comer mas tarde."),
-    ("@innkeeper_exits", ""),
-    ("TU", "Ahora que estamos solos, ¿que sabes de esa criatura?"),
-    ("ANCIANO", "Mas de lo que me gustaria. Y menos de lo necesario."),
-    ("ANCIANO", "Hace años comenzaron a aparecer rastros en la costa."),
-    ("ANCIANO", "Animales desaparecidos, marcas en la roca, noches sin aves."),
-    ("ANCIANO", "Algunos lo atribuyeron a las mareas. Otros dejaron de salir."),
-    ("TU", "¿La habias visto antes?"),
-    ("ANCIANO", "No con mis propios ojos. Pero reconozco lo que has contado."),
-    ("ANCIANO", "Y lo mas extraño de todo es que hayas sobrevivido."),
-    ("ANCIANO", "Una criatura de ese tamaño no suele dejar escapar a su presa."),
-    ("TU", "Entonces, ¿por que sigo aqui?"),
-    ("ANCIANO", "Esa es precisamente la pregunta que no puedo responder."),
-    ("ANCIANO", "Y no pienso inventar una respuesta para tranquilizarte."),
-    ("TU", "Has dicho que conocias a mi padre."),
-    ("ANCIANO", "Almarin Velhart no era un hombre que buscara reconocimiento."),
-    ("ANCIANO", "Era paciente, reservado y mas obstinado que cualquier marinero."),
-    ("ANCIANO", "Construyo una finca a las afueras. Trabajaba la tierra con sus manos."),
-    ("ANCIANO", "Pero tambien tenia un taller. Alli guardaba sus herramientas y notas."),
-    ("ANCIANO", "Nunca me explico del todo en que trabajaba durante las noches."),
-    ("TU", "¿Que le ocurrio?"),
-    ("ANCIANO", "Su historia no cabe en una conversacion junto a una cama."),
-    ("ANCIANO", "Y hay cosas que prefiero comprobar antes de contartelas."),
-    ("ANCIANO", "La finca sigue en pie, aunque nadie la cuida desde hace tiempo."),
-    ("ANCIANO", "Te pertenece por derecho. Tengo documentos que debes ver."),
-    ("ANCIANO", "Cuando hayas descansado, ven a la entrada de la finca."),
-    ("TU", "¿Y la criatura?"),
-    ("ANCIANO", "No vuelvas a la playa de noche. Ni siquiera por curiosidad."),
-    ("ANCIANO", "No puedo protegerte de algo que aun no comprendo."),
-    ("ANCIANO", "Por ahora descansa. Hablaremos cuando recuperes fuerzas."),
-    ("@elder_exits", ""),
-    ("@fade", ""),
-]
-CHOICES = [
-    "Era enorme y avanzaba lentamente.",
-    "Vi unos ojos brillando entre las sombras.",
-    "Parecia conocer el camino al pueblo.",
-]
-RESPONSES = [
-    "Entonces era tan grande como cuentan los viejos relatos...",
-    "Esos ojos... esperaba no volver a oir hablar de ellos.",
-    "Si buscaba el camino al pueblo, estamos ante algo peor.",
-]
+INTRO = get_chapter_intro()
+SCRIPT = [(entry["speaker"], entry["text"]) for entry in INTRO["script"]]
+CHOICES = INTRO["choices"]
+RESPONSES = INTRO["responses"]
 VILLAGE_LAYOUT = json.loads(
     (Path(__file__).resolve().parents[2] / "python_simulator" / "scenes" / "pueblo.json").read_text(encoding="utf-8")
 )
-VILLAGE_NPCS = [
-    ("HERRERO", "human", (920, 485), ["Trabajo el hierro. Busca a Sylvarin si necesitas un cerrojo."]),
-    ("BOTICA", "human", (1130, 475), ["La botica esta abierta."]),
-    ("MERCADER", "human", (910, 300), ["Bienvenido a Brumazul."]),
-    ("POSADERA", "human", (1080, 265), ["La posada esta al norte."]),
-]
-
-TAVERN_NPCS = [
-    ("MARINERA", "human", (370, 450), [
-        "La costa parecia tranquila ayer. Esta manana nadie quiere salir a faenar.",
-        "No te acerques a la playa cuando caiga la noche.",
-    ]),
-    ("VIAJERO", "human", (555, 440), [
-        "He recorrido tres islas y ninguna posada sirve un caldo como esta.",
-        "Si buscas la finca Velhart, pregunta en el camino del pueblo.",
-    ]),
-]
-
+VILLAGE_NPCS = [(npc["name"], npc["race"], tuple(npc["position"]), npc["dialogue"]) for npc in get_chapter_npcs("village")]
+TAVERN_NPCS = [(npc["name"], npc["race"], tuple(npc["position"]), npc["dialogue"]) for npc in get_chapter_npcs("tavern")]
 
 class BrumazulScene(FarmScene):
     def enter(self):
@@ -228,7 +158,7 @@ class BrumazulScene(FarmScene):
         if self.phase == "fade" or self.phase in ("elder_enters", "keeper_exits", "elder_exits"):
             return True
         if self.phase == "dialogue":
-            if event.type == pygame.KEYDOWN and self.index == 10:
+            if event.type == pygame.KEYDOWN and self.index == INTRO["choice_index"]:
                 if event.key in (pygame.K_UP, pygame.K_w):
                     self.choice = (self.choice - 1) % len(CHOICES)
                     return True
@@ -432,14 +362,14 @@ class BrumazulScene(FarmScene):
                         dispatch_story_event(self.app, "npc_talked", {"npc_id": "sylvarin"})
                         self.npc_dialogue = get_chapter_dialogue("sylvarin_offer" if quests["cuando_callan_las_campanas"] != "completed" else "sylvarin_done")
                     else:
-                        self.npc_dialogue = (node.get("label", npc_id), ["Bienvenido a Brumazul."])
+                        self.npc_dialogue = get_chapter_dialogue("generic_villager")
                         dispatch_story_event(self.app, "npc_talked", {"npc_id": npc_id})
                     self.autosave()
                     return True
             return False
-        for name, race, pos, lines in (VILLAGE_NPCS if self.village else TAVERN_NPCS):
+        for name, race, pos, dialogue_id in (VILLAGE_NPCS if self.village else TAVERN_NPCS):
             if math.dist((p["x"], p["y"]), pos) < 65:
-                self.npc_dialogue = (name, lines)
+                self.npc_dialogue = get_chapter_dialogue(dialogue_id)
                 dispatch_story_event(self.app, "npc_talked", {"npc_id": name.lower()})
                 return True
         return False
@@ -493,9 +423,9 @@ class BrumazulScene(FarmScene):
         if self.phase == "dialogue":
             who, line = SCRIPT[self.index]
             if who == "@choice":
-                self.draw_dialogue("TU", "¿Que fue lo que viste?", CHOICES, self.choice)
+                self.draw_dialogue("TU", INTRO["question"], CHOICES, self.choice)
             else:
-                self.draw_dialogue(who, self.response if self.index == 11 else line)
+                self.draw_dialogue(who, self.response if self.index == INTRO["response_index"] else line)
         if self.npc_dialogue:
             self.draw_dialogue(self.npc_dialogue[0], "  ".join(self.npc_dialogue[1]))
         if self.phase == "fade":
