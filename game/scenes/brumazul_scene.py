@@ -172,6 +172,36 @@ class BrumazulScene(FarmScene):
                 self.npc_dialogue = ("RECOGIDA", ["+5 madera. Total: %d" % progress["wood"]])
                 self.autosave()
                 return True
+        # El porton de reparacion esta dentro de la finca, separado del
+        # paso real al pueblo (x=844): interactuar no cambia de escenario.
+        gate_marker = (770, 445)
+        gate_near = math.dist((p["x"], p["y"]), gate_marker) <= 85
+        gate_clicked = clicked is not None and math.dist(clicked, gate_marker) <= 42
+        if (gate_clicked or (clicked is None and gate_near)) and self.app.state["quests"]["un_techo_propio"] in ("inspect_gate", "get_bolt"):
+            stage = self.app.state["quests"]["un_techo_propio"]
+            if stage == "inspect_gate":
+                dispatch_story_event(self.app, "object_interacted", {"object_id": "farm_gate"})
+                self.npc_dialogue = ("PORTON DE LA FINCA", [
+                    "La puerta necesita 15 de madera y un cerrojo metalico.",
+                    "Consigue el cerrojo y vuelve para repararla.",
+                ])
+            else:
+                wood_cost = layout.get("door_cost", {}).get("wood", 15)
+                bolt_cost = layout.get("door_cost", {}).get("metal_bolt", 1)
+                bolts = progress.get("metal_bolt", 0)
+                if progress["wood"] >= wood_cost and bolts >= bolt_cost:
+                    progress["wood"] -= wood_cost
+                    progress["metal_bolt"] = bolts - bolt_cost
+                    progress["gate_repaired"] = True
+                    dispatch_story_event(self.app, "object_repaired", {"object_id": "farm_gate"})
+                    self.npc_dialogue = ("PORTON REPARADO", ["La puerta de la finca esta asegurada."])
+                else:
+                    self.npc_dialogue = ("PORTON DE LA FINCA", [
+                        "Necesitas %d de madera y %d cerrojo. Tienes %d de madera y %d cerrojo."
+                        % (wood_cost, bolt_cost, progress["wood"], bolts),
+                    ])
+            self.autosave()
+            return True
         if self.app.state["quests"]["un_techo_propio"] != "repair_fence":
             return False
         for gap in layout.get("fence_gaps", []):
