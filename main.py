@@ -1,31 +1,41 @@
+"""Canonical entry point for the modular Pygame game.
+
+The legacy python_simulator is not launched or imported here.
+"""
+import argparse
+
 from core.data_loader import load_game_data
 from core.game_state import create_initial_state, normalize_state
 from core.save_manager import load_latest_saved_state
 from game.pygame_app import PygameApp
+from game.scenes.scene_loader import scene_exists
 
 
 def main():
+    parser = argparse.ArgumentParser(description="Pirats RPG - modular game")
+    parser.add_argument(
+        "--new-game", action="store_true",
+        help="Start from a fresh game state without loading an existing save.",
+    )
+    args = parser.parse_args()
+
     game_data = load_game_data()
-    saved_state = load_latest_saved_state()
+    saved_state = None if args.new_game else load_latest_saved_state()
+    state = (
+        normalize_state(saved_state, game_data)
+        if saved_state is not None
+        else create_initial_state(game_data)
+    )
 
-    if saved_state is None:
-        state = create_initial_state(game_data)
-        start_in_game = False
-    else:
-        state = normalize_state(saved_state, game_data)
-        start_in_game = True
-
-    # Los guardados antiguos no deben devolvernos a la playa o la granja.
-    # Solo se respeta la posada si el combate ya se completo.
-    if state.get("current_scene") != "brumazul_posada":
-        state["current_scene"] = "escenario_limpio"
-        state["player"]["x"] = 320
-        state["player"]["y"] = 256
-    start_in_game = True
+    # Never silently teleport the player to a hard-coded test scene.
+    # Invalid legacy scene IDs fall back to the modular default.
+    if not scene_exists(state.get("current_scene", "")):
+        state["current_scene"] = "farm"
+        state["player"]["x"] = 160
+        state["player"]["y"] = 160
 
     app = PygameApp(state, game_data)
-
-    if start_in_game:
+    if saved_state is not None and not args.new_game:
         app.mode = "game"
         app.dispatch_scene_entered_event()
 
