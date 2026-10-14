@@ -16,7 +16,7 @@ SCENE_IDS = {
 def find_chapter_exit(scene_id, x, y, layout=None):
     """Resolve every chapter door in one place; arrival points never overlap exits."""
     if scene_id == "brumazul_pueblo":
-        if (425 <= x <= 550 and y <= 105) or (1035 <= x <= 1115 and 245 <= y <= 270):
+        if 1035 <= x <= 1115 and 245 <= y <= 270:
             return "brumazul_taberna", (485, 540)
         if 1225 <= x <= 1285 and 425 <= y <= 450:
             return "brumazul_taller_sylvarin", (400, 555)
@@ -30,7 +30,7 @@ def find_chapter_exit(scene_id, x, y, layout=None):
         if 425 <= x <= 550 and y <= 225:
             return "brumazul_posada", (400, 440)
         if 425 <= x <= 550 and y >= 620:
-            return "brumazul_pueblo", (485, 145)
+            return "brumazul_pueblo", (1075, 275)
     if scene_id == "brumazul_posada":
         if 430 <= x <= 540 and y >= 575:
             return "brumazul_taberna", (485, 540)
