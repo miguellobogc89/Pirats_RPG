@@ -248,6 +248,43 @@
       "lines": [
         "No tienes espacio suficiente para recibir este objeto. Libera un hueco y vuelve a intentarlo."
       ]
+    },
+    "smith_gate_repaired": {
+      "speaker": "HERRERO",
+      "lines": [
+        "Espero que ese cerrojo funcionara."
+      ]
+    },
+    "smith_trade": {
+      "speaker": "HERRERO",
+      "lines": [
+        "Bienvenido a mi herreria. ¿Quieres comerciar?"
+      ]
+    },
+    "innkeeper_tavern": {
+      "speaker": "POSADERA",
+      "lines": [
+        "Bienvenido de nuevo a la posada. ¿Necesitas alojamiento?"
+      ]
+    },
+    "elder_port_followup": {
+      "speaker": "ANCIANO",
+      "lines": [
+        "Has asegurado la entrada. Bien hecho.",
+        "Hay criaturas merodeando por la finca. Regresa a la granja: debemos investigar."
+      ]
+    },
+    "elder_port_idle": {
+      "speaker": "ANCIANO",
+      "lines": [
+        "Nos encontraremos aqui cuando hayas terminado de asegurar la finca."
+      ]
+    },
+    "elder_farm_after_gate": {
+      "speaker": "ANCIANO",
+      "lines": [
+        "El porton esta reparado. Ahora ve al puerto; alli hablaremos de lo que ocurre en la granja."
+      ]
     }
   },
   "intro": {
@@ -514,6 +551,16 @@
           440
         ],
         "dialogue": "tavern_viajero"
+      },
+      {
+        "id": "posadera",
+        "name": "POSADERA",
+        "race": "human",
+        "position": [
+          305,
+          355
+        ],
+        "dialogue": "innkeeper_tavern"
       }
     ]
   }
