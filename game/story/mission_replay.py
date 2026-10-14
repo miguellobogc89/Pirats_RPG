@@ -17,6 +17,8 @@ def replay_mission(app, mission_id):
     if mission is None:
         return False
     state = app.state
+    health = state.setdefault("health", {})
+    health["current"] = health.get("max", 10)
     quests = ensure_chapter_quests(state)
     for quest_id in mission["reset_quests"]:
         quests[quest_id] = QUESTS[quest_id]["initial"]
