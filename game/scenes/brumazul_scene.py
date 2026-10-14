@@ -382,6 +382,11 @@ class BrumazulScene(FarmScene):
                 stage = quests["un_techo_propio"]
                 smith_stage = quests["el_hierro_que_canta"]
                 progress = self.app.state.setdefault("farm_repairs", {})
+                if stage == "get_bolt" and not progress.get("smith_bolt_claimed") and smith_stage == "completed" and quests["cuando_callan_las_campanas"] != "not_started":
+                    # Recover saves affected by Sylvarin's former double event:
+                    # investigation completed, but the bolt was never delivered.
+                    quests["el_hierro_que_canta"] = "artisan_explained"
+                    smith_stage = "artisan_explained"
                 if stage == "get_bolt" and not progress.get("smith_bolt_claimed") and smith_stage in ("not_started", "completed"):
                     # Starting the bolt quest must not depend on stale side-quest
                     # flags left behind by mission replay or older saves.
@@ -417,7 +422,7 @@ class BrumazulScene(FarmScene):
                         if metal_stage == "investigate":
                             self.npc_dialogue = get_chapter_dialogue("sylvarin_metal_explained")
                             dispatch_story_event(self.app, "npc_talked", {"npc_id": "sylvarin"})
-                            dispatch_story_event(self.app, "npc_talked", {"npc_id": "sylvarin"})
+                            dispatch_story_event(self.app, "rat_nest_offered", {"object_id": "sylvarin"})
                         elif rat_stage == "get_weapon":
                             self.npc_dialogue = get_chapter_dialogue("sylvarin_need_weapon")
                         elif rat_stage == "not_started":
