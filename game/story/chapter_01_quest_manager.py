@@ -9,8 +9,8 @@ QUESTS = {
         "initial": "find_elder",
         "transitions": {
             "find_elder": ("npc_talked", "anciano", "repair_fence"),
-            "repair_fence": ("object_repaired", "fence", "inspect_gate"),
-            "inspect_gate": ("object_interacted", "farm_gate", "get_bolt"),
+            "repair_fence": ("npc_talked", "anciano", "get_bolt"),
+            "inspect_gate": ("npc_talked", "anciano", "get_bolt"),
             "get_bolt": ("object_repaired", "farm_gate", "find_elder_port"),
             "find_elder_port": ("npc_talked", "anciano_puerto", "complete"),
         },
