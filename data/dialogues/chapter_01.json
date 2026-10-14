@@ -2,66 +2,8 @@
   "version": 1,
   "language": "es",
   "dialogues": {
-    "farm_intro": {
-      "speaker": "ANCIANO",
-      "lines": [
-        "Bienvenido a las tierras de Almarin.",
-        "Esta finca necesita reparaciones. Recoge madera y arregla las vallas."
-      ]
-    },
-    "farm_fence_end": {
-      "speaker": "ANCIANO",
-      "lines": [
-        "Buen trabajo con las vallas.",
-        "Ahora debemos asegurar la entrada con madera y un cerrojo."
-      ]
-    },
-    "inn_elder_clue": {
-      "speaker": "ANCIANO",
-      "lines": [
-        "Nos encontraremos en el puerto. Alli hablaremos de lo que sucede en la granja."
-      ]
-    },
-    "port_elder_intro": {
-      "speaker": "ANCIANO",
-      "lines": [
-        "Hay criaturas merodeando por la finca.",
-        "Regresa a la granja. Tenemos que investigar."
-      ]
-    },
-    "farm_final": {
-      "speaker": "ANCIANO",
-      "lines": [
-        "Has logrado detener a las criaturas.",
-        "La casa y el taller vuelven a estar a tu disposicion."
-      ]
-    },
-    "herrero_intro": {
-      "speaker": "HERRERO",
-      "lines": [
-        "Bienvenido. ¿En que puedo ayudarte?"
-      ]
-    },
     "sylvarin_intro": {
       "speaker": "SYLVARIN",
-      "lines": [
-        "Bienvenido. ¿En que puedo ayudarte?"
-      ]
-    },
-    "botica_intro": {
-      "speaker": "BOTICA",
-      "lines": [
-        "Bienvenido. ¿En que puedo ayudarte?"
-      ]
-    },
-    "mercader_intro": {
-      "speaker": "MERCADER",
-      "lines": [
-        "Bienvenido. ¿En que puedo ayudarte?"
-      ]
-    },
-    "posadera_intro": {
-      "speaker": "POSADERA",
       "lines": [
         "Bienvenido. ¿En que puedo ayudarte?"
       ]
@@ -119,12 +61,6 @@
       "lines": [
         "Ahora comprendo para que utiliza Sylvarin ese metal.",
         "Has cumplido tu parte. Toma el cerrojo que necesitabas."
-      ]
-    },
-    "smith_done": {
-      "speaker": "HERRERO",
-      "lines": [
-        "Ya tienes el cerrojo. Suerte con la finca."
       ]
     },
     "farm_wood_pickup": {
@@ -269,12 +205,6 @@
       ]
     },
     "elder_port_idle": {
-      "speaker": "ANCIANO",
-      "lines": [
-        "Nos encontraremos en el puerto. Alli hablaremos de lo que sucede en la granja."
-      ]
-    },
-    "elder_farm_after_gate": {
       "speaker": "ANCIANO",
       "lines": [
         "Nos encontraremos en el puerto. Alli hablaremos de lo que sucede en la granja."
@@ -575,6 +505,79 @@
     "mission_started": "MISION: LAS TIERRAS DE ALMARIN - Busca al anciano en la finca",
     "room_exit_hint": "Puerta al salon: abajo",
     "tavern_hint": "E: hablar  |  norte: habitacion  |  sur: pueblo",
-    "village_hint": "E: hablar | Posada, taller, granja, puerto y playa"
+    "village_hint": "E: hablar | Posada, taller, granja, puerto y playa",
+    "continue_hint": "ENTER / ESPACIO"
+  },
+  "legacy_dialogues": {
+    "farm_intro": {
+      "speaker": "ANCIANO",
+      "lines": [
+        "Bienvenido a las tierras de Almarin.",
+        "Esta finca necesita reparaciones. Recoge madera y arregla las vallas."
+      ]
+    },
+    "farm_fence_end": {
+      "speaker": "ANCIANO",
+      "lines": [
+        "Buen trabajo con las vallas.",
+        "Ahora debemos asegurar la entrada con madera y un cerrojo."
+      ]
+    },
+    "inn_elder_clue": {
+      "speaker": "ANCIANO",
+      "lines": [
+        "Nos encontraremos en el puerto. Alli hablaremos de lo que sucede en la granja."
+      ]
+    },
+    "port_elder_intro": {
+      "speaker": "ANCIANO",
+      "lines": [
+        "Hay criaturas merodeando por la finca.",
+        "Regresa a la granja. Tenemos que investigar."
+      ]
+    },
+    "farm_final": {
+      "speaker": "ANCIANO",
+      "lines": [
+        "Has logrado detener a las criaturas.",
+        "La casa y el taller vuelven a estar a tu disposicion."
+      ]
+    },
+    "herrero_intro": {
+      "speaker": "HERRERO",
+      "lines": [
+        "Bienvenido. ¿En que puedo ayudarte?"
+      ]
+    },
+    "botica_intro": {
+      "speaker": "BOTICA",
+      "lines": [
+        "Bienvenido. ¿En que puedo ayudarte?"
+      ]
+    },
+    "mercader_intro": {
+      "speaker": "MERCADER",
+      "lines": [
+        "Bienvenido. ¿En que puedo ayudarte?"
+      ]
+    },
+    "posadera_intro": {
+      "speaker": "POSADERA",
+      "lines": [
+        "Bienvenido. ¿En que puedo ayudarte?"
+      ]
+    },
+    "smith_done": {
+      "speaker": "HERRERO",
+      "lines": [
+        "Ya tienes el cerrojo. Suerte con la finca."
+      ]
+    },
+    "elder_farm_after_gate": {
+      "speaker": "ANCIANO",
+      "lines": [
+        "Nos encontraremos en el puerto. Alli hablaremos de lo que sucede en la granja."
+      ]
+    }
   }
 }
