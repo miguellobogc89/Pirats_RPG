@@ -278,9 +278,9 @@ class BrumazulScene(FarmScene):
                 if not can_walk_chapter_area(self.scene_id, p["x"], p["y"], self.area_layout) and not find_chapter_exit(self.scene_id, p["x"], p["y"], self.area_layout):
                     p["x"], p["y"] = old_position
             if self.tavern:
-                if p["y"] < 115 and 425 < p["x"] < 550:
+                if p["y"] < 225 and 425 < p["x"] < 550:
                     self.transition("brumazul_posada", "retorno")
-                elif p["y"] > 745 and 425 < p["x"] < 550:
+                elif p["y"] > 615 and 425 < p["x"] < 550:
                     self.transition("brumazul_pueblo", "entrada")
             elif self.village or self.chapter_area:
                 self.update_chapter_exits(p)
@@ -386,7 +386,7 @@ class BrumazulScene(FarmScene):
         pygame.draw.rect(s, LINE, room, 1)
         pygame.draw.rect(s, LIGHT, (280 - cx, 400 - cy, 80, 120), 1)
         pygame.draw.rect(s, LIGHT, (480 - cx, 280 - cy, 80, 80), 1)
-        pygame.draw.line(s, WHITE, (430 - cx, 600 - cy), (540 - cx, 600 - cy), 5)
+        self.draw_door(430, 595, 110, 10, cx, cy, "SALON")
         if self.show_keeper:
             self.actor("POSADERA", self.keeper, cx, cy)
         if self.show_elder:
@@ -395,16 +395,26 @@ class BrumazulScene(FarmScene):
         if self.phase == "free":
             self.label("Puerta al salon: abajo", 24, 43)
 
+    def draw_door(self, x, y, w, h, cx, cy, label=""):
+        rect = pygame.Rect(int(x - cx), int(y - cy), int(w), int(max(h, 8)))
+        pygame.draw.rect(self.app.screen, (129, 94, 54), rect)
+        pygame.draw.rect(self.app.screen, (75, 57, 40), rect, 2)
+        if label:
+            self.label(label, rect.centerx - min(55, len(label) * 3), rect.y - 19)
+
     def draw_tavern(self, cx, cy):
         s = self.app.screen
-        pygame.draw.rect(s, PAPER, pygame.Rect(100 - cx, 100 - cy, 600, 650))
-        pygame.draw.rect(s, LINE, pygame.Rect(100 - cx, 100 - cy, 600, 650), 1)
-        for x, y, w, h in ((225, 210, 105, 65), (480, 460, 110, 75), (410, 250, 105, 65)):
+        # Salon mas compacto; puertas y transiciones comparten coordenadas.
+        pygame.draw.rect(s, PAPER, pygame.Rect(180 - cx, 220 - cy, 440, 400))
+        pygame.draw.rect(s, LINE, pygame.Rect(180 - cx, 220 - cy, 440, 400), 2)
+        for x, y, w, h in ((225, 270, 85, 55), (460, 440, 95, 65), (395, 320, 85, 55)):
             pygame.draw.rect(s, LIGHT, (x - cx, y - cy, w, h), 1)
+        self.draw_door(425, 215, 125, 12, cx, cy, "HABITACION")
+        self.draw_door(425, 610, 125, 12, cx, cy, "PUEBLO")
         for name, race, pos, _ in TAVERN_NPCS:
             self.actor(name + " / " + race, pygame.Vector2(pos), cx, cy)
         self.label("POSADA  /  SALON", 22, 18)
-        self.label("E: hablar   |   puerta norte: habitacion   |   sur: pueblo", 22, 43)
+        self.label("E: hablar  |  norte: habitacion  |  sur: pueblo", 22, 43)
 
     def update_chapter_exits(self, player):
         from game.scenes.chapter_area_navigation import find_chapter_exit
@@ -429,6 +439,17 @@ class BrumazulScene(FarmScene):
             pygame.draw.rect(screen, PAPER, (x - cx, y - cy, w, h))
             pygame.draw.rect(screen, LINE, (x - cx, y - cy, w, h), 2)
             self.label(building.get("label", ""), x - cx + 5, y - cy + 8)
+        for door in layout.get("doors", []) + layout.get("exits", []):
+            if "rect" in door:
+                x, y, w, h = door["rect"]
+                self.draw_door(x, y, w, h, cx, cy, door.get("label", ""))
+        for building in buildings:
+            if "door" in building:
+                door = building["door"]
+                if len(door) == 4:
+                    self.draw_door(*door, cx, cy, building.get("label", ""))
+                elif len(door) == 2:
+                    self.draw_door(door[0] - 20, door[1] - 5, 40, 10, cx, cy, building.get("label", ""))
         for node in layout.get("nodes", []):
             x, y = node["position"]
             self.actor(node.get("label", node["id"]), pygame.Vector2(x, y), cx, cy)
@@ -448,7 +469,10 @@ class BrumazulScene(FarmScene):
             pygame.draw.rect(s, LINE, (x - cx, y - cy, w, h), 2)
             self.label(building["label"], x - cx + 8, y - cy + 10)
             dx, dy, dw, dh = building["door"]
-            pygame.draw.rect(s, INK, (dx - cx, dy - cy, dw, max(5, dh)))
+            self.draw_door(dx, dy, dw, dh, cx, cy, building.get("label", ""))
+        for exit_data in VILLAGE_LAYOUT.get("doors", []):
+            x, y, w, h = exit_data["rect"]
+            self.draw_door(x, y, w, h, cx, cy, exit_data.get("label", ""))
         for name, race, pos, _ in VILLAGE_NPCS:
             self.actor(name, pygame.Vector2(pos), cx, cy)
         pygame.draw.rect(s, LINE, (-cx, -cy, 1400, 1050), 2)
