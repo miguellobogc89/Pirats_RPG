@@ -470,7 +470,8 @@ def journal_visible_missions(app, category=None):
     quests = ensure_chapter_quests(app.state)
     return [m for m in replay_config()["missions"]
             if (category is None or m["category"] == category)
-            and quests.get(m["id"], m["initial"]) not in ("not_started", "ready")]
+            and (m["id"] == "la_ultima_madriguera" and quests.get("un_techo_propio") == "complete"
+                 or quests.get(m["id"], m["initial"]) not in ("not_started", "ready"))]
 
 
 def journal_objectives(mission_id):
@@ -492,6 +493,7 @@ def journal_objectives(mission_id):
             ("cleared", "Regresa con Sylvarin"),
         ],
         "la_ultima_madriguera": [
+            ("ready", "Reúnete con el anciano llevando la espada"),
             ("hunt", "Investiga las criaturas de la granja"),
             ("boss", "Derrota a la criatura del nido"),
             ("approach", "Habla con el anciano"),
@@ -504,6 +506,11 @@ def draw_journal_tab(app):
     quests = ensure_chapter_quests(app.state)
     category = getattr(app, "mission_category", "main")
     expanded = getattr(app, "mission_expanded", None)
+    from game.inventory.inventory_manager import get_item_quantity
+    from game.data.item_database import ITEM_DATABASE
+    if quests.get("cuando_callan_las_campanas") == "get_weapon" and any(item.get("type") == "weapon" and get_item_quantity(app.state, item_id) > 0 for item_id, item in ITEM_DATABASE.items()):
+        from game.story_events.story_event_manager import dispatch_story_event
+        dispatch_story_event(app, "weapon_acquired", {"object_id": "player"})
     app.draw_text("Misiones", 140, 180, TEXT_DARK, app.big_font)
     for name, label, x in (("main", "Principales", 140), ("secondary", "Secundarias", 295)):
         rect = pygame.Rect(x, 214, 145, 32)
@@ -535,7 +542,7 @@ def draw_journal_tab(app):
             app.menu_action_hitboxes.append({"rect": header.clip(viewport), "action": "mission_expand", "mission_id": mission["id"]})
         if opened:
             keys = [key for key, _ in objectives]
-            current_index = keys.index(stage) if stage in keys else (-1 if stage in ("not_started", "ready") else len(keys))
+            current_index = keys.index(stage) if stage in keys else (-1 if stage == "not_started" else len(keys))
             if mission["id"] == "un_techo_propio" and stage == "get_bolt":
                 from game.inventory.item_transactions import quantity
                 if quantity(app.state, "metal_bolt") > 0 or app.state.get("farm_repairs", {}).get("smith_bolt_claimed"):
