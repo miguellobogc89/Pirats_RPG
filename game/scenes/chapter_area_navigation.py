@@ -39,7 +39,16 @@ def find_chapter_exit(scene_id, x, y, layout=None):
             return "brumazul_pueblo", (650, 925)
         if x <= 45 and 390 <= y <= 490:
             return "brumazul_playa", (650, 440)
-    # Interior doors are introduced only after validating their scene geometry.
+    if scene_id == "brumazul_casa_almarin" and 350 <= x <= 450 and y >= 545:
+        return "brumazul_granja", (275, 310)
+    if scene_id == "brumazul_taller_almarin" and 350 <= x <= 450 and y >= 545:
+        return "brumazul_granja", (470, 310)
+    for exit_data in (layout or {}).get("exits", []):
+        rect = exit_data.get("rect")
+        target = SCENE_IDS.get(exit_data.get("to"))
+        spawn = exit_data.get("spawn")
+        if rect and target and spawn and rect[0] <= x <= rect[0] + rect[2] and rect[1] <= y <= rect[1] + rect[3]:
+            return target, tuple(spawn)
     return None
 
 def can_walk_chapter_area(scene_id, x, y, layout=None):
