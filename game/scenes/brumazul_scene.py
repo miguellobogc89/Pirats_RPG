@@ -186,7 +186,7 @@ class BrumazulScene(FarmScene):
         if (self.tavern or self.village or self.chapter_area) and not self.app.menu_open and ((event.type == pygame.KEYDOWN and event.key in (pygame.K_e, pygame.K_RETURN)) or (event.type == pygame.MOUSEBUTTONDOWN and event.button == 1)):
             if self.scene_id == "brumazul_granja" and self.interact_farm(event.pos if event.type == pygame.MOUSEBUTTONDOWN else None):
                 return True
-            if self.talk_to_nearby():
+            if self.talk_to_nearby(event.pos if event.type == pygame.MOUSEBUTTONDOWN else None):
                 return True
         if self.beach and event.type == pygame.MOUSEBUTTONDOWN and event.button == 1 and not self.app.menu_open:
             self.attack(event.pos)
@@ -330,7 +330,7 @@ class BrumazulScene(FarmScene):
             if direction.normalize().dot(target.normalize()) > 0.35:
                 self.boss_hp = max(0, self.boss_hp - 25)
 
-    def talk_to_nearby(self):
+    def talk_to_nearby(self, click_position=None):
         from game.story_events.story_event_manager import dispatch_story_event
         p = self.app.state["player"]
         if self.tavern and self.app.state["quests"]["un_techo_propio"] in ("find_elder_port", "complete"):
@@ -375,10 +375,13 @@ class BrumazulScene(FarmScene):
                 return True
         if self.village:
             smith = next((npc for npc in VILLAGE_NPCS if npc[0] == "HERRERO"), None)
-            if smith and math.dist((p["x"], p["y"]), smith[2]) < 85:
+            cx, cy = get_camera_position(p["x"], p["y"], WIDTH, HEIGHT, VILLAGE_LAYOUT["width"], VILLAGE_LAYOUT["height"])
+            clicked_smith = click_position is not None and math.dist((click_position[0] + cx, click_position[1] + cy), smith[2]) < 48 if smith else False
+            if smith and (math.dist((p["x"], p["y"]), smith[2]) < 110 or clicked_smith):
                 quests = self.app.state["quests"]
                 stage = quests["un_techo_propio"]
                 smith_stage = quests["el_hierro_que_canta"]
+                self.app.add_log("Herrero: principal=" + stage + ", encargo=" + smith_stage)
                 if stage not in ("get_bolt", "inspect_gate", "find_elder_port", "complete"):
                     self.npc_dialogue = get_chapter_dialogue("smith_idle")
                 elif smith_stage == "not_started":
