@@ -19,10 +19,10 @@ def create_default_stash_state():
 
 
 def create_empty_stash_grid():
-    return [
-        [None for _ in range(STASH_COLUMNS)]
-        for _ in range(STASH_ROWS)
-    ]
+    grid = [[None for _ in range(STASH_COLUMNS)] for _ in range(STASH_ROWS)]
+    for index, item_id in enumerate(("axe", "scythe", "watering_can", "pickaxe", "hoe")):
+        grid[0][index] = {"item_id": item_id, "amount": 1}
+    return grid
 
 
 def ensure_stash_state(state):
