@@ -152,20 +152,21 @@
     "sylvarin_metal_explained": {
       "speaker": "SYLVARIN",
       "lines": [
-        "¿Te envía el herrero? Ya veo. Lo que está intentando entender tiene que ver con unas campanas y las ratas.",
-        "Dile que las campanas sirven para mantenerlas alejadas. Pero aquí todavía tenemos un problema con esas criaturas."
+        "El herrero quiere saber para qué sirven mis campanas. Ahuyentan a las ratas, pero todavía no puedo instalarlas.",
+        "Hay un nido en el almacén. Antes de colocar las campanas necesito que lo limpies.",
+        "No entres desarmado. Primero consigue un arma; después podrás ocuparte del nido."
       ]
     },
     "sylvarin_rats_offer": {
       "speaker": "SYLVARIN",
       "lines": [
-        "Bienvenido. ¿En que puedo ayudarte?"
+        "Ya puedes ocuparte del nido. Entra en el almacén y limpia la madriguera para que pueda instalar las campanas."
       ]
     },
     "sylvarin_rats_pending": {
       "speaker": "SYLVARIN",
       "lines": [
-        "Bienvenido. ¿En que puedo ayudarte?"
+        "Todavía queda el nido. Sin limpiarlo no puedo colocar las campanas."
       ]
     },
     "sylvarin_rats_cleared": {
@@ -225,6 +226,13 @@
       "speaker": "ANCIANO",
       "lines": [
         "Nos encontraremos en el puerto. Alli hablaremos de lo que sucede en la granja."
+      ]
+    },
+    "sylvarin_need_weapon": {
+      "speaker": "SYLVARIN",
+      "lines": [
+        "¿Ya tienes un arma? No te acerques al nido sin una.",
+        "Cuando estés preparado, entra en el almacén y acaba con las criaturas."
       ]
     }
   },
