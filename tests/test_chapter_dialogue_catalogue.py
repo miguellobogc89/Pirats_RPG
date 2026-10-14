@@ -50,6 +50,16 @@ class ChapterDialogueAudit(unittest.TestCase):
                             self.fail(f"Inline dialogue text at line {node.lineno}")
         self.assertNotRegex(self.source, r'(?m)^\s*self\.npc_dialogue\s*=\s*\(\s*["\']')
 
+    def test_no_orphaned_active_dialogues(self):
+        referenced = set()
+        for node in ast.walk(self.tree):
+            if isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id == "get_chapter_dialogue" and node.args:
+                referenced.update(part.value for part in ast.walk(node.args[0])
+                                  if isinstance(part, ast.Constant) and isinstance(part.value, str))
+        referenced.update(npc["dialogue"] for npcs in self.catalogue["npcs"].values() for npc in npcs)
+        self.assertEqual(set(self.catalogue["dialogues"]) - referenced, set())
+        self.assertTrue(self.catalogue.get("legacy_dialogues"))
+
     def test_npc_dialogue_advances_one_line_at_a_time(self):
         self.assertIn("self.npc_dialogue_index += 1", self.source)
         self.assertIn("self.npc_dialogue[1][self.npc_dialogue_index]", self.source)
