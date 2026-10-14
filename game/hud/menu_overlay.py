@@ -465,43 +465,42 @@ def draw_options_tab(app):
 
 
 def draw_journal_tab(app):
-    """Muestra el progreso del capítulo 1 sin modificarlo."""
-    progress = getattr(app, "chapter_progress", None)
-    if progress is None:
-        progress = getattr(app, "state", {})
-    if not isinstance(progress, dict):
-        progress = {}
-
-    def flag(key):
-        return bool(progress.get(key, False))
-
-    def value(key, default="not_started"):
-        return str(progress.get(key, default))
-
-    def line(message, y):
-        app.draw_text(message, 140, y, TEXT_DARK, app.small_font)
-
-    app.draw_text("Diario de misiones", 140, 183, TEXT_DARK, app.big_font)
-    line("PRINCIPALES", 219)
-    line("M1  Las tierras de Almarin", 244)
-    line("Completada" if flag("elder_met") else "Busca al anciano en la finca", 264)
-    line("M2  Un techo propio", 294)
-    if flag("port_meeting"):
-        objective = "Completada - Espada de Almarin recibida"
-    elif flag("gate_repaired"):
-        objective = "Busca al anciano en el puerto" if flag("elder_clue") else "Habla con el anciano en la posada"
-    elif not flag("elder_after_fence"):
-        objective = "Repara las vallas" if value("mission_stage") == "repair_fence" else "Habla con el anciano"
-    elif not flag("gate_inspected"):
-        objective = "Examina la puerta de la finca"
-    else:
-        objective = "Consigue madera y un cerrojo"
-    line(objective, 314)
-    line("M3  La ultima madriguera", 343)
-    farm_objectives = {"ready": "Habla con el anciano en la finca", "hunt": "Investiga la maleza", "boss": "Derrota a la criatura mayor", "fade": "Victoria", "approach": "Habla con el anciano", "complete": "Completada - Llave recibida"}
-    line(farm_objectives.get(value("farm_state", "ready"), "Pendiente"), 363)
-    line("SECUNDARIAS", 395)
-    smith = {"not_started": "No iniciada", "investigate": "Investiga a Sylvarin", "artisan_explained": "Vuelve con el herrero", "completed": "Completada"}
-    rat = {"not_started": "No iniciada", "offered": "Despeja el almacen", "cleared": "Vuelve con Sylvarin", "completed": "Completada"}
-    line("S1 El hierro que canta: " + smith.get(value("smith_quest"), "En curso"), 419)
-    line("S2 Cuando callan las campanas: " + rat.get(value("rat_quest"), "En curso"), 443)
+    from game.story.mission_replay import replay_config
+    from game.story.chapter_01_quest_manager import ensure_chapter_quests
+    config = replay_config()
+    quests = ensure_chapter_quests(app.state)
+    category = getattr(app, "mission_category", "main")
+    selected = getattr(app, "mission_selected", None)
+    app.draw_text("Misiones", 140, 180, TEXT_DARK, app.big_font)
+    for name, label, x in (("main", "Principales", 140), ("secondary", "Secundarias", 295)):
+        rect = pygame.Rect(x, 214, 145, 32)
+        pygame.draw.rect(app.screen, (198, 207, 188) if category == name else (220, 214, 201), rect, border_radius=5)
+        app.draw_text(label, x + 10, 222, TEXT_DARK, app.small_font)
+        app.menu_action_hitboxes.append({"rect": rect, "action": "mission_category", "category": name})
+    missions = [m for m in config["missions"] if m["category"] == category]
+    viewport = pygame.Rect(140, 260, 670, 155)
+    row_h = 43
+    scroll = max(0, min(getattr(app, "mission_scroll", 0), max(0, len(missions) * row_h - viewport.height)))
+    app.mission_scroll = scroll
+    app.screen.set_clip(viewport)
+    for n, mission in enumerate(missions):
+        y = viewport.y + n * row_h - scroll
+        rect = pygame.Rect(145, y, 645, 39)
+        if rect.bottom < viewport.top or rect.top > viewport.bottom:
+            continue
+        pygame.draw.rect(app.screen, (202, 215, 198) if selected == mission["id"] else (231, 227, 215), rect, border_radius=4)
+        stage = quests.get(mission["id"], mission["initial"])
+        done = stage in ("complete", "completed")
+        marker = "✓" if done else "○"
+        app.draw_text(marker + "  " + mission["title"], 155, y + 8, TEXT_DARK, app.small_font)
+        app.draw_text("Terminada" if done else stage.replace("_", " "), 555, y + 8, TEXT_DARK, app.small_font)
+        app.menu_action_hitboxes.append({"rect": rect.clip(viewport), "action": "mission_select", "mission_id": mission["id"]})
+    app.screen.set_clip(None)
+    if len(missions) * row_h > viewport.height:
+        app.draw_text("Rueda del ratón para desplazar", 145, 419, TEXT_DARK, app.small_font)
+    if selected and any(m["id"] == selected for m in missions):
+        rect = pygame.Rect(580, 438, 215, 36)
+        draw_panel(app.screen, rect)
+        draw_button_text(app.screen, app.small_font, "Repetir misión (test)", rect, enabled=True)
+        app.menu_action_hitboxes.append({"rect": rect, "action": "mission_replay", "mission_id": selected})
+    app.draw_text("Modo prueba: reinicia la misión seleccionada en el pueblo.", 145, 443, TEXT_DARK, app.small_font)
