@@ -8,7 +8,8 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 from game.hud.menu_overlay import draw_menu, get_menu_tabs, get_menu_tab_at_position
-from game.hud.play_hud import draw_play_hud
+from game.hud.hud_renderer import draw_hud
+from game.time.time_manager import update_time
 
 ROOT = Path(__file__).resolve().parent
 SAVE = ROOT / "save.json"
@@ -42,6 +43,8 @@ class Game:
         self.gate_inspected = saved.get("gate_inspected", False)
         self.gate_repaired = saved.get("gate_repaired", saved.get("mission_stage") == "gate_repaired")
         self.journal_open = False
+        self.hud_visible = True
+        self.game_clock = saved.get("game_clock", {"hour": 6 if self.time_of_day == "day" else 21, "minute": 0})
         self.menu_tab = "inventory"
         self.small_font = pygame.font.SysFont("consolas", 14)
         self.big_font = pygame.font.SysFont(None, 30)
@@ -958,7 +961,12 @@ class Game:
         side = pygame.Vector2(-self.facing.y,self.facing.x)
         points = [center+self.facing*16,center-self.facing*12+side*10,center-self.facing*12-side*10]
         pygame.draw.polygon(s,INK,points,1)
-        draw_play_hud(self)
+        self.hud_visible = self.phase == "free" and not self.journal_open
+        if self.hud_visible:
+            self.refresh_menu_state()
+            self.state["health"] = {"current": max(0, self.hp), "max": 100}
+            self.state["time"] = self.game_clock
+            draw_hud(self)
         if self.journal_open:
             self.refresh_menu_state()
             draw_menu(self)
@@ -1110,7 +1118,10 @@ class Game:
                         self.click_world(pygame.Vector2(event.pos)+pygame.Vector2(cx,cy))
                     elif self.phase == "free":
                         self.attack()
-            self.update(self.clock.tick(60)/1000)
+            dt = self.clock.tick(60)/1000
+            if self.phase == "free" and not self.journal_open and not self.modal:
+                update_time({"time": self.game_clock}, dt)
+            self.update(dt)
             self.draw()
         pygame.quit()
 
