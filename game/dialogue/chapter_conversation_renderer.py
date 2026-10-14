@@ -24,4 +24,5 @@ def draw_chapter_conversation(scene, speaker, message, choices=None, selected=0)
                 line = trial
         if line:
             scene.label(line, 58, y)
-    scene.label("ENTER / ESPACIO", WIDTH - 175, HEIGHT - 73)
+    from game.dialogue.chapter_dialogues import get_chapter_ui_text
+    scene.label(get_chapter_ui_text("continue_hint"), WIDTH - 175, HEIGHT - 73)
