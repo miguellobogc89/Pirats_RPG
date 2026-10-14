@@ -334,8 +334,6 @@ class BrumazulScene(FarmScene):
                 if stage == "find_elder":
                     self.npc_dialogue = get_chapter_dialogue("elder_farm_first")
                     dispatch_story_event(self.app, "npc_talked", {"npc_id": "anciano"})
-                elif stage in ("find_elder_port", "complete"):
-                    self.npc_dialogue = get_chapter_dialogue("elder_farm_after_gate")
                 elif len(self.app.state.get("farm_repairs", {}).get("repaired_fences", [])) == len(self.area_layout.get("fence_gaps", [])) and self.area_layout.get("fence_gaps"):
                     if stage == "repair_fence":
                         dispatch_story_event(self.app, "object_repaired", {"object_id": "fence"})
