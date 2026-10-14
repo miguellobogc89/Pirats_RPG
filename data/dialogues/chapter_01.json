@@ -249,42 +249,16 @@
         "No tienes espacio suficiente para recibir este objeto. Libera un hueco y vuelve a intentarlo."
       ]
     },
-    "smith_gate_repaired": {
-      "speaker": "HERRERO",
-      "lines": [
-        "Espero que ese cerrojo funcionara."
-      ]
-    },
-    "smith_trade": {
-      "speaker": "HERRERO",
-      "lines": [
-        "Bienvenido a mi herreria. ¿Quieres comerciar?"
-      ]
-    },
     "innkeeper_tavern": {
       "speaker": "POSADERA",
       "lines": [
-        "Si buscas al anciano, lo encontraras en el puerto.",
-        "Sigue el camino hacia el sur del pueblo para llegar hasta el."
+        "Bienvenido. ¿En que puedo ayudarte?"
       ]
     },
-    "elder_port_followup": {
-      "speaker": "ANCIANO",
+    "innkeeper_port_clue": {
+      "speaker": "POSADERA",
       "lines": [
-        "Has asegurado la entrada. Bien hecho.",
-        "Hay criaturas merodeando por la finca. Regresa a la granja: debemos investigar."
-      ]
-    },
-    "elder_port_idle": {
-      "speaker": "ANCIANO",
-      "lines": [
-        "Nos encontraremos aqui cuando hayas terminado de asegurar la finca."
-      ]
-    },
-    "elder_farm_after_gate": {
-      "speaker": "ANCIANO",
-      "lines": [
-        "El porton esta reparado. Ahora ve al puerto; alli hablaremos de lo que ocurre en la granja."
+        "Si buscas al anciano, esta en el puerto."
       ]
     }
   },
