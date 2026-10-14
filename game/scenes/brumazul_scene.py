@@ -737,18 +737,6 @@ class BrumazulScene(FarmScene):
         pygame.draw.rect(s, (65, 54, 54), (24, 65, 155, 15))
         pygame.draw.rect(s, (188, 65, 65), (26, 67, round(151 * min(current, maximum) / maximum), 11))
         self.label("VIDA " + str(current) + "/" + str(maximum), 25, 45)
-        slots = get_hotbar_slots(self.app.state)
-        selected = get_active_hotbar_index(self.app.state)
-        size, gap = 42, 7
-        start = (WIDTH - len(slots) * (size + gap) + gap) // 2
-        for i, item in enumerate(slots):
-            x = start + i * (size + gap)
-            pygame.draw.rect(s, LINE if i == selected else LIGHT, (x, HEIGHT - 54, size, size), 1)
-            self.label(str(i + 1), x + 3, HEIGHT - 51)
-            if item:
-                item_id = item.get("item_id", "") if isinstance(item, dict) else str(item)
-                data = get_item_data(item_id)
-                self.label((data or {}).get("icon", item_id[:1]).upper(), x + 17, HEIGHT - 34)
 
     def draw_dialogue(self, speaker, message, choices=None, selected=0):
         draw_chapter_conversation(self, speaker, message, choices, selected)
