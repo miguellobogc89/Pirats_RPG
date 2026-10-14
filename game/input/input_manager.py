@@ -80,6 +80,8 @@ def handle_event(app, event):
                     return True
 
                 if app.menu_tab == "inventory":
+                    if handle_equipment_slot_click(app, event.pos):
+                        return True
                     if handle_inventory_slot_click(app, event.pos):
                         return True
 
@@ -326,6 +328,34 @@ def get_slot_container_rows(container_id):
     return INVENTORY_ROWS
 
 
+
+def handle_equipment_slot_click(app, position):
+    from game.inventory.equipment_state import ensure_equipment_state, armor_slot, EQUIPMENT_SLOTS
+    equipment = ensure_equipment_state(app.state)
+    for hitbox in getattr(app, "equipment_slot_hitboxes", []):
+        if not hitbox["rect"].collidepoint(position):
+            continue
+        name = hitbox["slot"]
+        existing = equipment[name]
+        ui = app.slot_ui_state
+        if not ui.is_dragging:
+            if existing is not None:
+                ui.start_drag(SlotReference("equipment", EQUIPMENT_SLOTS.index(name)), existing)
+                equipment[name] = None
+            return True
+        dragged = copy_stack(ui.dragged_stack)
+        if armor_slot(dragged["item_id"]) != name:
+            app.add_log("Esta pieza no encaja en esa casilla.")
+            return True
+        equipment[name] = dragged
+        if existing is None:
+            ui.cancel_drag()
+        else:
+            ui.dragged_stack = copy_stack(existing)
+            ui.is_dragging = True
+        return True
+    return False
+
 def handle_inventory_slot_click(app, position):
     slot_hitbox = get_inventory_slot_hitbox_at_position(app, position)
 
@@ -415,6 +445,16 @@ def cancel_slot_drag(app):
 
     if slot_ui_state.drag_origin is None:
         return False
+
+    if slot_ui_state.drag_origin.container_id == "equipment":
+        from game.inventory.equipment_state import ensure_equipment_state, EQUIPMENT_SLOTS
+        equipment = ensure_equipment_state(app.state)
+        name = EQUIPMENT_SLOTS[slot_ui_state.drag_origin.index]
+        if equipment[name] is not None:
+            return False
+        equipment[name] = copy_stack(slot_ui_state.dragged_stack)
+        slot_ui_state.cancel_drag()
+        return True
 
     if slot_ui_state.drag_origin.container_id not in ("inventory", "stash"):
         return False
