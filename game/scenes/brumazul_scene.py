@@ -68,11 +68,7 @@ class BrumazulScene(FarmScene):
         self.fade = 0.0
         self.npc_dialogue = None
         self.door_cooldown = 0.8
-        if self.tavern:
-            # Never spawn in the southern exit trigger after entering from village.
-            player = self.app.state["player"]
-            if player["y"] >= 605:
-                player["x"], player["y"] = 485, 540
+
         self.save_elapsed = 0.0
         if self.beach:
             self.progress["chapter_started"] = True
@@ -398,7 +394,10 @@ class BrumazulScene(FarmScene):
             return False
         for name, race, pos, dialogue_id in (VILLAGE_NPCS if self.village else TAVERN_NPCS):
             if math.dist((p["x"], p["y"]), pos) < 65:
-                self.npc_dialogue = get_chapter_dialogue(dialogue_id)
+                if self.tavern and name == "POSADERA" and self.app.state["quests"]["un_techo_propio"] in ("find_elder_port", "complete"):
+                    self.npc_dialogue = get_chapter_dialogue("innkeeper_port_clue")
+                else:
+                    self.npc_dialogue = get_chapter_dialogue(dialogue_id)
                 dispatch_story_event(self.app, "npc_talked", {"npc_id": name.lower()})
                 return True
         return False
@@ -493,8 +492,8 @@ class BrumazulScene(FarmScene):
         pygame.draw.rect(s, LINE, pygame.Rect(180 - cx, 220 - cy, 440, 400), 2)
         for x, y, w, h in ((225, 270, 85, 55), (460, 440, 95, 65), (395, 320, 85, 55)):
             pygame.draw.rect(s, LIGHT, (x - cx, y - cy, w, h), 1)
-        self.draw_door(425, 215, 125, 12, cx, cy, "HABITACION")
-        self.draw_door(425, 610, 125, 12, cx, cy, "PUEBLO")
+        self.draw_door(430, 100, 110, 10, cx, cy, "HABITACION")
+        self.draw_door(430, 740, 110, 10, cx, cy, "PUEBLO")
         for name, race, pos, _ in TAVERN_NPCS:
             self.actor(name + " / " + race, pygame.Vector2(pos), cx, cy)
         self.label("POSADA  /  SALON", 22, 18)
