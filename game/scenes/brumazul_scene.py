@@ -366,8 +366,8 @@ class BrumazulScene(FarmScene):
                         self.npc_dialogue = get_chapter_dialogue("inventory_full")
                         return True
                 else:
-                    self.npc_dialogue = get_chapter_dialogue("smith_gate_repaired" if stage == "find_elder_port" and not quests.get("smith_gate_acknowledged") else "smith_trade")
-                    if stage == "find_elder_port":
+                    self.npc_dialogue = get_chapter_dialogue("smith_gate_repaired" if stage in ("find_elder_port", "complete") and not quests.get("smith_gate_acknowledged") else "smith_trade")
+                    if stage in ("find_elder_port", "complete"):
                         quests["smith_gate_acknowledged"] = True
                 self.autosave()
                 return True
