@@ -316,6 +316,17 @@ class BrumazulScene(FarmScene):
     def talk_to_nearby(self):
         from game.story_events.story_event_manager import dispatch_story_event
         p = self.app.state["player"]
+        if self.scene_id == "brumazul_puerto":
+            elder = self.area_layout.get("elder")
+            if elder and math.dist((p["x"], p["y"]), elder) < 90:
+                stage = self.app.state["quests"]["un_techo_propio"]
+                if stage == "find_elder_port":
+                    self.npc_dialogue = get_chapter_dialogue("elder_port_followup")
+                    dispatch_story_event(self.app, "npc_talked", {"npc_id": "anciano_puerto"})
+                else:
+                    self.npc_dialogue = get_chapter_dialogue("elder_port_idle")
+                self.autosave()
+                return True
         if self.scene_id == "brumazul_granja":
             elder = self.area_layout.get("elder", [690, 365])
             if math.dist((p["x"], p["y"]), elder) < 90:
@@ -323,6 +334,8 @@ class BrumazulScene(FarmScene):
                 if stage == "find_elder":
                     self.npc_dialogue = get_chapter_dialogue("elder_farm_first")
                     dispatch_story_event(self.app, "npc_talked", {"npc_id": "anciano"})
+                elif stage in ("find_elder_port", "complete"):
+                    self.npc_dialogue = get_chapter_dialogue("elder_farm_after_gate")
                 elif len(self.app.state.get("farm_repairs", {}).get("repaired_fences", [])) == len(self.area_layout.get("fence_gaps", [])) and self.area_layout.get("fence_gaps"):
                     if stage == "repair_fence":
                         dispatch_story_event(self.app, "object_repaired", {"object_id": "fence"})
@@ -353,7 +366,9 @@ class BrumazulScene(FarmScene):
                         self.npc_dialogue = get_chapter_dialogue("inventory_full")
                         return True
                 else:
-                    self.npc_dialogue = get_chapter_dialogue("smith_done")
+                    self.npc_dialogue = get_chapter_dialogue("smith_gate_repaired" if stage == "find_elder_port" and not quests.get("smith_gate_acknowledged") else "smith_trade")
+                    if stage == "find_elder_port":
+                        quests["smith_gate_acknowledged"] = True
                 self.autosave()
                 return True
         if self.chapter_area:
@@ -545,8 +560,11 @@ class BrumazulScene(FarmScene):
         for node in layout.get("nodes", []):
             x, y = node["position"]
             self.actor(node.get("label", node["id"]), pygame.Vector2(x, y), cx, cy)
-        if "elder" in layout and self.scene_id == "brumazul_granja" and self.app.state["quests"]["un_techo_propio"] in ("find_elder", "repair_fence", "inspect_gate", "get_bolt"):
-            self.actor("ANCIANO [E]", pygame.Vector2(layout["elder"]), cx, cy)
+        if "elder" in layout and self.scene_id in ("brumazul_granja", "brumazul_puerto"):
+            stage = self.app.state["quests"]["un_techo_propio"]
+            visible = (self.scene_id == "brumazul_granja" and stage in ("find_elder", "repair_fence", "inspect_gate", "get_bolt")) or (self.scene_id == "brumazul_puerto" and stage in ("find_elder_port", "complete"))
+            if visible:
+                self.actor("ANCIANO [E]", pygame.Vector2(layout["elder"]), cx, cy)
         pygame.draw.rect(screen, LINE, (-cx, -cy, layout.get("width", 800), layout.get("height", 704)), 2)
         self.label(self.scene_id.replace("brumazul_", "").upper(), 22, 18)
         if self.scene_id == "brumazul_granja":
