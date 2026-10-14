@@ -384,8 +384,11 @@ class BrumazulScene(FarmScene):
                             self.npc_dialogue = get_chapter_dialogue("sylvarin_rats_offer")
                             dispatch_story_event(self.app, "npc_talked", {"npc_id": "sylvarin"})
                         elif rat_stage == "cleared":
-                            dispatch_story_event(self.app, "npc_talked", {"npc_id": "sylvarin"})
-                            self.npc_dialogue = get_chapter_dialogue("sylvarin_rats_cleared")
+                            if receive(self.app.state, "sylvarin_boots", 1, receipt_id="chapter01_sylvarin_boots"):
+                                dispatch_story_event(self.app, "npc_talked", {"npc_id": "sylvarin"})
+                                self.npc_dialogue = get_chapter_dialogue("sylvarin_rats_cleared")
+                            else:
+                                self.npc_dialogue = get_chapter_dialogue("inventory_full")
                         elif rat_stage == "completed":
                             self.npc_dialogue = get_chapter_dialogue("sylvarin_intro")
                         else:
