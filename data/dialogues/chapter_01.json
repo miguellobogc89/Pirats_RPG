@@ -104,47 +104,27 @@
     "smith_offer": {
       "speaker": "HERRERO",
       "lines": [
-        "Un cerrojo como ese es dificil de conseguir.",
-        "Te lo dare si me ayudas con un problema: las ratas del almacen de Sylvarin.",
-        "Habla con Sylvarin en su taller. Averigua que ocurre alli."
+        "El cerrojo necesita un metal especial.",
+        "Averigua para que utiliza ese metal Sylvarin, la artesana elfa, y vuelve a contarmelo."
       ]
     },
     "smith_wait_sylvarin": {
       "speaker": "HERRERO",
       "lines": [
-        "Habla con Sylvarin. Su almacen esta infestado de ratas."
-      ]
-    },
-    "smith_wait_rats": {
-      "speaker": "HERRERO",
-      "lines": [
-        "Primero acaba con las ratas del almacen de Sylvarin."
+        "Pregunta a Sylvarin para que utiliza ese metal y vuelve cuando lo sepas."
       ]
     },
     "smith_reward": {
       "speaker": "HERRERO",
       "lines": [
-        "Asi que las campanas servian para espantar a las ratas.",
-        "Cumpliste tu parte. Toma el cerrojo que te prometi."
+        "Ahora comprendo para que utiliza Sylvarin ese metal.",
+        "Has cumplido tu parte. Toma el cerrojo que necesitabas."
       ]
     },
     "smith_done": {
       "speaker": "HERRERO",
       "lines": [
         "Ya tienes el cerrojo. Suerte con la finca."
-      ]
-    },
-    "sylvarin_offer": {
-      "speaker": "SYLVARIN",
-      "lines": [
-        "Las ratas han ocupado mi almacen. Hay que acabar con ellas y su nido.",
-        "Cuando este despejado, vuelve a hablar conmigo."
-      ]
-    },
-    "sylvarin_done": {
-      "speaker": "SYLVARIN",
-      "lines": [
-        "Gracias por recuperar mi almacen."
       ]
     },
     "farm_wood_pickup": {
@@ -232,6 +212,35 @@
       "lines": [
         "He recorrido tres islas y ninguna posada sirve un caldo como esta.",
         "Si buscas la finca Velhart, pregunta en el camino del pueblo."
+      ]
+    },
+    "sylvarin_metal_explained": {
+      "speaker": "SYLVARIN",
+      "lines": [
+        "Utilizo ese metal para fabricar campanas especiales.",
+        "Su sonido ahuyenta a las criaturas que se acercan al taller.",
+        "Puedes explicarselo al herrero."
+      ]
+    },
+    "sylvarin_rats_offer": {
+      "speaker": "SYLVARIN",
+      "lines": [
+        "Mi almacen esta infestado de ratas.",
+        "Si despejas el almacen y destruyes el nido, te recompensare."
+      ]
+    },
+    "sylvarin_rats_pending": {
+      "speaker": "SYLVARIN",
+      "lines": [
+        "Todavia quedan ratas en mi almacen."
+      ]
+    },
+    "sylvarin_rats_cleared": {
+      "speaker": "SYLVARIN",
+      "lines": [
+        "Ya no se oyen las criaturas. Has recuperado mi taller.",
+        "Toma estas botas de cuero, las hice yo misma. +2 defensa.",
+        "A partir de ahora tambien comerciare contigo materiales organicos."
       ]
     }
   },
