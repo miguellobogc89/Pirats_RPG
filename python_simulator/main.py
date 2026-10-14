@@ -10,6 +10,7 @@ if str(PROJECT_ROOT) not in sys.path:
 from game.hud.menu_overlay import draw_menu, get_menu_tabs, get_menu_tab_at_position
 from game.hud.hud_renderer import draw_hud
 from game.time.time_manager import update_time
+from game.skills.skill_manager import SkillManager
 
 ROOT = Path(__file__).resolve().parent
 SAVE = ROOT / "save.json"
@@ -48,7 +49,10 @@ class Game:
         self.menu_tab = "inventory"
         self.small_font = pygame.font.SysFont("consolas", 14)
         self.big_font = pygame.font.SysFont(None, 30)
-        self.unavailable_menu_tabs = {"routes", "upgrades", "plants", "recipes", "skills", "options"}
+        self.unavailable_menu_tabs = {"routes", "upgrades", "plants", "recipes", "options"}
+        self.state = {"skills": saved.get("skills", {})}
+        self.skill_manager = SkillManager(self.state)
+        self.WARN = (180, 135, 60)
         self.menu_action_hitboxes = []
         self.inventory_slot_hitboxes = []
         self.slot_ui_state = type("SlotState", (), {"is_dragging": False, "drag_origin": None, "dragged_stack": None})()
@@ -146,7 +150,8 @@ class Game:
             "tools_collected": self.tools_collected, "prologue_finished": self.prologue_finished,
             "repaired_fences": self.repaired_fences, "elder_met": self.elder_met,
             "elder_after_fence": self.elder_after_fence, "gate_inspected": self.gate_inspected,
-            "gate_repaired": self.gate_repaired
+            "gate_repaired": self.gate_repaired,
+            "skills": self.state["skills"], "game_clock": self.game_clock
         }), encoding="utf-8")
 
     def advance(self):
@@ -333,6 +338,7 @@ class Game:
             if i not in self.wood and world.distance_to(pygame.Vector2(position)) < 28:
                 self.wood.append(i)
                 self.wood_count += self.data.get("wood_per_pile",5)
+                self.skill_manager.register_action("collectable_picked")
                 self.notice = "RAMAS RECOGIDAS: +5 MADERA (TOTAL %d)" % self.wood_count
                 self.notice_timer = 3
                 self.save(True)
@@ -484,6 +490,7 @@ class Game:
                         creature["hp"] = max(0,creature["hp"]-20)
                         if creature["hp"] == 0 and creature["id"] not in self.farm_kills:
                             self.farm_kills.append(creature["id"])
+                            self.skill_manager.register_action("combat_won")
                             self.save(True)
                 if len(self.farm_kills) == len(self.data["ambushes"]):
                     self.farm_state = "boss"
@@ -497,6 +504,7 @@ class Game:
                 if 0 < delta.length() < 100 and self.facing.dot(delta.normalize()) > .1:
                     self.farm_boss_hp = max(0,self.farm_boss_hp-20)
                     if self.farm_boss_hp == 0:
+                        self.skill_manager.register_action("combat_won")
                         self.farm_state = "fade"
                         self.farm_fade = 0
                         self.mission_stage = "complete"
@@ -519,6 +527,7 @@ class Game:
                 self.rat_nest_hp = max(0,self.rat_nest_hp-20)
             if self.rat_nest_hp == 0 and all(r["hp"] == 0 for r in self.rats):
                 self.rat_quest = "cleared"
+                self.skill_manager.register_action("combat_won")
                 self.notice = "ALMACEN DESPEJADO - VUELVE CON SYLVARIN"
                 self.notice_timer = 6
                 self.save(True)
@@ -1050,8 +1059,8 @@ class Game:
             items.extend((tool, 1) for tool in ("axe", "hoe", "pickaxe", "scythe", "watering_can"))
         stacks = [{"item_id": item, "amount": quantity} for item, quantity in items if quantity > 0]
         slots = (stacks + [None] * 16)[:16]
-        self.state = {"inventory": {"rows": 2, "columns": 8, "active_hotbar_index": 0,
-                                    "grid": [slots[:8], slots[8:16]]}}
+        self.state["inventory"] = {"rows": 2, "columns": 8, "active_hotbar_index": 0,
+                                   "grid": [slots[:8], slots[8:16]]}
         self.chapter_progress = {
             key: getattr(self, key) for key in (
                 "mission_stage", "elder_met", "elder_after_fence", "gate_inspected",
