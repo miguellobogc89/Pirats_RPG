@@ -479,6 +479,11 @@ class BrumazulScene(FarmScene):
             self.actor("ANCIANO [E]", pygame.Vector2(layout["elder"]), cx, cy)
         pygame.draw.rect(screen, LINE, (-cx, -cy, layout.get("width", 800), layout.get("height", 704)), 2)
         self.label(self.scene_id.replace("brumazul_", "").upper(), 22, 18)
+        if self.scene_id == "brumazul_granja":
+            stage = self.app.state["quests"]["un_techo_propio"]
+            objective = {"find_elder": "MISION: Habla con el anciano [E]", "repair_fence": "MISION: Repara las tres vallas", "inspect_gate": "MISION: Examina la puerta de la finca"}.get(stage)
+            if objective:
+                self.label(objective, 22, 43)
 
     def draw_village(self, cx, cy):
         s = self.app.screen
