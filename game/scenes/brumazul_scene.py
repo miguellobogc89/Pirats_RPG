@@ -153,6 +153,40 @@ class BrumazulScene(FarmScene):
             })
         self.progress["beach_drops_spawned"] = True
 
+    def interact_farm(self):
+        """Collect original wood piles and repair each original fence gap."""
+        from game.story_events.story_event_manager import dispatch_story_event
+        p = self.app.state["player"]
+        layout = self.area_layout
+        progress = self.app.state.setdefault("farm_repairs", {})
+        collected = progress.setdefault("collected_wood", [])
+        repaired = progress.setdefault("repaired_fences", [])
+        wood = progress.setdefault("wood", 0)
+        for i, position in enumerate(layout.get("wood_piles", [])):
+            if i not in collected and math.dist((p["x"], p["y"]), position) <= 52:
+                collected.append(i)
+                progress["wood"] += layout.get("wood_per_pile", 5)
+                self.npc_dialogue = ("RECOGIDA", ["+5 madera. Total: %d" % progress["wood"]])
+                return True
+        if self.app.state["quests"]["un_techo_propio"] != "repair_fence":
+            return False
+        for gap in layout.get("fence_gaps", []):
+            x, y, w, h = gap["rect"]
+            if gap["id"] in repaired or not (x - 65 <= p["x"] <= x + w + 65 and y - 65 <= p["y"] <= y + h + 65):
+                continue
+            cost = gap.get("cost", 10)
+            if progress["wood"] < cost:
+                self.npc_dialogue = ("VALLA ROTA", ["Necesitas %d de madera. Tienes %d." % (cost, progress["wood"])])
+                return True
+            progress["wood"] -= cost
+            repaired.append(gap["id"])
+            self.npc_dialogue = ("VALLA REPARADA", ["Tramos reparados: %d/%d. Madera: %d" % (len(repaired), len(layout["fence_gaps"]), progress["wood"])])
+            if len(repaired) == len(layout["fence_gaps"]):
+                dispatch_story_event(self.app, "object_repaired", {"object_id": "fence"})
+                self.npc_dialogue = ("VALLAS COMPLETADAS", ["Has reparado las tres vallas. Vuelve a hablar con el anciano."])
+            return True
+        return False
+
     def handle_event(self, event):
         if event.type == pygame.QUIT:
             pygame.quit()
@@ -178,6 +212,8 @@ class BrumazulScene(FarmScene):
                 self.npc_dialogue = None
             return True
         if (self.tavern or self.village or self.chapter_area) and not self.app.menu_open and event.type == pygame.KEYDOWN and event.key in (pygame.K_e, pygame.K_RETURN):
+            if self.scene_id == "brumazul_granja" and self.interact_farm():
+                return True
             if self.talk_to_nearby():
                 return True
         if self.beach and event.type == pygame.MOUSEBUTTONDOWN and event.button == 1 and not self.app.menu_open:
