@@ -49,8 +49,18 @@ class Game:
         self.menu_tab = "inventory"
         self.small_font = pygame.font.SysFont("consolas", 14)
         self.big_font = pygame.font.SysFont(None, 30)
-        self.unavailable_menu_tabs = {"routes", "upgrades", "plants", "recipes", "options"}
-        self.state = {"skills": saved.get("skills") if isinstance(saved.get("skills"), dict) else {}}
+        self.unavailable_menu_tabs = set()
+        self.game_data = {
+            "routes": json.loads((PROJECT_ROOT / "data" / "routes.json").read_text(encoding="utf-8")),
+            "upgrades": json.loads((PROJECT_ROOT / "data" / "upgrades.json").read_text(encoding="utf-8")),
+        }
+        self.menu_open = False
+        self.WARN = (120, 120, 120)
+        self.state = {"skills": saved.get("skills") if isinstance(saved.get("skills"), dict) else {},
+                      "ship": saved.get("ship", {"status": "available", "days_left": 0, "route": None, "pending_event": None}),
+                      "upgrades": saved.get("upgrades", {}),
+                      "resources": saved.get("resources", {}),
+                      "farming": saved.get("farming", {"tilled_cells": [], "watered_cells": [], "crops": []})}
         from game.skills.skill_database import SKILL_DATABASE
         from game.skills.skill_state import create_default_skills_state
         for skill_id, default in create_default_skills_state(SKILL_DATABASE).items():
@@ -155,7 +165,9 @@ class Game:
             "repaired_fences": self.repaired_fences, "elder_met": self.elder_met,
             "elder_after_fence": self.elder_after_fence, "gate_inspected": self.gate_inspected,
             "gate_repaired": self.gate_repaired,
-            "skills": self.state["skills"], "game_clock": self.game_clock
+            "skills": self.state["skills"], "game_clock": self.game_clock,
+            "ship": self.state["ship"], "upgrades": self.state["upgrades"],
+            "resources": self.state["resources"], "farming": self.state["farming"]
         }), encoding="utf-8")
 
     def advance(self):
@@ -1045,6 +1057,10 @@ class Game:
     def actor(self,name,pos,cx,cy):
         pygame.draw.circle(self.screen,LINE,(int(pos.x-cx),int(pos.y-cy)),15,1)
         self.label(name,pos.x-cx-35,pos.y-cy-33)
+
+    def add_log(self, message):
+        self.notice = str(message)
+        self.notice_timer = 4
 
     def draw_text(self, message, x, y, color, font=None):
         surface = (font or self.font).render(str(message), True, color)
