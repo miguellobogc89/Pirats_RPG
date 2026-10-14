@@ -28,6 +28,18 @@ def transition_chapter_scene(app, scene_id, player, layout=None):
     if destination is None:
         return False
     target, spawn = destination
+    if target == "brumazul_madriguera_artesana":
+        from game.inventory.inventory_manager import get_item_quantity
+        from game.data.item_database import ITEM_DATABASE
+        from game.story.chapter_01_quest_manager import ensure_chapter_quests
+        from game.story_events.story_event_manager import dispatch_story_event
+        armed = any(item.get("type") == "weapon" and get_item_quantity(app.state, item_id) > 0 for item_id, item in ITEM_DATABASE.items())
+        quests = ensure_chapter_quests(app.state)
+        if not armed:
+            app.add_log("Necesitas conseguir un arma antes de entrar en el nido.")
+            return False
+        if quests["cuando_callan_las_campanas"] == "get_weapon":
+            dispatch_story_event(app, "weapon_acquired", {"object_id": "player"})
     if not app.scene_manager.change_scene(target, payload={"target_position": list(spawn)}):
         return False
     app.dispatch_scene_entered_event()
