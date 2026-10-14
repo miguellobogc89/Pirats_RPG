@@ -89,7 +89,7 @@
     "farm_gate_inspect": {
       "speaker": "SISTEMA",
       "lines": [
-        "Para construir la puerta necesitas 15 de madera y un cerrojo de metal."
+        "Esta puerta está en muy mal estado. Necesitaré madera y un cerrojo para repararla."
       ]
     },
     "farm_gate_repaired": {
