@@ -1,0 +1,66 @@
+{
+  "id": "brumazul_madriguera",
+  "name": "madriguera artesana",
+  "width": 50,
+  "height": 40,
+  "tile_size": 16,
+  "player_spawn": {
+    "x": 125,
+    "y": 330
+  },
+  "objects": [],
+  "collisions": [],
+  "spawns": [],
+  "exits": [],
+  "chapter_layout": {
+    "id": "madriguera_artesana",
+    "width": 800,
+    "height": 640,
+    "spawn": [
+      125,
+      330
+    ],
+    "walkable": [
+      [
+        65,
+        65,
+        670,
+        510
+      ]
+    ],
+    "exits": [
+      {
+        "rect": [
+          65,
+          275,
+          20,
+          110
+        ],
+        "to": "taller_sylvarin",
+        "spawn": [
+          605,
+          260
+        ],
+        "label": "VOLVER AL TALLER"
+      }
+    ],
+    "nest": [
+      570,
+      300
+    ],
+    "rats": [
+      [
+        420,
+        180
+      ],
+      [
+        480,
+        410
+      ],
+      [
+        615,
+        465
+      ]
+    ]
+  }
+}

@@ -1,4 +1,5 @@
 from game.story.story_manager import get_current_story_step
+from game.story.chapter_01_quest_manager import apply_chapter_quest_event
 from game.story_events.story_event_database import EVENT_PHASES, STORY_EVENTS
 from game.story_events.story_event_executor import execute_story_event_actions
 from game.story_events.story_event_state import (
@@ -12,7 +13,7 @@ from game.story_events.story_event_state import (
 def dispatch_story_event(app, event_type, payload=None):
     payload = payload or {}
     ensure_story_event_state(app.state)
-    results = []
+    results = apply_chapter_quest_event(app.state, event_type, payload)
 
     for phase in EVENT_PHASES:
         results.extend(process_story_event_phase(app, event_type, payload, phase))

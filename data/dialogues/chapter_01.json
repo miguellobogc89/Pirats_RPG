@@ -1,0 +1,584 @@
+{
+  "version": 1,
+  "language": "es",
+  "dialogues": {
+    "sylvarin_intro": {
+      "speaker": "SYLVARIN",
+      "lines": [
+        "Bienvenido. ¿En que puedo ayudarte?"
+      ]
+    },
+    "elder_farm_first": {
+      "speaker": "ANCIANO",
+      "lines": [
+        "Bienvenido a las tierras de Almarin.",
+        "Esta finca necesita reparaciones. Recoge madera y arregla las vallas."
+      ]
+    },
+    "elder_fences_done": {
+      "speaker": "ANCIANO",
+      "lines": [
+        "Buen trabajo con las vallas.",
+        "Ahora debemos asegurar la entrada con madera y un cerrojo."
+      ]
+    },
+    "elder_fences_pending": {
+      "speaker": "ANCIANO",
+      "lines": [
+        "Bienvenido a las tierras de Almarin.",
+        "Esta finca necesita reparaciones. Recoge madera y arregla las vallas."
+      ]
+    },
+    "elder_farm_other": {
+      "speaker": "ANCIANO",
+      "lines": [
+        "Bienvenido a las tierras de Almarin.",
+        "Esta finca necesita reparaciones. Recoge madera y arregla las vallas."
+      ]
+    },
+    "smith_idle": {
+      "speaker": "HERRERO",
+      "lines": [
+        "Bienvenido. ¿En que puedo ayudarte?"
+      ]
+    },
+    "smith_offer": {
+      "speaker": "HERRERO",
+      "lines": [
+        "Bienvenido. ¿En que puedo ayudarte?"
+      ]
+    },
+    "smith_wait_sylvarin": {
+      "speaker": "HERRERO",
+      "lines": [
+        "Bienvenido. ¿En que puedo ayudarte?"
+      ]
+    },
+    "smith_reward": {
+      "speaker": "HERRERO",
+      "lines": [
+        "Ahora comprendo. Eran campanas contra las ratas.",
+        "Toma el cerrojo que necesitabas."
+      ]
+    },
+    "farm_wood_pickup": {
+      "speaker": "RECOGIDA",
+      "lines": [
+        "RAMAS RECOGIDAS: +5 MADERA (TOTAL {wood})"
+      ]
+    },
+    "farm_fence_need_wood": {
+      "speaker": "SISTEMA",
+      "lines": [
+        "Reparar este tramo requiere 10 de madera. Tienes {wood}."
+      ]
+    },
+    "farm_fence_repaired": {
+      "speaker": "SISTEMA",
+      "lines": [
+        "Reparar este tramo requiere 10 de madera. Tienes {wood}."
+      ]
+    },
+    "farm_fences_complete": {
+      "speaker": "ANCIANO",
+      "lines": [
+        "Buen trabajo con las vallas.",
+        "Ahora debemos asegurar la entrada con madera y un cerrojo."
+      ]
+    },
+    "farm_gate_inspect": {
+      "speaker": "SISTEMA",
+      "lines": [
+        "Para construir la puerta necesitas 15 de madera y un cerrojo de metal."
+      ]
+    },
+    "farm_gate_repaired": {
+      "speaker": "SISTEMA",
+      "lines": [
+        "La puerta ya esta reparada y asegurada."
+      ]
+    },
+    "farm_gate_requirements": {
+      "speaker": "SISTEMA",
+      "lines": [
+        "Puerta: necesitas {cost} madera y {bolt_cost} cerrojo.",
+        "Tienes: {wood} madera y {bolts} cerrojo."
+      ]
+    },
+    "generic_villager": {
+      "speaker": "NPC",
+      "lines": [
+        "Que necesitas?"
+      ]
+    },
+    "village_smith": {
+      "speaker": "HERRERO",
+      "lines": [
+        "Bienvenido. ¿En que puedo ayudarte?"
+      ]
+    },
+    "village_botica": {
+      "speaker": "BOTICA",
+      "lines": [
+        "Bienvenido. ¿En que puedo ayudarte?"
+      ]
+    },
+    "village_mercader": {
+      "speaker": "MERCADER",
+      "lines": [
+        "Bienvenido. ¿En que puedo ayudarte?"
+      ]
+    },
+    "village_posadera": {
+      "speaker": "POSADERA",
+      "lines": [
+        "Bienvenido. ¿En que puedo ayudarte?"
+      ]
+    },
+    "tavern_marinera": {
+      "speaker": "POSADERA",
+      "lines": [
+        "Bienvenido. ¿En que puedo ayudarte?"
+      ]
+    },
+    "tavern_viajero": {
+      "speaker": "POSADERA",
+      "lines": [
+        "Bienvenido. ¿En que puedo ayudarte?"
+      ]
+    },
+    "sylvarin_metal_explained": {
+      "speaker": "SYLVARIN",
+      "lines": [
+        "Bienvenido. ¿En que puedo ayudarte?"
+      ]
+    },
+    "sylvarin_rats_offer": {
+      "speaker": "SYLVARIN",
+      "lines": [
+        "Bienvenido. ¿En que puedo ayudarte?"
+      ]
+    },
+    "sylvarin_rats_pending": {
+      "speaker": "SYLVARIN",
+      "lines": [
+        "Bienvenido. ¿En que puedo ayudarte?"
+      ]
+    },
+    "sylvarin_rats_cleared": {
+      "speaker": "SYLVARIN",
+      "lines": [
+        "Ya no se oyen las criaturas. Has recuperado mi taller.",
+        "Toma estas botas de cuero, las hice yo misma. +2 defensa.",
+        "A partir de ahora tambien comerciare contigo materiales organicos."
+      ]
+    },
+    "inventory_full": {
+      "speaker": "SISTEMA",
+      "lines": [
+        "Comercio pendiente de implementar."
+      ]
+    },
+    "innkeeper_tavern": {
+      "speaker": "POSADERA",
+      "lines": [
+        "Bienvenido. ¿En que puedo ayudarte?"
+      ]
+    },
+    "innkeeper_port_clue": {
+      "speaker": "POSADERA",
+      "lines": [
+        "Bienvenido. ¿En que puedo ayudarte?"
+      ]
+    },
+    "elder_port_followup": {
+      "speaker": "ANCIANO",
+      "lines": [
+        "Hay criaturas merodeando por la finca.",
+        "Regresa a la granja. Tenemos que investigar."
+      ]
+    },
+    "elder_port_idle": {
+      "speaker": "ANCIANO",
+      "lines": [
+        "Hay criaturas merodeando por la finca.",
+        "Regresa a la granja. Tenemos que investigar."
+      ]
+    },
+    "smith_gate_repaired": {
+      "speaker": "HERRERO",
+      "lines": [
+        "Bienvenido. ¿En que puedo ayudarte?"
+      ]
+    },
+    "smith_trade": {
+      "speaker": "HERRERO",
+      "lines": [
+        "Bienvenido. ¿En que puedo ayudarte?"
+      ]
+    },
+    "inn_elder_clue": {
+      "speaker": "ANCIANO",
+      "lines": [
+        "Nos encontraremos en el puerto. Alli hablaremos de lo que sucede en la granja."
+      ]
+    }
+  },
+  "intro": {
+    "script": [
+      {
+        "speaker": "POSADERA",
+        "text": "Vaya, has despertado. Pensabamos que no lo contarias."
+      },
+      {
+        "speaker": "POSADERA",
+        "text": "Un pescador te encontro al amanecer, tendido junto al camino."
+      },
+      {
+        "speaker": "POSADERA",
+        "text": "Llevabas arena en la ropa y no reaccionabas a nada."
+      },
+      {
+        "speaker": "TU",
+        "text": "Recuerdo la playa. Y algo enorme moviendose en la oscuridad."
+      },
+      {
+        "speaker": "POSADERA",
+        "text": "Aqui conocemos las tormentas y las alimañas. Pero aquello..."
+      },
+      {
+        "speaker": "POSADERA",
+        "text": "Hay alguien que lleva horas esperando a que despiertes."
+      },
+      {
+        "speaker": "@elder_enters",
+        "text": ""
+      },
+      {
+        "speaker": "ANCIANO",
+        "text": "Asi que eres el hijo de Almarin Velhart."
+      },
+      {
+        "speaker": "ANCIANO",
+        "text": "He visto muchos naufragos. Pocos llegan vivos desde esa playa."
+      },
+      {
+        "speaker": "ANCIANO",
+        "text": "Dime, ¿que recuerdas exactamente de la criatura?"
+      },
+      {
+        "speaker": "@choice",
+        "text": ""
+      },
+      {
+        "speaker": "ANCIANO",
+        "text": "Lo que describes confirma mis temores."
+      },
+      {
+        "speaker": "POSADERA",
+        "text": "¿Que ocurre? ¿Acaso sabeis que hay ahi fuera?"
+      },
+      {
+        "speaker": "ANCIANO",
+        "text": "Os agradezco que le hayais cuidado. ¿Nos dejaria a solas?"
+      },
+      {
+        "speaker": "POSADERA",
+        "text": "Por supuesto. Os traere algo de comer mas tarde."
+      },
+      {
+        "speaker": "@innkeeper_exits",
+        "text": ""
+      },
+      {
+        "speaker": "TU",
+        "text": "Ahora que estamos solos, ¿que sabes de esa criatura?"
+      },
+      {
+        "speaker": "ANCIANO",
+        "text": "Mas de lo que me gustaria. Y menos de lo necesario."
+      },
+      {
+        "speaker": "ANCIANO",
+        "text": "Hace años comenzaron a aparecer rastros en la costa."
+      },
+      {
+        "speaker": "ANCIANO",
+        "text": "Animales desaparecidos, marcas en la roca, noches sin aves."
+      },
+      {
+        "speaker": "ANCIANO",
+        "text": "Algunos lo atribuyeron a las mareas. Otros dejaron de salir."
+      },
+      {
+        "speaker": "TU",
+        "text": "¿La habias visto antes?"
+      },
+      {
+        "speaker": "ANCIANO",
+        "text": "No con mis propios ojos. Pero reconozco lo que has contado."
+      },
+      {
+        "speaker": "ANCIANO",
+        "text": "Y lo mas extraño de todo es que hayas sobrevivido."
+      },
+      {
+        "speaker": "ANCIANO",
+        "text": "Una criatura de ese tamaño no suele dejar escapar a su presa."
+      },
+      {
+        "speaker": "TU",
+        "text": "Entonces, ¿por que sigo aqui?"
+      },
+      {
+        "speaker": "ANCIANO",
+        "text": "Esa es precisamente la pregunta que no puedo responder."
+      },
+      {
+        "speaker": "ANCIANO",
+        "text": "Y no pienso inventar una respuesta para tranquilizarte."
+      },
+      {
+        "speaker": "TU",
+        "text": "Has dicho que conocias a mi padre."
+      },
+      {
+        "speaker": "ANCIANO",
+        "text": "Almarin Velhart no era un hombre que buscara reconocimiento."
+      },
+      {
+        "speaker": "ANCIANO",
+        "text": "Era paciente, reservado y mas obstinado que cualquier marinero."
+      },
+      {
+        "speaker": "ANCIANO",
+        "text": "Construyo una finca a las afueras. Trabajaba la tierra con sus manos."
+      },
+      {
+        "speaker": "ANCIANO",
+        "text": "Pero tambien tenia un taller. Alli guardaba sus herramientas y notas."
+      },
+      {
+        "speaker": "ANCIANO",
+        "text": "Nunca me explico del todo en que trabajaba durante las noches."
+      },
+      {
+        "speaker": "TU",
+        "text": "¿Que le ocurrio?"
+      },
+      {
+        "speaker": "ANCIANO",
+        "text": "Su historia no cabe en una conversacion junto a una cama."
+      },
+      {
+        "speaker": "ANCIANO",
+        "text": "Y hay cosas que prefiero comprobar antes de contartelas."
+      },
+      {
+        "speaker": "ANCIANO",
+        "text": "La finca sigue en pie, aunque nadie la cuida desde hace tiempo."
+      },
+      {
+        "speaker": "ANCIANO",
+        "text": "Te pertenece por derecho. Tengo documentos que debes ver."
+      },
+      {
+        "speaker": "ANCIANO",
+        "text": "Cuando hayas descansado, ven a la entrada de la finca."
+      },
+      {
+        "speaker": "TU",
+        "text": "¿Y la criatura?"
+      },
+      {
+        "speaker": "ANCIANO",
+        "text": "No vuelvas a la playa de noche. Ni siquiera por curiosidad."
+      },
+      {
+        "speaker": "ANCIANO",
+        "text": "No puedo protegerte de algo que aun no comprendo."
+      },
+      {
+        "speaker": "ANCIANO",
+        "text": "Por ahora descansa. Hablaremos cuando recuperes fuerzas."
+      },
+      {
+        "speaker": "@elder_exits",
+        "text": ""
+      },
+      {
+        "speaker": "@fade",
+        "text": ""
+      }
+    ],
+    "choices": [
+      "Era enorme y avanzaba lentamente.",
+      "Vi unos ojos brillando entre las sombras.",
+      "Parecia conocer el camino al pueblo."
+    ],
+    "responses": [
+      "Entonces era tan grande como cuentan los viejos relatos...",
+      "Esos ojos... esperaba no volver a oir hablar de ellos.",
+      "Si buscaba el camino al pueblo, estamos ante algo peor."
+    ],
+    "choice_index": 10,
+    "response_index": 11,
+    "question": "¿Que fue lo que viste?",
+    "player_speaker": "TU"
+  },
+  "npcs": {
+    "village": [
+      {
+        "id": "herrero",
+        "name": "HERRERO",
+        "race": "human",
+        "position": [
+          920,
+          485
+        ],
+        "dialogue": "village_smith"
+      },
+      {
+        "id": "botica",
+        "name": "BOTICA",
+        "race": "human",
+        "position": [
+          1130,
+          475
+        ],
+        "dialogue": "village_botica"
+      },
+      {
+        "id": "mercader",
+        "name": "MERCADER",
+        "race": "human",
+        "position": [
+          910,
+          300
+        ],
+        "dialogue": "village_mercader"
+      },
+      {
+        "id": "posadera",
+        "name": "POSADERA",
+        "race": "human",
+        "position": [
+          1080,
+          265
+        ],
+        "dialogue": "village_posadera"
+      }
+    ],
+    "tavern": [
+      {
+        "id": "marinera",
+        "name": "MARINERA",
+        "race": "human",
+        "position": [
+          370,
+          450
+        ],
+        "dialogue": "tavern_marinera"
+      },
+      {
+        "id": "viajero",
+        "name": "VIAJERO",
+        "race": "human",
+        "position": [
+          555,
+          440
+        ],
+        "dialogue": "tavern_viajero"
+      },
+      {
+        "id": "posadera",
+        "name": "POSADERA",
+        "race": "human",
+        "position": [
+          305,
+          355
+        ],
+        "dialogue": "innkeeper_tavern"
+      }
+    ]
+  },
+  "ui_text": {
+    "mission_started": "MISION: LAS TIERRAS DE ALMARIN - Busca al anciano en la finca",
+    "room_exit_hint": "Puerta al salon: abajo",
+    "tavern_hint": "E: hablar  |  norte: habitacion  |  sur: pueblo",
+    "village_hint": "E: hablar | Posada, taller, granja, puerto y playa",
+    "continue_hint": "ENTER / ESPACIO"
+  },
+  "legacy_dialogues": {
+    "farm_intro": {
+      "speaker": "ANCIANO",
+      "lines": [
+        "Bienvenido a las tierras de Almarin.",
+        "Esta finca necesita reparaciones. Recoge madera y arregla las vallas."
+      ]
+    },
+    "farm_fence_end": {
+      "speaker": "ANCIANO",
+      "lines": [
+        "Buen trabajo con las vallas.",
+        "Ahora debemos asegurar la entrada con madera y un cerrojo."
+      ]
+    },
+    "inn_elder_clue": {
+      "speaker": "ANCIANO",
+      "lines": [
+        "Nos encontraremos en el puerto. Alli hablaremos de lo que sucede en la granja."
+      ]
+    },
+    "port_elder_intro": {
+      "speaker": "ANCIANO",
+      "lines": [
+        "Hay criaturas merodeando por la finca.",
+        "Regresa a la granja. Tenemos que investigar."
+      ]
+    },
+    "farm_final": {
+      "speaker": "ANCIANO",
+      "lines": [
+        "Has logrado detener a las criaturas.",
+        "La casa y el taller vuelven a estar a tu disposicion."
+      ]
+    },
+    "herrero_intro": {
+      "speaker": "HERRERO",
+      "lines": [
+        "Bienvenido. ¿En que puedo ayudarte?"
+      ]
+    },
+    "botica_intro": {
+      "speaker": "BOTICA",
+      "lines": [
+        "Bienvenido. ¿En que puedo ayudarte?"
+      ]
+    },
+    "mercader_intro": {
+      "speaker": "MERCADER",
+      "lines": [
+        "Bienvenido. ¿En que puedo ayudarte?"
+      ]
+    },
+    "posadera_intro": {
+      "speaker": "POSADERA",
+      "lines": [
+        "Bienvenido. ¿En que puedo ayudarte?"
+      ]
+    },
+    "smith_done": {
+      "speaker": "HERRERO",
+      "lines": [
+        "Ya tienes el cerrojo. Suerte con la finca."
+      ]
+    },
+    "elder_farm_after_gate": {
+      "speaker": "ANCIANO",
+      "lines": [
+        "Nos encontraremos en el puerto. Alli hablaremos de lo que sucede en la granja."
+      ]
+    }
+  }
+}

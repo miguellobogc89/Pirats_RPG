@@ -10,6 +10,7 @@ from game.skills.skill_database import SKILL_DATABASE
 from game.ui.ui_components import (
     TEXT_DARK,
     TEXT_DISABLED,
+    WOOD_DARK,
     draw_button_text,
     draw_content_panel,
     draw_panel,
@@ -27,7 +28,7 @@ TAB_Y = 122
 
 
 def get_menu_tabs():
-    return ["inventory", "routes", "upgrades", "plants", "recipes", "skills", "options"]
+    return ["inventory", "routes", "upgrades", "plants", "recipes", "skills", "journal", "options"]
 
 
 def get_menu_tab_at_position(mouse_x, mouse_y):
@@ -51,6 +52,7 @@ def get_menu_tab_labels():
         "plants": "Plantas",
         "recipes": "Recetas",
         "skills": "Skills",
+        "journal": "Diario",
         "options": "Opciones",
     }
 
@@ -77,7 +79,10 @@ def draw_menu(app):
     draw_content_panel(app.screen, MENU_CONTENT_RECT, padding=12)
     app.menu_action_hitboxes = []
 
-    if app.menu_tab == "inventory":
+    if app.menu_tab in getattr(app, "unavailable_menu_tabs", ()):
+        app.draw_text("Esta seccion aun no esta disponible en el capitulo 1.", 140, 225, TEXT_DARK, app.small_font)
+
+    elif app.menu_tab == "inventory":
         draw_inventory_tab(app)
 
     elif app.menu_tab == "routes":
@@ -86,11 +91,17 @@ def draw_menu(app):
     elif app.menu_tab == "upgrades":
         draw_upgrades_tab(app)
 
+    elif app.menu_tab == "plants":
+        draw_plants_tab(app)
+
     elif app.menu_tab == "recipes":
         draw_recipes_tab(app)
 
     elif app.menu_tab == "skills":
         draw_skills_tab(app)
+
+    elif app.menu_tab == "journal":
+        draw_journal_tab(app)
 
     elif app.menu_tab == "options":
         draw_options_tab(app)
@@ -241,6 +252,16 @@ def draw_dragged_inventory_stack(app, stack, mouse_pos, cell_size):
         selected=True,
         text_color=TEXT_DARK,
     )
+
+
+def draw_plants_tab(app):
+    """Show the original farming state without inventing crops or progress."""
+    farming = app.state.get("farming", {})
+    app.draw_text("Plantas y cultivos", 140, 186, TEXT_DARK, app.big_font)
+    app.draw_text(f"Parcelas preparadas: {len(farming.get('tilled_cells', []))}", 140, 235, TEXT_DARK, app.small_font)
+    app.draw_text(f"Parcelas regadas: {len(farming.get('watered_cells', []))}", 140, 270, TEXT_DARK, app.small_font)
+    app.draw_text(f"Cultivos plantados: {len(farming.get('crops', []))}", 140, 305, TEXT_DARK, app.small_font)
+    app.draw_text("El cultivo en el mundo aun debe conectarse.", 140, 365, TEXT_DARK, app.small_font)
 
 
 def draw_routes_tab(app):
@@ -421,9 +442,9 @@ def draw_skills_tab(app):
             pygame.Rect(bar_x, bar_y, bar_width, bar_height),
             percent,
             100,
-            (190, 190, 190),
-            background_color=(55, 55, 55),
-            border_color=(150, 150, 150),
+            app.WARN,
+            background_color=(70, 48, 34),
+            border_color=WOOD_DARK,
         )
 
         y += 48
@@ -441,3 +462,46 @@ def draw_options_tab(app):
         "rect": button_rect,
         "action": "return_to_main_menu",
     })
+
+
+def draw_journal_tab(app):
+    """Muestra el progreso del capítulo 1 sin modificarlo."""
+    progress = getattr(app, "chapter_progress", None)
+    if progress is None:
+        progress = getattr(app, "state", {})
+    if not isinstance(progress, dict):
+        progress = {}
+
+    def flag(key):
+        return bool(progress.get(key, False))
+
+    def value(key, default="not_started"):
+        return str(progress.get(key, default))
+
+    def line(message, y):
+        app.draw_text(message, 140, y, TEXT_DARK, app.small_font)
+
+    app.draw_text("Diario de misiones", 140, 183, TEXT_DARK, app.big_font)
+    line("PRINCIPALES", 219)
+    line("M1  Las tierras de Almarin", 244)
+    line("Completada" if flag("elder_met") else "Busca al anciano en la finca", 264)
+    line("M2  Un techo propio", 294)
+    if flag("port_meeting"):
+        objective = "Completada - Espada de Almarin recibida"
+    elif flag("gate_repaired"):
+        objective = "Busca al anciano en el puerto" if flag("elder_clue") else "Habla con el anciano en la posada"
+    elif not flag("elder_after_fence"):
+        objective = "Repara las vallas" if value("mission_stage") == "repair_fence" else "Habla con el anciano"
+    elif not flag("gate_inspected"):
+        objective = "Examina la puerta de la finca"
+    else:
+        objective = "Consigue madera y un cerrojo"
+    line(objective, 314)
+    line("M3  La ultima madriguera", 343)
+    farm_objectives = {"ready": "Habla con el anciano en la finca", "hunt": "Investiga la maleza", "boss": "Derrota a la criatura mayor", "fade": "Victoria", "approach": "Habla con el anciano", "complete": "Completada - Llave recibida"}
+    line(farm_objectives.get(value("farm_state", "ready"), "Pendiente"), 363)
+    line("SECUNDARIAS", 395)
+    smith = {"not_started": "No iniciada", "investigate": "Investiga a Sylvarin", "artisan_explained": "Vuelve con el herrero", "completed": "Completada"}
+    rat = {"not_started": "No iniciada", "offered": "Despeja el almacen", "cleared": "Vuelve con Sylvarin", "completed": "Completada"}
+    line("S1 El hierro que canta: " + smith.get(value("smith_quest"), "En curso"), 419)
+    line("S2 Cuando callan las campanas: " + rat.get(value("rat_quest"), "En curso"), 443)

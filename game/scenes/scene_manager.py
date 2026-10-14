@@ -46,6 +46,15 @@ def resolve_scene_spawn(scene_data, payload=None):
     if payload is None:
         return scene_data["player_spawn"]
 
+    target_position = payload.get("target_position")
+    if target_position is not None:
+        if not isinstance(target_position, (list, tuple)) or len(target_position) != 2:
+            raise ValueError("target_position must contain x and y")
+        x, y = target_position
+        if not all(isinstance(v, (int, float)) and not isinstance(v, bool) for v in (x, y)):
+            raise ValueError("target_position must contain numeric coordinates")
+        return {"x": x, "y": y}
+
     target_spawn_id = payload.get("target_spawn_id")
 
     if target_spawn_id is None:
@@ -90,6 +99,9 @@ class SceneManager:
             self.app.state["current_scene"] = scene_id
 
         self.notify_scene_data_changed(scene_id)
+        if scene_id.startswith("brumazul_"):
+            from game.scenes.chapter_area_navigation import recover_chapter_position
+            recover_chapter_position(self.app.state, scene_id, load_scene_data(scene_id))
         scene = self.create_scene(scene_id)
         self.scene_stack = [scene]
         scene.enter()
@@ -120,7 +132,7 @@ class SceneManager:
         if scene_id == "escenario_limpio":
             from game.scenes.escenario_limpio_scene import EscenarioLimpioScene
             return EscenarioLimpioScene
-        if scene_id in ("brumazul_playa", "brumazul_posada", "brumazul_taberna", "brumazul_pueblo"):
+        if scene_id.startswith("brumazul_"):
             from game.scenes.brumazul_scene import BrumazulScene
             return BrumazulScene
         return FarmScene

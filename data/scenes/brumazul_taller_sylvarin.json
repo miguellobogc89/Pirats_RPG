@@ -1,0 +1,73 @@
+{
+  "id": "brumazul_taller_sylvarin",
+  "name": "taller sylvarin",
+  "width": 50,
+  "height": 40,
+  "tile_size": 16,
+  "player_spawn": {
+    "x": 400,
+    "y": 555
+  },
+  "objects": [],
+  "collisions": [],
+  "spawns": [],
+  "exits": [],
+  "chapter_layout": {
+    "id": "taller_sylvarin",
+    "width": 800,
+    "height": 640,
+    "spawn": [
+      400,
+      555
+    ],
+    "walkable": [
+      [
+        75,
+        75,
+        650,
+        510
+      ]
+    ],
+    "nodes": [
+      {
+        "id": "sylvarin",
+        "label": "SYLVARIN",
+        "position": [
+          390,
+          255
+        ],
+        "radius": 65
+      }
+    ],
+    "exits": [
+      {
+        "rect": [
+          350,
+          575,
+          100,
+          15
+        ],
+        "to": "pueblo",
+        "spawn": [
+          1255,
+          455
+        ],
+        "label": "SALIR AL PUEBLO"
+      },
+      {
+        "rect": [
+          650,
+          215,
+          50,
+          90
+        ],
+        "to": "madriguera_artesana",
+        "spawn": [
+          125,
+          330
+        ],
+        "label": "PUERTA AL ALMACEN"
+      }
+    ]
+  }
+}
