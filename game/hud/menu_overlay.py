@@ -499,8 +499,8 @@ def draw_journal_tab(app):
     if len(missions) * row_h > viewport.height:
         app.draw_text("Rueda del ratón para desplazar", 145, 419, TEXT_DARK, app.small_font)
     if selected and any(m["id"] == selected for m in missions):
-        rect = pygame.Rect(580, 438, 215, 36)
+        rect = pygame.Rect(580, 436, 215, 36)
         draw_panel(app.screen, rect)
         draw_button_text(app.screen, app.small_font, "Repetir misión (test)", rect, enabled=True)
         app.menu_action_hitboxes.append({"rect": rect, "action": "mission_replay", "mission_id": selected})
-    app.draw_text("Modo prueba: reinicia la misión seleccionada en el pueblo.", 145, 443, TEXT_DARK, app.small_font)
+    app.draw_text("Modo prueba · conserva inventario", 145, 446, TEXT_DARK, app.small_font)
