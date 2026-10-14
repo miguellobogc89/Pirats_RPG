@@ -6,7 +6,7 @@
   "tile_size": 16,
   "player_spawn": {
     "x": 485,
-    "y": 170
+    "y": 540
   },
   "objects": [],
   "collisions": [],
@@ -21,7 +21,7 @@
       ],
       "spawn_cell": [
         30,
-        9
+        34
       ]
     },
     {
@@ -34,7 +34,7 @@
       ],
       "spawn_cell": [
         30,
-        43
+        35
       ]
     }
   ],
