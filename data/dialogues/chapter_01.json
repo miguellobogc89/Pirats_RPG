@@ -240,6 +240,26 @@
       "lines": [
         "Ya te he entregado el cerrojo. Ahora podrás asegurar la entrada de la granja."
       ]
+    },
+    "elder_farm_need_sword": {
+      "speaker": "ANCIANO",
+      "lines": [
+        "Antes de entrar, trae la espada que te entregué. No quiero que te enfrentes a esas criaturas desarmado."
+      ]
+    },
+    "elder_farm_ambush": {
+      "speaker": "ANCIANO",
+      "lines": [
+        "¿Estás listo para enfrentarte a ellas? Las criaturas se esconden entre la maleza.",
+        "En cuanto te vean, saldrán a atacarte. Mantén la espada cerca y no bajes la guardia.",
+        "Yo me quedaré aquí, vigilando la puerta. ¡Ve con cuidado!"
+      ]
+    },
+    "elder_farm_guard": {
+      "speaker": "ANCIANO",
+      "lines": [
+        "Yo vigilaré la puerta. Las criaturas siguen ahí dentro. Acaba con ellas y vuelve conmigo."
+      ]
     }
   },
   "intro": {
