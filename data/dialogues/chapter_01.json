@@ -242,6 +242,12 @@
         "Toma estas botas de cuero, las hice yo misma. +2 defensa.",
         "A partir de ahora tambien comerciare contigo materiales organicos."
       ]
+    },
+    "inventory_full": {
+      "speaker": "INVENTARIO",
+      "lines": [
+        "No tienes espacio suficiente para recibir este objeto. Libera un hueco y vuelve a intentarlo."
+      ]
     }
   },
   "intro": {
