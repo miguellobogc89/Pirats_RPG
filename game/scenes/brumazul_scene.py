@@ -472,6 +472,10 @@ class BrumazulScene(FarmScene):
                             self.npc_dialogue = get_chapter_dialogue("sylvarin_metal_explained")
                             dispatch_story_event(self.app, "npc_talked", {"npc_id": "sylvarin"})
                             dispatch_story_event(self.app, "rat_nest_offered", {"object_id": "sylvarin"})
+                            from game.inventory.inventory_manager import get_item_quantity
+                            from game.data.item_database import ITEM_DATABASE
+                            if any(item.get("type") == "weapon" and get_item_quantity(self.app.state, item_id) > 0 for item_id, item in ITEM_DATABASE.items()):
+                                dispatch_story_event(self.app, "weapon_acquired", {"object_id": "player"})
                         elif rat_stage == "get_weapon":
                             self.npc_dialogue = get_chapter_dialogue("sylvarin_need_weapon")
                         elif rat_stage == "not_started":
