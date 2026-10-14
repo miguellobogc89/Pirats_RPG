@@ -185,6 +185,23 @@ class BrumazulScene(FarmScene):
                     if self.port_departure:
                         self.phase = "port_departure"
             return True
+        if self.scene_id in ("brumazul_casa_almarin", "brumazul_taller_almarin") and not self.app.menu_open and not self.app.stash_open and (
+            (event.type == pygame.KEYDOWN and event.key in (pygame.K_e, pygame.K_RETURN))
+            or (event.type == pygame.MOUSEBUTTONDOWN and event.button == 1)
+        ):
+            key = "bed" if self.scene_id == "brumazul_casa_almarin" else "chest"
+            position = self.area_layout.get(key)
+            player = self.app.state["player"]
+            if position and math.dist((player["x"], player["y"]), position) <= 85:
+                if self.scene_id == "brumazul_casa_almarin":
+                    self.app.state.setdefault("health", {})["current"] = self.app.state.get("health", {}).get("max", 10)
+                    self.autosave()
+                    self.app.add_log("Has descansado en tu cama. Partida guardada.")
+                else:
+                    from game.inventory.stash_state import ensure_stash_state
+                    ensure_stash_state(self.app.state)
+                    self.app.stash_open = True
+                return True
         if (self.tavern or self.village or self.chapter_area) and not self.app.menu_open and ((event.type == pygame.KEYDOWN and event.key in (pygame.K_e, pygame.K_RETURN)) or (event.type == pygame.MOUSEBUTTONDOWN and event.button == 1)):
             if self.scene_id == "brumazul_granja" and self.interact_farm(event.pos if event.type == pygame.MOUSEBUTTONDOWN else None):
                 return True
@@ -382,7 +399,7 @@ class BrumazulScene(FarmScene):
                         return True
                     if quests["la_ultima_madriguera"] == "approach":
                         dispatch_story_event(self.app, "npc_talked", {"npc_id": "anciano_granja"})
-                        self.npc_dialogue = get_chapter_dialogue("elder_farm_guard")
+                        self.npc_dialogue = get_chapter_dialogue("elder_farm_deed")
                         self.autosave()
                         return True
                     if quests["la_ultima_madriguera"] in ("hunt", "boss"):
