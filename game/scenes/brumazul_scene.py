@@ -381,6 +381,11 @@ class BrumazulScene(FarmScene):
                 quests = self.app.state["quests"]
                 stage = quests["un_techo_propio"]
                 smith_stage = quests["el_hierro_que_canta"]
+                # Old/replayed saves can mark the smith quest completed before
+                # the player has actually received the bolt.
+                if stage == "get_bolt" and smith_stage == "completed" and not self.app.state.get("farm_repairs", {}).get("smith_bolt_claimed"):
+                    quests["el_hierro_que_canta"] = "not_started"
+                    smith_stage = "not_started"
                 self.app.add_log("Herrero: principal=" + stage + ", encargo=" + smith_stage)
                 if stage not in ("get_bolt", "inspect_gate", "find_elder_port", "complete"):
                     self.npc_dialogue = get_chapter_dialogue("smith_idle")
