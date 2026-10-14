@@ -16,26 +16,8 @@ def ensure_inventory_state(state):
 
     if "grid" not in state["inventory"]:
         state["inventory"]["grid"] = [
-            [
-                {"item_id": "axe", "amount": 1},
-                {"item_id": "pickaxe", "amount": 1},
-                {"item_id": "campfire", "amount": 1},
-                {"item_id": "hoe", "amount": 1},
-                {"item_id": "corn_seed", "amount": 10},
-                {"item_id": "watering_can", "amount": 1},
-                {"item_id": "rope", "amount": 100},
-                None,
-            ],
-            [
-                {"item_id": "wood", "amount": 100},
-                {"item_id": "rope", "amount": 100},
-                None,
-                None,
-                None,
-                None,
-                None,
-                None,
-            ],
+            [None for _ in range(INVENTORY_COLUMNS)],
+            [{"item_id": "wood", "amount": 40}] + [None for _ in range(INVENTORY_COLUMNS - 1)],
         ]
 
     if not isinstance(state["inventory"].get("grid"), list):
