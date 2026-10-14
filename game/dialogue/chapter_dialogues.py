@@ -1,13 +1,24 @@
-"""Engine-independent chapter dialogue catalogue (shared JSON with Unity)."""
+"""Chapter dialogue data adapter. No gameplay text lives in scene controllers."""
 import json
+from functools import lru_cache
 from pathlib import Path
 
 CATALOGUE = Path(__file__).resolve().parents[2] / "data" / "dialogues" / "chapter_01.json"
 
 
+@lru_cache(maxsize=1)
+def load_chapter_dialogues():
+    return json.loads(CATALOGUE.read_text(encoding="utf-8"))
+
+
 def get_chapter_dialogue(dialogue_id, **values):
-    data = json.loads(CATALOGUE.read_text(encoding="utf-8"))
-    entry = data["dialogues"].get(dialogue_id)
-    if entry is None:
-        raise KeyError("Dialogo desconocido: " + dialogue_id)
+    entry = load_chapter_dialogues()["dialogues"][dialogue_id]
     return entry["speaker"], [line.format(**values) for line in entry["lines"]]
+
+
+def get_chapter_intro():
+    return load_chapter_dialogues()["intro"]
+
+
+def get_chapter_npcs(area):
+    return load_chapter_dialogues()["npcs"].get(area, [])
