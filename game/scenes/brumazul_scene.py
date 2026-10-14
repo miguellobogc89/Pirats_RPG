@@ -404,7 +404,8 @@ class BrumazulScene(FarmScene):
                         dispatch_story_event(self.app, "object_repaired", {"object_id": "fence"})
                     self.npc_dialogue = ("ANCIANO", [
                         "He comprobado las tres vallas. Buen trabajo.",
-                        "Ahora examina la puerta principal de la finca. Necesitaremos asegurarla.",
+                        "La puerta necesita un cerrojo nuevo, y no sera facil conseguirlo.",
+                        "Pregunta al herrero del pueblo. Tal vez pueda fabricarte uno.",
                     ])
                 else:
                     self.npc_dialogue = ("ANCIANO", [
@@ -412,13 +413,52 @@ class BrumazulScene(FarmScene):
                         if stage == "repair_fence" else "Tenemos que continuar con los trabajos de la finca."
                     ])
                 return True
+        if self.village:
+            smith = next((npc for npc in VILLAGE_NPCS if npc[0] == "HERRERO"), None)
+            if smith and math.dist((p["x"], p["y"]), smith[2]) < 85:
+                quests = self.app.state["quests"]
+                stage = quests["un_techo_propio"]
+                smith_stage = quests["el_hierro_que_canta"]
+                if stage not in ("get_bolt", "inspect_gate", "find_elder_port", "complete"):
+                    self.npc_dialogue = ("HERRERO", ["Trabajo el hierro, pero no puedo regalar materiales."])
+                elif smith_stage == "not_started":
+                    dispatch_story_event(self.app, "npc_talked", {"npc_id": "herrero"})
+                    self.npc_dialogue = ("HERRERO", [
+                        "Un cerrojo como ese es dificil de conseguir.",
+                        "Te lo dare si me ayudas con un problema: las ratas del almacen de Sylvarin.",
+                        "Habla con Sylvarin en su taller. Averigua que ocurre alli.",
+                    ])
+                elif smith_stage == "investigate":
+                    self.npc_dialogue = ("HERRERO", ["Habla con Sylvarin. Su almacen esta infestado de ratas."])
+                elif smith_stage == "artisan_explained":
+                    dispatch_story_event(self.app, "npc_talked", {"npc_id": "herrero"})
+                    progress = self.app.state.setdefault("farm_repairs", {})
+                    if not progress.get("smith_bolt_claimed"):
+                        progress["metal_bolt"] = progress.get("metal_bolt", 0) + 1
+                        progress["smith_bolt_claimed"] = True
+                    self.npc_dialogue = ("HERRERO", [
+                        "Asi que las campanas servian para espantar a las ratas.",
+                        "Cumpliste tu parte. Toma el cerrojo que te prometi.",
+                    ])
+                else:
+                    self.npc_dialogue = ("HERRERO", ["Ya tienes el cerrojo. Suerte con la finca."])
+                self.autosave()
+                return True
         if self.chapter_area:
             for node in self.area_layout.get("nodes", []):
                 if math.dist((p["x"], p["y"]), node["position"]) < node.get("radius", 65):
-                    self.npc_dialogue = (node.get("label", node["id"]), [
-                        "Bienvenido. Hablemos de lo que ocurre en Brumazul."
-                    ])
-                    dispatch_story_event(self.app, "npc_talked", {"npc_id": node["id"]})
+                    npc_id = node["id"]
+                    if npc_id == "sylvarin":
+                        quests = self.app.state["quests"]
+                        dispatch_story_event(self.app, "npc_talked", {"npc_id": "sylvarin"})
+                        self.npc_dialogue = ("SYLVARIN", [
+                            "Las ratas han ocupado mi almacen. Hay que acabar con ellas y su nido.",
+                            "Cuando este despejado, vuelve a hablar conmigo.",
+                        ] if quests["cuando_callan_las_campanas"] != "completed" else ["Gracias por recuperar mi almacen."])
+                    else:
+                        self.npc_dialogue = (node.get("label", npc_id), ["Bienvenido a Brumazul."])
+                        dispatch_story_event(self.app, "npc_talked", {"npc_id": npc_id})
+                    self.autosave()
                     return True
             return False
         for name, race, pos, lines in (VILLAGE_NPCS if self.village else TAVERN_NPCS):
