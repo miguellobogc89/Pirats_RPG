@@ -194,15 +194,16 @@
     "elder_port_followup": {
       "speaker": "ANCIANO",
       "lines": [
-        "Hay criaturas merodeando por la finca.",
-        "Regresa a la granja. Tenemos que investigar."
+        "Solo falta acabar con las criaturas que merodean por la finca.",
+        "Encuéntrate conmigo allí al anochecer.",
+        "Antes de irnos, quiero darte algo. Esta espada perteneció a tu padre.",
+        "[El anciano te entrega la espada de tu padre.]"
       ]
     },
     "elder_port_idle": {
       "speaker": "ANCIANO",
       "lines": [
-        "Hay criaturas merodeando por la finca.",
-        "Regresa a la granja. Tenemos que investigar."
+        "Nos veremos en la finca al anochecer."
       ]
     },
     "smith_gate_repaired": {
