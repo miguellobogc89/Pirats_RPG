@@ -88,7 +88,6 @@ def attack(scene):
             scene.encounter_state["boss_defeated"] = True
             from game.story_events.story_event_manager import dispatch_story_event
             if scene.scene_id == "brumazul_granja":
-                dispatch_story_event(scene.app, "object_interacted", {"object_id": "ambushes_cleared"})
                 dispatch_story_event(scene.app, "object_interacted", {"object_id": "farm_boss_defeated"})
             else:
                 dispatch_story_event(scene.app, "object_interacted", {"object_id": "rat_nest_cleared"})
