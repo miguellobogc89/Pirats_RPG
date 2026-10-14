@@ -23,7 +23,18 @@ def replay_mission(app, mission_id):
     if mission.get("reset_farm"):
         state["farm_repairs"] = {}
         state.setdefault("brumazul", {}).pop("elder_clue_seen", None)
-    if mission_id == "la_ultima_madriguera":
+    # Reset encounter persistence alongside the corresponding quest stages.
+    # Inventory and one-time item receipts remain untouched in test replay.
+    encounter_keys = {
+        "un_techo_propio": ("farm_ambush", "rat_nest"),
+        "la_ultima_madriguera": ("farm_ambush",),
+        "el_hierro_que_canta": ("rat_nest",),
+        "cuando_callan_las_campanas": ("rat_nest",),
+    }
+    encounters = state.setdefault("chapter_encounters", {})
+    for encounter_key in encounter_keys.get(mission_id, ()):
+        encounters.pop(encounter_key, None)
+    if mission_id in ("un_techo_propio", "la_ultima_madriguera"):
         state.setdefault("brumazul", {}).pop("farm_boss_defeated", None)
     if mission_id in ("el_hierro_que_canta", "cuando_callan_las_campanas"):
         # Make the replayed side quest reachable without replaying the farm.
