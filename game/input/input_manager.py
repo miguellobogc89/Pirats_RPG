@@ -66,10 +66,11 @@ def handle_event(app, event):
         return True
 
     if event.type == pygame.MOUSEWHEEL and app.menu_open and app.menu_tab == "journal":
-        from game.story.mission_replay import replay_config
+        from game.hud.menu_overlay import journal_visible_missions, journal_objectives
         category = getattr(app, "mission_category", "main")
-        count = sum(m["category"] == category for m in replay_config()["missions"])
-        app.mission_scroll = max(0, min(max(0, count * 43 - 155), getattr(app, "mission_scroll", 0) - event.y * 35))
+        expanded = getattr(app, "mission_expanded", None)
+        height = sum(45 + (len(journal_objectives(m["id"])) * 25 + 8 if expanded == m["id"] else 0) for m in journal_visible_missions(app, category))
+        app.mission_scroll = max(0, min(max(0, height - 155), getattr(app, "mission_scroll", 0) - event.y * 35))
         return True
 
     if event.type == pygame.MOUSEBUTTONDOWN:
@@ -126,6 +127,12 @@ def handle_menu_action_click(app, pos):
         if action == "mission_category":
             app.mission_category = hitbox["category"]
             app.mission_selected = None
+            app.mission_scroll = 0
+            return True
+        if action == "mission_expand":
+            mission_id = hitbox["mission_id"]
+            app.mission_expanded = None if getattr(app, "mission_expanded", None) == mission_id else mission_id
+            app.mission_selected = mission_id
             app.mission_scroll = 0
             return True
         if action == "mission_select":
