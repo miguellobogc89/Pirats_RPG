@@ -52,6 +52,7 @@ def normalize_scene_data(raw_scene, fallback_scene_id=None):
         "collisions": normalize_collisions(raw_scene),
         "spawns": normalize_spawns(raw_scene),
         "exits": normalize_exits(raw_scene),
+        "chapter_layout": raw_scene.get("chapter_layout", {}),
     }
 
 
