@@ -344,10 +344,10 @@ class BrumazulScene(FarmScene):
                 elif smith_stage == "investigate":
                     self.npc_dialogue = get_chapter_dialogue("smith_wait_sylvarin")
                 elif smith_stage == "artisan_explained":
-                    dispatch_story_event(self.app, "npc_talked", {"npc_id": "herrero"})
                     progress = self.app.state.setdefault("farm_repairs", {})
                     if progress.get("smith_bolt_claimed") or receive(self.app.state, "metal_bolt", 1, receipt_id="chapter01_smith_bolt"):
                         progress["smith_bolt_claimed"] = True
+                        dispatch_story_event(self.app, "npc_talked", {"npc_id": "herrero"})
                         self.npc_dialogue = get_chapter_dialogue("smith_reward")
                     else:
                         self.npc_dialogue = get_chapter_dialogue("inventory_full")
