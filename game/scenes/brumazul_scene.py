@@ -68,6 +68,8 @@ class BrumazulScene(FarmScene):
         self.fade = 0.0
         self.npc_dialogue = None
         self.npc_dialogue_index = 0
+        self.port_departure = False
+        self.port_departure_progress = 0.0
         self.door_cooldown = 0.8
 
         self.save_elapsed = 0.0
@@ -156,7 +158,7 @@ class BrumazulScene(FarmScene):
         if event.type == pygame.QUIT:
             pygame.quit()
             raise SystemExit
-        if self.phase == "fade" or self.phase in ("elder_enters", "keeper_exits", "elder_exits"):
+        if self.phase in ("fade", "port_departure", "port_fade", "elder_enters", "keeper_exits", "elder_exits"):
             return True
         if self.phase == "dialogue":
             if event.type == pygame.KEYDOWN and self.index == INTRO["choice_index"]:
@@ -178,6 +180,8 @@ class BrumazulScene(FarmScene):
                 if self.npc_dialogue_index >= len(self.npc_dialogue[1]):
                     self.npc_dialogue = None
                     self.npc_dialogue_index = 0
+                    if self.port_departure:
+                        self.phase = "port_departure"
             return True
         if (self.tavern or self.village or self.chapter_area) and not self.app.menu_open and ((event.type == pygame.KEYDOWN and event.key in (pygame.K_e, pygame.K_RETURN)) or (event.type == pygame.MOUSEBUTTONDOWN and event.button == 1)):
             if self.scene_id == "brumazul_granja" and self.interact_farm(event.pos if event.type == pygame.MOUSEBUTTONDOWN else None):
@@ -229,6 +233,20 @@ class BrumazulScene(FarmScene):
         if self.save_elapsed >= 2.0:
             self.save_elapsed = 0.0
             self.autosave()
+        if self.phase == "port_departure":
+            self.port_departure_progress = min(1.0, self.port_departure_progress + dt / 2.5)
+            if self.port_departure_progress >= 1.0:
+                self.phase = "port_fade"
+                self.fade = 0.0
+            return
+        if self.phase == "port_fade":
+            self.fade = min(1.0, self.fade + dt / 1.0)
+            if self.fade >= 1.0:
+                self.port_departure = False
+                self.phase = "free"
+                self.fade = 0.0
+                self.autosave()
+            return
         if self.beach:
             self.app.update_farm_scene(dt)
             if self.app.menu_open or self.app.stash_open:
@@ -328,7 +346,12 @@ class BrumazulScene(FarmScene):
                 stage = self.app.state["quests"]["un_techo_propio"]
                 if stage == "find_elder_port":
                     self.npc_dialogue = get_chapter_dialogue("elder_port_followup")
-                    dispatch_story_event(self.app, "npc_talked", {"npc_id": "anciano_puerto"})
+                    if receive(self.app.state, "father_sword", 1, receipt_id="chapter01_father_sword") or "chapter01_father_sword" in self.app.state.get("item_receipts", []):
+                        dispatch_story_event(self.app, "npc_talked", {"npc_id": "anciano_puerto"})
+                        self.port_departure = True
+                        self.port_departure_progress = 0.0
+                    else:
+                        self.npc_dialogue = get_chapter_dialogue("inventory_full")
                 else:
                     self.npc_dialogue = get_chapter_dialogue("elder_port_idle")
                 self.autosave()
@@ -471,7 +494,7 @@ class BrumazulScene(FarmScene):
                 self.draw_dialogue(who, self.response if self.index == INTRO["response_index"] else line)
         if self.npc_dialogue:
             self.draw_dialogue(self.npc_dialogue[0], self.npc_dialogue[1][self.npc_dialogue_index])
-        if self.phase == "fade":
+        if self.phase in ("fade", "port_fade"):
             overlay = pygame.Surface((WIDTH, HEIGHT))
             overlay.fill(WHITE)
             overlay.set_alpha(int(self.fade * 255))
@@ -564,9 +587,12 @@ class BrumazulScene(FarmScene):
             self.actor(node.get("label", node["id"]), pygame.Vector2(x, y), cx, cy)
         if "elder" in layout and self.scene_id in ("brumazul_granja", "brumazul_puerto"):
             stage = self.app.state["quests"]["un_techo_propio"]
-            visible = (self.scene_id == "brumazul_granja" and stage in ("find_elder", "repair_fence", "inspect_gate", "get_bolt")) or (self.scene_id == "brumazul_puerto" and stage in ("find_elder_port", "complete"))
+            visible = (self.scene_id == "brumazul_granja" and stage in ("find_elder", "repair_fence", "inspect_gate", "get_bolt")) or (self.scene_id == "brumazul_puerto" and (stage == "find_elder_port" or self.port_departure))
             if visible:
-                self.actor("ANCIANO [E]", pygame.Vector2(layout["elder"]), cx, cy)
+                elder_position = pygame.Vector2(layout["elder"])
+                if self.scene_id == "brumazul_puerto" and self.port_departure:
+                    elder_position.y += self.port_departure_progress * 180
+                self.actor("ANCIANO [E]", elder_position, cx, cy)
         pygame.draw.rect(screen, LINE, (-cx, -cy, layout.get("width", 800), layout.get("height", 704)), 2)
         self.label(self.scene_id.replace("brumazul_", "").upper(), 22, 18)
         if self.scene_id == "brumazul_granja":
