@@ -10,6 +10,7 @@ from game.skills.skill_database import SKILL_DATABASE
 from game.ui.ui_components import (
     TEXT_DARK,
     TEXT_DISABLED,
+    WOOD_DARK,
     draw_button_text,
     draw_content_panel,
     draw_panel,
