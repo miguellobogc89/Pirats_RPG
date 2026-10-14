@@ -134,6 +134,7 @@ class BrumazulScene(FarmScene):
         self.fade = 0.0
         self.npc_dialogue = None
         self.door_cooldown = 0.8
+        self.save_elapsed = 0.0
         if self.beach:
             self.progress["chapter_started"] = True
             self.seed_collectables()
@@ -167,6 +168,7 @@ class BrumazulScene(FarmScene):
                 collected.append(i)
                 progress["wood"] += layout.get("wood_per_pile", 5)
                 self.npc_dialogue = ("RECOGIDA", ["+5 madera. Total: %d" % progress["wood"]])
+                self.autosave()
                 return True
         if self.app.state["quests"]["un_techo_propio"] != "repair_fence":
             return False
@@ -181,6 +183,7 @@ class BrumazulScene(FarmScene):
             progress["wood"] -= cost
             repaired.append(gap["id"])
             self.npc_dialogue = ("VALLA REPARADA", ["Tramos reparados: %d/%d. Madera: %d" % (len(repaired), len(layout["fence_gaps"]), progress["wood"])])
+            self.autosave()
             if len(repaired) == len(layout["fence_gaps"]):
                 dispatch_story_event(self.app, "object_repaired", {"object_id": "fence"})
                 self.npc_dialogue = ("VALLAS COMPLETADAS", ["Has reparado las tres vallas. Vuelve a hablar con el anciano."])
@@ -257,6 +260,10 @@ class BrumazulScene(FarmScene):
     def update(self, dt):
         dt = min(dt, 0.05)
         self.door_cooldown = max(0, self.door_cooldown - dt)
+        self.save_elapsed += dt
+        if self.save_elapsed >= 2.0:
+            self.save_elapsed = 0.0
+            self.autosave()
         if self.beach:
             self.app.update_farm_scene(dt)
             if self.app.menu_open or self.app.stash_open:
@@ -328,6 +335,7 @@ class BrumazulScene(FarmScene):
     def transition(self, scene_id, spawn_id):
         if self.app.scene_manager.change_scene(scene_id, payload={"target_spawn_id": spawn_id}):
             self.app.dispatch_scene_entered_event()
+            self.autosave()
 
     def attack(self, mouse):
         if self.attack_timer > 0:
@@ -489,6 +497,7 @@ class BrumazulScene(FarmScene):
             if self.app.scene_manager.change_scene(scene_id):
                 self.app.state["player"].update({"x": spawn[0], "y": spawn[1]})
                 self.app.dispatch_scene_entered_event()
+                self.autosave()
 
     def draw_chapter_area(self, cx, cy):
         layout = self.area_layout
