@@ -574,6 +574,8 @@ class BrumazulScene(FarmScene):
         else:
             pygame.draw.circle(s, LINE, (int(p["x"] - cx), int(p["y"] - cy)), 13, 1)
         self.draw_minimal_hud()
+        from game.hud.hotbar_widget import draw_hotbar_widget
+        draw_hotbar_widget(self.app)
         if self.app.menu_open:
             draw_menu(self.app)
         if self.app.stash_open:
