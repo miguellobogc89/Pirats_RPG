@@ -382,33 +382,34 @@ class BrumazulScene(FarmScene):
                 stage = quests["un_techo_propio"]
                 smith_stage = quests["el_hierro_que_canta"]
                 progress = self.app.state.setdefault("farm_repairs", {})
-                if stage == "get_bolt" and not progress.get("smith_bolt_claimed") and smith_stage == "completed" and quests["cuando_callan_las_campanas"] != "not_started":
-                    # Recover saves affected by Sylvarin's former double event:
-                    # investigation completed, but the bolt was never delivered.
-                    quests["el_hierro_que_canta"] = "artisan_explained"
+                # The bolt is delivered only on this interaction, never by a
+                # dialogue event. A completed quest without the bolt is repaired.
+                if stage in ("get_bolt", "inspect_gate") and not progress.get("smith_bolt_claimed") and smith_stage == "completed":
                     smith_stage = "artisan_explained"
-                if stage == "get_bolt" and not progress.get("smith_bolt_claimed") and smith_stage in ("not_started", "completed"):
-                    # Starting the bolt quest must not depend on stale side-quest
-                    # flags left behind by mission replay or older saves.
-                    quests["el_hierro_que_canta"] = "investigate"
-                    smith_stage = "investigate"
-                    self.npc_dialogue = get_chapter_dialogue("smith_offer")
-                elif stage not in ("get_bolt", "inspect_gate", "find_elder_port", "complete"):
+                    quests["el_hierro_que_canta"] = smith_stage
+                if stage not in ("get_bolt", "inspect_gate", "find_elder_port", "complete"):
                     self.npc_dialogue = get_chapter_dialogue("smith_idle")
                 elif smith_stage == "not_started":
-                    quests["el_hierro_que_canta"] = "investigate"
+                    dispatch_story_event(self.app, "npc_talked", {"npc_id": "herrero"})
                     self.npc_dialogue = get_chapter_dialogue("smith_offer")
                 elif smith_stage == "investigate":
                     self.npc_dialogue = get_chapter_dialogue("smith_wait_sylvarin")
-                elif smith_stage == "artisan_explained":
-                    if progress.get("smith_bolt_claimed") or receive(self.app.state, "metal_bolt", 1, receipt_id="chapter01_smith_bolt"):
+                elif smith_stage == "artisan_explained" and not progress.get("smith_bolt_claimed"):
+                    if receive(self.app.state, "metal_bolt", 1, receipt_id="chapter01_smith_bolt"):
+                        progress["smith_bolt_claimed"] = True
+                        quests["el_hierro_que_canta"] = "completed"
+                        self.npc_dialogue = get_chapter_dialogue("smith_reward")
+                    elif "chapter01_smith_bolt" in self.app.state.get("item_receipts", []) or quantity(self.app.state, "metal_bolt") > 0:
+                        # Legacy saves may have a receipt/item but no claim flag.
                         progress["smith_bolt_claimed"] = True
                         quests["el_hierro_que_canta"] = "completed"
                         self.npc_dialogue = get_chapter_dialogue("smith_reward")
                     else:
                         self.npc_dialogue = get_chapter_dialogue("inventory_full")
+                elif smith_stage == "completed" or progress.get("smith_bolt_claimed"):
+                    self.npc_dialogue = get_chapter_dialogue("smith_bolt_delivered")
                 else:
-                    self.npc_dialogue = get_chapter_dialogue("smith_gate_repaired" if stage in ("find_elder_port", "complete") else "smith_trade")
+                    self.npc_dialogue = get_chapter_dialogue("smith_wait_sylvarin")
                 self.autosave()
                 return True
         if self.chapter_area:
