@@ -1,0 +1,178 @@
+{
+  "id": "pueblo",
+  "width": 1400,
+  "height": 1050,
+  "spawn": [
+    1060,
+    410
+  ],
+  "walkable": [
+    [
+      850,
+      50,
+      500,
+      550
+    ],
+    [
+      650,
+      210,
+      200,
+      90
+    ],
+    [
+      580,
+      210,
+      70,
+      580
+    ],
+    [
+      580,
+      790,
+      140,
+      220
+    ],
+    [
+      100,
+      410,
+      480,
+      90
+    ],
+    [
+      450,
+      680,
+      130,
+      90
+    ],
+    [
+      450,
+      750,
+      90,
+      260
+    ]
+  ],
+  "buildings": [
+    {
+      "rect": [
+        985,
+        85,
+        180,
+        160
+      ],
+      "label": "POSADA",
+      "door": [
+        1040,
+        245,
+        70,
+        5
+      ],
+      "to": "salon_posada",
+      "spawn": [
+        485,
+        710
+      ]
+    },
+    {
+      "rect": [
+        1190,
+        310,
+        135,
+        115
+      ],
+      "label": "TALLER SYLVARIN",
+      "door": [
+        1230,
+        425,
+        50,
+        5
+      ],
+      "to": "taller_sylvarin",
+      "spawn": [
+        400,
+        555
+      ]
+    }
+  ],
+  "doors": [
+    {
+      "rect": [
+        100,
+        410,
+        8,
+        90
+      ],
+      "to": "granja",
+      "spawn": [
+        680,
+        320
+      ],
+      "label": "GRANJA"
+    },
+    {
+      "rect": [
+        580,
+        950,
+        140,
+        50
+      ],
+      "to": "puerto",
+      "spawn": [
+        400,
+        145
+      ],
+      "label": "PUERTO"
+    },
+    {
+      "rect": [
+        450,
+        950,
+        90,
+        50
+      ],
+      "to": "playa",
+      "spawn": [
+        400,
+        55
+      ],
+      "label": "PLAYA"
+    }
+  ],
+  "npcs": [],
+  "nodes": [
+    {
+      "id": "herrero",
+      "label": "HERRERO",
+      "position": [
+        920,
+        485
+      ],
+      "radius": 45
+    },
+    {
+      "id": "botica",
+      "label": "BOTICA",
+      "position": [
+        1130,
+        475
+      ],
+      "radius": 45
+    },
+    {
+      "id": "mercader",
+      "label": "MERCADER",
+      "position": [
+        910,
+        300
+      ],
+      "radius": 45
+    },
+    {
+      "id": "posadera",
+      "label": "POSADA",
+      "position": [
+        1080,
+        265
+      ],
+      "radius": 40
+    }
+  ]
+}
