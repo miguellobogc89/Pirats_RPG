@@ -126,8 +126,29 @@ def draw_inventory_tab(app):
     cell_size = 50
     gap = 7
     grid_width = columns * cell_size + (columns - 1) * gap
-    x0 = MENU_CONTENT_RECT.x + (MENU_CONTENT_RECT.width - grid_width) // 2
+    x0 = MENU_CONTENT_RECT.right - grid_width - 24
     y0 = 202
+    from game.inventory.equipment_state import ensure_equipment_state
+    equipment = ensure_equipment_state(app.state)
+    app.equipment_slot_hitboxes = []
+    positions = {
+        "head": (193, 201),
+        "torso": (193, 264),
+        "gloves": (252, 264),
+        "pants": (193, 327),
+        "boots": (193, 390),
+    }
+    labels = {"head": "Cabeza", "torso": "Torso", "gloves": "Guantes", "pants": "Pantalon", "boots": "Botas"}
+    app.draw_text("EQUIPO", 166, 181, TEXT_DARK, app.small_font)
+    for slot_name, (sx, sy) in positions.items():
+        rect = pygame.Rect(sx, sy, cell_size, cell_size)
+        stack = equipment[slot_name]
+        app.equipment_slot_hitboxes.append({"rect": rect, "slot": slot_name, "stack": stack})
+        if rect.collidepoint(mouse_pos):
+            hovered_slot = {"slot": stack}
+        draw_slot(app.screen, rect, stack, app.font, app.small_font,
+                  hovered=rect.collidepoint(mouse_pos), text_color=TEXT_DARK)
+        app.draw_text(labels[slot_name], sx + 2, sy + cell_size + 1, TEXT_DARK, app.small_font)
 
     for row_index in range(rows):
         row = []
