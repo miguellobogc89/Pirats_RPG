@@ -16,7 +16,7 @@ from game.inventory.hotbar_manager import get_hotbar_slots, get_active_hotbar_in
 from game.inventory.item_transactions import receive, spend, spend_bundle, quantity, migrate_chapter_items
 from game.world.camera import get_camera_position
 from game.data.item_database import get_item_data
-from game.dialogue.chapter_dialogues import get_chapter_dialogue, get_chapter_intro, get_chapter_npcs
+from game.dialogue.chapter_dialogues import get_chapter_dialogue, get_chapter_intro, get_chapter_npcs, get_chapter_ui_text
 from game.dialogue.chapter_conversation_renderer import draw_chapter_conversation
 
 WIDTH, HEIGHT = 960, 640
@@ -213,7 +213,7 @@ class BrumazulScene(FarmScene):
         self.app.state["player"]["x"] = 400
         self.app.state["player"]["y"] = 440
         self.phase = "free"
-        self.app.add_log("MISION: LAS TIERRAS DE ALMARIN - Busca al anciano en la finca")
+        self.app.add_log(get_chapter_ui_text("mission_started"))
         self.autosave()
 
     def autosave(self):
@@ -451,7 +451,7 @@ class BrumazulScene(FarmScene):
         if self.phase == "dialogue":
             who, line = SCRIPT[self.index]
             if who == "@choice":
-                self.draw_dialogue("TU", INTRO["question"], CHOICES, self.choice)
+                self.draw_dialogue(INTRO["player_speaker"], INTRO["question"], CHOICES, self.choice)
             else:
                 self.draw_dialogue(who, self.response if self.index == INTRO["response_index"] else line)
         if self.npc_dialogue:
@@ -476,7 +476,7 @@ class BrumazulScene(FarmScene):
             self.actor("ANCIANO", self.elder, cx, cy)
         self.label("POSADA  /  HABITACION", 22, 18)
         if self.phase == "free":
-            self.label("Puerta al salon: abajo", 24, 43)
+            self.label(get_chapter_ui_text("room_exit_hint"), 24, 43)
 
     def draw_door(self, x, y, w, h, cx, cy, label=""):
         rect = pygame.Rect(int(x - cx), int(y - cy), int(w), int(max(h, 8)))
@@ -497,7 +497,7 @@ class BrumazulScene(FarmScene):
         for name, race, pos, _ in TAVERN_NPCS:
             self.actor(name + " / " + race, pygame.Vector2(pos), cx, cy)
         self.label("POSADA  /  SALON", 22, 18)
-        self.label("E: hablar  |  norte: habitacion  |  sur: pueblo", 22, 43)
+        self.label(get_chapter_ui_text("tavern_hint"), 22, 43)
 
     def update_chapter_exits(self, player):
         from game.scenes.chapter_area_navigation import transition_chapter_scene
@@ -584,7 +584,7 @@ class BrumazulScene(FarmScene):
             self.actor(name, pygame.Vector2(pos), cx, cy)
         pygame.draw.rect(s, LINE, (-cx, -cy, 1400, 1050), 2)
         self.label("BRUMAZUL  /  PUEBLO", 22, 18)
-        self.label("E: hablar | Posada, taller, granja, puerto y playa", 22, 43)
+        self.label(get_chapter_ui_text("village_hint"), 22, 43)
 
     def actor(self, name, pos, cx, cy):
         x, y = int(pos.x - cx), int(pos.y - cy)
