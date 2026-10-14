@@ -1,6 +1,6 @@
 import random
 
-from game.inventory.inventory_manager import add_item
+from game.inventory.item_transactions import receive
 from game.data.item_database import get_item_data
 from game.notifications import notify
 from game.story_events import dispatch_story_event
@@ -47,7 +47,7 @@ def update_collectables(app):
         if distance > COLLECT_RADIUS:
             continue
 
-        added = add_item(
+        added = receive(
             app.state,
             collectable["item_id"],
             collectable["amount"],
