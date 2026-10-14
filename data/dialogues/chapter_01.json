@@ -260,6 +260,15 @@
       "lines": [
         "Yo vigilaré la puerta. Las criaturas siguen ahí dentro. Acaba con ellas y vuelve conmigo."
       ]
+    },
+    "elder_farm_deed": {
+      "speaker": "ANCIANO",
+      "lines": [
+        "Has demostrado que mereces estas tierras. No solo has reparado la finca: también la has defendido.",
+        "Tu padre habría estado orgulloso de ti. Desde hoy, la casa y el taller de Almarin son oficialmente tuyos.",
+        "Aquí tienes la escritura de la propiedad y las llaves de ambos edificios.",
+        "Podrás descansar y guardar tus progresos en la cama de la casa, y almacenar tus pertenencias en el cofre del taller."
+      ]
     }
   },
   "intro": {
