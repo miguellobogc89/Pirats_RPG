@@ -15,7 +15,7 @@ def initialize(scene):
     state = scene.app.state.setdefault("chapter_encounters", {}).setdefault(key, {})
     scene.encounter_state = state
     scene.encounter_units = [
-        {"id": str(i), "x": float(x), "y": float(y), "hp": 3 if key == "farm_ambush" else 2, "max_hp": 3 if key == "farm_ambush" else 2,
+        {"id": str(i), "x": float(x), "y": float(y), "hp": state.get("unit_hp", {}).get(str(i), 3 if key == "farm_ambush" else 2), "max_hp": 3 if key == "farm_ambush" else 2,
          "awake": False, "cooldown": 0.0}
         for i, (x, y) in enumerate(scene.area_layout.get(positions_key, []))
         if str(i) not in state.get("defeated", [])
@@ -31,8 +31,9 @@ def initialize(scene):
 def spawn_boss(scene):
     x, y = scene.encounter_boss_position
     scene.encounter_boss = {"id": "boss", "x": float(x), "y": float(y),
-                            "hp": 12, "max_hp": 12, "awake": True, "cooldown": 0.0}
+                            "hp": scene.encounter_state.get("boss_hp", 12), "max_hp": 12, "awake": True, "cooldown": 0.0}
     scene.encounter_state["boss_spawned"] = True
+    scene.encounter_state["boss_hp"] = scene.encounter_boss["hp"]
 
 
 def update(scene, dt):
@@ -84,11 +85,17 @@ def attack(scene):
     enemy = min(targets, key=lambda e: math.dist((player["x"], player["y"]), (e["x"], e["y"])))
     enemy["awake"] = True
     enemy["hp"] -= 1
+    if enemy["id"] == "boss":
+        scene.encounter_state["boss_hp"] = max(0, enemy["hp"])
+    else:
+        scene.encounter_state.setdefault("unit_hp", {})[enemy["id"]] = max(0, enemy["hp"])
+    scene.autosave()
     scene.encounter_attack_cooldown = 0.4
     if enemy["hp"] <= 0:
         if enemy["id"] == "boss":
             scene.encounter_boss = None
             scene.encounter_state["boss_defeated"] = True
+            scene.encounter_state.pop("boss_hp", None)
             from game.story_events.story_event_manager import dispatch_story_event
             if scene.scene_id == "brumazul_granja":
                 dispatch_story_event(scene.app, "object_interacted", {"object_id": "farm_boss_defeated"})
@@ -97,6 +104,7 @@ def attack(scene):
             scene.app.add_log("¡Has derrotado al jefe!")
         else:
             scene.encounter_units.remove(enemy)
+            scene.encounter_state.get("unit_hp", {}).pop(enemy["id"], None)
             scene.encounter_state.setdefault("defeated", []).append(enemy["id"])
             scene.app.add_log("Criatura derrotada.")
         scene.autosave()
