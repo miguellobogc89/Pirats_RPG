@@ -94,25 +94,13 @@ VILLAGE_NPCS = [
 ]
 
 TAVERN_NPCS = [
-    ("GORATHUN", "gorathun", (280, 280), [
-        "Soy Gorathun. Trabajo el hierro. En Brumazul hasta las bisagras se oxidan.",
-        "Si necesitas una herramienta de verdad, pregunta por la herreria.",
-    ]),
-    ("SYLVARIN", "sylvarin", (570, 330), [
-        "Me llaman Sylvarin. Escucho el viento antes de decidir donde trabajar.",
-        "Hay cosas que los metales no pueden decir y la madera si.",
-    ]),
     ("MARINERA", "human", (370, 450), [
         "La costa parecia tranquila ayer. Esta manana nadie quiere salir a faenar.",
         "No te acerques a la playa cuando caiga la noche.",
     ]),
-    ("VIAJERO", "human", (675, 440), [
+    ("VIAJERO", "human", (555, 440), [
         "He recorrido tres islas y ninguna posada sirve un caldo como esta.",
         "Si buscas la finca Velhart, pregunta en el camino del pueblo.",
-    ]),
-    ("POSADERA", "human", (480, 215), [
-        "Me alegro de verte en pie. Come algo antes de salir.",
-        "La puerta principal da al pueblo. La habitacion esta al fondo.",
     ]),
 ]
 
@@ -126,6 +114,8 @@ class BrumazulScene(FarmScene):
         self.area_layout = self.app.scene_data.get("chapter_layout", {}) if self.chapter_area and self.app.scene_data else {}
         self.app.menu_open = False
         self.app.stash_open = False
+        from game.story.chapter_01_quest_manager import ensure_chapter_quests
+        ensure_chapter_quests(self.app.state)
         self.app.state.setdefault("brumazul", {})
         self.progress = self.app.state["brumazul"]
         self.boss = pygame.Vector2(490, 560)
@@ -316,10 +306,38 @@ class BrumazulScene(FarmScene):
                 self.boss_hp = max(0, self.boss_hp - 25)
 
     def talk_to_nearby(self):
+        from game.story_events.story_event_manager import dispatch_story_event
         p = self.app.state["player"]
+        if self.scene_id == "brumazul_granja":
+            elder = self.area_layout.get("elder", [690, 365])
+            if math.dist((p["x"], p["y"]), elder) < 90:
+                stage = self.app.state["quests"]["un_techo_propio"]
+                if stage == "find_elder":
+                    self.npc_dialogue = ("ANCIANO", [
+                        "Has llegado a la finca de Almarin. Ahora es tuya.",
+                        "Antes de entrar debemos arreglar las tres vallas rotas.",
+                        "Busca madera por la granja y repara los huecos.",
+                    ])
+                    dispatch_story_event(self.app, "npc_talked", {"npc_id": "anciano"})
+                else:
+                    self.npc_dialogue = ("ANCIANO", [
+                        "Las vallas necesitan reparacion. Revisa los huecos de la finca."
+                        if stage == "repair_fence" else "Tenemos que continuar con los trabajos de la finca."
+                    ])
+                return True
+        if self.chapter_area:
+            for node in self.area_layout.get("nodes", []):
+                if math.dist((p["x"], p["y"]), node["position"]) < node.get("radius", 65):
+                    self.npc_dialogue = (node.get("label", node["id"]), [
+                        "Bienvenido. Hablemos de lo que ocurre en Brumazul."
+                    ])
+                    dispatch_story_event(self.app, "npc_talked", {"npc_id": node["id"]})
+                    return True
+            return False
         for name, race, pos, lines in (VILLAGE_NPCS if self.village else TAVERN_NPCS):
             if math.dist((p["x"], p["y"]), pos) < 65:
                 self.npc_dialogue = (name, lines)
+                dispatch_story_event(self.app, "npc_talked", {"npc_id": name.lower()})
                 return True
         return False
 
@@ -457,8 +475,8 @@ class BrumazulScene(FarmScene):
         for node in layout.get("nodes", []):
             x, y = node["position"]
             self.actor(node.get("label", node["id"]), pygame.Vector2(x, y), cx, cy)
-        if "elder" in layout:
-            self.actor("ANCIANO", pygame.Vector2(layout["elder"]), cx, cy)
+        if "elder" in layout and self.scene_id == "brumazul_granja" and self.app.state["quests"]["un_techo_propio"] in ("find_elder", "repair_fence", "inspect_gate", "get_bolt"):
+            self.actor("ANCIANO [E]", pygame.Vector2(layout["elder"]), cx, cy)
         pygame.draw.rect(screen, LINE, (-cx, -cy, layout.get("width", 800), layout.get("height", 704)), 2)
         self.label(self.scene_id.replace("brumazul_", "").upper(), 22, 18)
 
