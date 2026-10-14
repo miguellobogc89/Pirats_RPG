@@ -38,6 +38,7 @@ ITEM_DATABASE = {
     'name': 'Manzana', 'type': 'food', 'icon': 'A', 'sprite': 'assets/items/food/apple.png', 'stackable': True},
     'arrow': {
     'name': 'Flecha', 'type': 'ammo', 'icon': 'A', 'sprite': 'assets/items/ammo/arrow.png', 'stackable': True},
+    'scythe': {'name': 'Segadora', 'type': 'tool', 'icon': 'S', 'stackable': False, 'tool_type': 'scythe'},
     'axe': {
     'name': 'Hacha', 'type': 'tool', 'icon': 'A', 'sprite': 'assets/items/tools/axe.png', 'stackable': False, 'tool_type': 'axe'},
     'black_pearl': {
