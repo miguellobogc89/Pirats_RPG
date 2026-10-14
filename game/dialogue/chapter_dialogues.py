@@ -22,3 +22,7 @@ def get_chapter_intro():
 
 def get_chapter_npcs(area):
     return load_chapter_dialogues()["npcs"].get(area, [])
+
+
+def get_chapter_ui_text(text_id, **values):
+    return load_chapter_dialogues()["ui_text"][text_id].format(**values)
