@@ -264,7 +264,8 @@
     "innkeeper_tavern": {
       "speaker": "POSADERA",
       "lines": [
-        "Bienvenido de nuevo a la posada. ¿Necesitas alojamiento?"
+        "Si buscas al anciano, lo encontraras en el puerto.",
+        "Sigue el camino hacia el sur del pueblo para llegar hasta el."
       ]
     },
     "elder_port_followup": {
