@@ -1,7 +1,13 @@
 """Prototipo visual independiente: combate, cinematicas y transiciones."""
 import json
 from pathlib import Path
+import sys
 import pygame
+
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+from game.hud.menu_overlay import draw_menu, get_menu_tabs, get_menu_tab_at_position
 
 ROOT = Path(__file__).resolve().parent
 SAVE = ROOT / "save.json"
@@ -35,7 +41,13 @@ class Game:
         self.gate_inspected = saved.get("gate_inspected", False)
         self.gate_repaired = saved.get("gate_repaired", saved.get("mission_stage") == "gate_repaired")
         self.journal_open = False
-        self.menu_tab = "inventario"
+        self.menu_tab = "inventory"
+        self.small_font = pygame.font.SysFont("consolas", 14)
+        self.big_font = pygame.font.SysFont(None, 30)
+        self.unavailable_menu_tabs = {"routes", "upgrades", "plants", "recipes", "skills", "options"}
+        self.menu_action_hitboxes = []
+        self.inventory_slot_hitboxes = []
+        self.slot_ui_state = type("SlotState", (), {"is_dragging": False, "drag_origin": None, "dragged_stack": None})()
         self.smith_quest = saved.get("smith_quest", "not_started")
         self.rat_quest = saved.get("rat_quest", "not_started")
         self.metal_bolt = saved.get("metal_bolt", 0)
@@ -948,68 +960,8 @@ class Game:
         pygame.draw.rect(s,LINE,(24,67,152,7),1)
         pygame.draw.rect(s,INK,(25,68,int(150*self.hp/100),5))
         if self.journal_open:
-            pygame.draw.rect(s,(250,250,250),(120,65,720,510))
-            pygame.draw.rect(s,INK,(120,65,720,510),2)
-            self.label("PERSONAJE  /  TAB PARA CERRAR",145,88)
-            for name,x in (("inventario",150),("misiones",330)):
-                active = self.menu_tab == name
-                pygame.draw.rect(s,(225,225,225) if active else (245,245,245),(x,110,170,42))
-                pygame.draw.rect(s,INK,(x,110,170,42),2 if active else 1)
-                self.label(name.upper(),x+23,122)
-            pygame.draw.line(s,LINE,(145,165),(815,165),1)
-            if self.menu_tab == "inventario":
-                self.label("INVENTARIO  /  OBJETOS EN TU PODER",150,183)
-                items = [
-                    ("wood",self.wood_count),
-                    ("metal_bolt",self.metal_bolt),
-                    ("fathers_sword",int(self.fathers_sword)),
-                    ("sylvarin_boots",int(self.sylvarin_boots)),
-                    ("house_key",int(self.house_key)),
-                ]
-                if self.tools_collected:
-                    items.extend((tool, 1) for tool in ("axe","hoe","pickaxe","scythe","watering_can"))
-                visible = [(item,qty) for item,qty in items if qty > 0]
-                # Cuadricula visual fija de 16 huecos; el estado de las misiones
-                # sigue siendo la fuente de verdad hasta migrar los objetos.
-                for i in range(16):
-                    x,y = 155+(i%4)*164,215+(i//4)*74
-                    pygame.draw.rect(s,(255,255,255),(x,y,150,66))
-                    pygame.draw.rect(s,LINE,(x,y,150,66),1)
-                    if i < len(visible):
-                        item,qty = visible[i]
-                        title = {"axe":"Hacha","hoe":"Azada","pickaxe":"Pico","scythe":"Guadana","watering_can":"Regadera"}.get(item,self.chapter["items"].get(item,{}).get("title",item))
-                        self.label(str(title)[:19],x+7,y+10)
-                        self.label("x%d" % qty,x+7,y+37)
-                if not visible:
-                    self.label("No tienes objetos todavia.",160,530)
-            else:
-                self.label("MISIONES PRINCIPALES",150,182)
-                self.label("M1  LAS TIERRAS DE ALMARIN",155,220)
-                self.label("Completada" if self.elder_met else "Busca al anciano en la finca",175,247)
-                if self.elder_met:
-                    self.label("M2  UN TECHO PROPIO",155,285)
-                    if self.port_meeting:
-                        objective = "COMPLETADA - Espada de Almarin recibida"
-                    elif self.gate_repaired:
-                        objective = "Busca al anciano en el puerto" if self.elder_clue else "Habla con el anciano en la posada"
-                    elif not self.elder_after_fence:
-                        objective = ("Repara la valla: %d/%d tramos" % (len(self.repaired_fences),len(self.data.get("fence_gaps",[])))) if self.mission_stage == "repair_fence" else "Habla con el anciano en la entrada"
-                    elif not self.gate_inspected:
-                        objective = "Examina la puerta de la finca"
-                    else:
-                        objective = "Puerta: %d/15 madera, %d/1 cerrojo" % (min(self.wood_count,15),min(self.metal_bolt,1))
-                    self.label(objective,175,313)
-                if self.port_meeting:
-                    self.label("M3  LA ULTIMA MADRIGUERA",155,342)
-                    self.label({"ready":"Habla con el anciano en la verja de la finca", "hunt":"Investiga la maleza: %d/%d" % (len(self.farm_kills),len(self.data.get("ambushes",[]))), "boss":"Derrota a la criatura mayor", "fade":"Victoria", "approach":"Habla con el anciano", "complete":"COMPLETADA - Llave recibida"}.get(self.farm_state,"Recupera la finca"),175,364)
-                self.label("MISIONES SECUNDARIAS",150,392)
-                if self.smith_quest != "not_started":
-                    self.label("S1  EL HIERRO QUE CANTA",155,420)
-                    status = {"investigate":"Investiga a Sylvarin","artisan_explained":"Vuelve con el herrero","completed":"Completada"}
-                    self.label(status.get(self.smith_quest,"En curso"),175,442)
-                if self.rat_quest != "not_started":
-                    self.label("S2  CUANDO CALLAN LAS CAMPANAS",155,482)
-                    self.label("Completada" if self.rat_quest == "completed" else ("Vuelve con Sylvarin" if self.rat_quest == "cleared" else "Despeja el almacen de la artesana"),175,505)
+            self.refresh_menu_state()
+            draw_menu(self)
             pygame.display.flip()
             return
         if False and self.mission:
@@ -1073,6 +1025,33 @@ class Game:
         pygame.draw.circle(self.screen,LINE,(int(pos.x-cx),int(pos.y-cy)),15,1)
         self.label(name,pos.x-cx-35,pos.y-cy-33)
 
+    def draw_text(self, message, x, y, color, font=None):
+        surface = (font or self.font).render(str(message), True, color)
+        self.screen.blit(surface, (x, y))
+
+    def refresh_menu_state(self):
+        """Read-only inventory view sourced from the simulator mission state."""
+        items = [
+            ("wood", self.wood_count),
+            ("metal_bolt", self.metal_bolt),
+            ("fathers_sword", int(self.fathers_sword)),
+            ("sylvarin_boots", int(self.sylvarin_boots)),
+            ("house_key", int(self.house_key)),
+        ]
+        if self.tools_collected:
+            items.extend((tool, 1) for tool in ("axe", "hoe", "pickaxe", "scythe", "watering_can"))
+        stacks = [{"item_id": item, "amount": quantity} for item, quantity in items if quantity > 0]
+        slots = (stacks + [None] * 16)[:16]
+        self.state = {"inventory": {"rows": 2, "columns": 8, "active_hotbar_index": 0,
+                                    "grid": [slots[:8], slots[8:16]]}}
+        self.chapter_progress = {
+            key: getattr(self, key) for key in (
+                "mission_stage", "elder_met", "elder_after_fence", "gate_inspected",
+                "gate_repaired", "elder_clue", "port_meeting", "farm_state",
+                "smith_quest", "rat_quest",
+            )
+        }
+
     def run(self):
         running = True
         while running:
@@ -1083,12 +1062,12 @@ class Game:
                         self.journal_open = not self.journal_open
                         continue
                     if self.journal_open:
-                        if event.key in (pygame.K_LEFT,pygame.K_RIGHT):
-                            self.menu_tab = "misiones" if self.menu_tab == "inventario" else "inventario"
-                        elif event.key == pygame.K_1:
-                            self.menu_tab = "inventario"
-                        elif event.key == pygame.K_2:
-                            self.menu_tab = "misiones"
+                        if event.key == pygame.K_ESCAPE:
+                            self.journal_open = False
+                        elif event.key in (pygame.K_LEFT, pygame.K_RIGHT):
+                            tabs = get_menu_tabs()
+                            direction = -1 if event.key == pygame.K_LEFT else 1
+                            self.menu_tab = tabs[(tabs.index(self.menu_tab) + direction) % len(tabs)]
                         continue
                     if self.modal:
                         if event.key in (pygame.K_LEFT,pygame.K_a,pygame.K_UP):
@@ -1105,12 +1084,9 @@ class Game:
                     elif self.phase == "free" and event.key in (pygame.K_SPACE,pygame.K_f): self.attack()
                 if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                     if self.journal_open:
-                        x,y = event.pos
-                        if 110 <= y <= 152:
-                            if 150 <= x <= 320:
-                                self.menu_tab = "inventario"
-                            elif 330 <= x <= 500:
-                                self.menu_tab = "misiones"
+                        selected_tab = get_menu_tab_at_position(*event.pos)
+                        if selected_tab is not None:
+                            self.menu_tab = selected_tab
                         continue
                     if self.modal:
                         x,y = event.pos
