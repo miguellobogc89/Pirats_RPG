@@ -68,6 +68,11 @@ class BrumazulScene(FarmScene):
         self.fade = 0.0
         self.npc_dialogue = None
         self.door_cooldown = 0.8
+        if self.tavern:
+            # Never spawn in the southern exit trigger after entering from village.
+            player = self.app.state["player"]
+            if player["y"] >= 605:
+                player["x"], player["y"] = 485, 540
         self.save_elapsed = 0.0
         if self.beach:
             self.progress["chapter_started"] = True
@@ -281,7 +286,7 @@ class BrumazulScene(FarmScene):
             if self.tavern:
                 if p["y"] < 225 and 425 < p["x"] < 550:
                     self.transition("brumazul_posada", "retorno")
-                elif p["y"] > 615 and 425 < p["x"] < 550:
+                elif p["y"] > 620 and 425 < p["x"] < 550:
                     self.transition("brumazul_pueblo", "entrada")
             elif self.village or self.chapter_area:
                 self.update_chapter_exits(p)
