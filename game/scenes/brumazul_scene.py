@@ -68,6 +68,7 @@ class BrumazulScene(FarmScene):
         self.fade = 0.0
         self.npc_dialogue = None
         self.npc_dialogue_index = 0
+        self.sleep_confirmation = False
         self.port_departure = False
         self.port_departure_progress = 0.0
         self.door_cooldown = 0.8
@@ -176,6 +177,21 @@ class BrumazulScene(FarmScene):
                 self.index += 1
                 self.process_script()
             return True
+        if self.sleep_confirmation:
+            if event.type == pygame.KEYDOWN:
+                if event.key in (pygame.K_y, pygame.K_s, pygame.K_RETURN):
+                    self.sleep_confirmation = False
+                    self.app.sleep_day()
+                    for key in ("health", "energy"):
+                        meter = self.app.state.setdefault(key, {})
+                        meter["current"] = meter.get("max", 10)
+                    self.autosave()
+                    self.app.add_log("Has descansado. Son las 06:00. Partida guardada.")
+                elif event.key in (pygame.K_n, pygame.K_ESCAPE):
+                    self.sleep_confirmation = False
+            elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                self.sleep_confirmation = False
+            return True
         if self.npc_dialogue is not None:
             if (event.type == pygame.KEYDOWN and event.key in (pygame.K_RETURN, pygame.K_SPACE, pygame.K_e, pygame.K_ESCAPE)) or (event.type == pygame.MOUSEBUTTONDOWN and event.button == 1):
                 self.npc_dialogue_index += 1
@@ -194,9 +210,7 @@ class BrumazulScene(FarmScene):
             player = self.app.state["player"]
             if position and math.dist((player["x"], player["y"]), position) <= 85:
                 if self.scene_id == "brumazul_casa_almarin":
-                    self.app.state.setdefault("health", {})["current"] = self.app.state.get("health", {}).get("max", 10)
-                    self.autosave()
-                    self.app.add_log("Has descansado en tu cama. Partida guardada.")
+                    self.sleep_confirmation = True
                 else:
                     from game.inventory.stash_state import ensure_stash_state
                     ensure_stash_state(self.app.state)
@@ -588,6 +602,8 @@ class BrumazulScene(FarmScene):
                 self.draw_dialogue(who, self.response if self.index == INTRO["response_index"] else line)
         if self.npc_dialogue:
             self.draw_dialogue(self.npc_dialogue[0], self.npc_dialogue[1][self.npc_dialogue_index])
+        if self.sleep_confirmation:
+            self.draw_dialogue("DESCANSAR", "¿Quieres dormir hasta las 06:00 del día siguiente? [S / ENTER] Sí   [N / ESC] No")
         if self.phase in ("fade", "port_fade"):
             overlay = pygame.Surface((WIDTH, HEIGHT))
             overlay.fill(WHITE)
@@ -656,6 +672,14 @@ class BrumazulScene(FarmScene):
                     self.draw_door(*door, cx, cy, building.get("label", ""))
                 elif len(door) == 2:
                     self.draw_door(door[0] - 20, door[1] - 5, 40, 10, cx, cy, building.get("label", ""))
+        if self.scene_id == "brumazul_casa_almarin" and "bed" in layout:
+            x, y = layout["bed"]
+            bed = pygame.Rect(int(x - cx - 27), int(y - cy - 39), 54, 78)
+            pygame.draw.rect(screen, (112, 76, 47), bed, border_radius=5)
+            pygame.draw.rect(screen, (224, 205, 171), bed.inflate(-8, -8), border_radius=4)
+            pygame.draw.rect(screen, (247, 242, 226), (bed.x + 8, bed.y + 7, bed.width - 16, 17), border_radius=4)
+            pygame.draw.rect(screen, (89, 135, 166), (bed.x + 7, bed.y + 28, bed.width - 14, bed.height - 37), border_radius=3)
+            self.label("CAMA [E]", x - cx - 31, y - cy - 60)
         if self.scene_id == "brumazul_taller_almarin" and "chest" in layout:
             x, y = layout["chest"]
             chest_rect = pygame.Rect(int(x - cx - 24), int(y - cy - 17), 48, 34)
