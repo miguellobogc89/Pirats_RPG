@@ -43,6 +43,18 @@ class ChapterTransitionsAudit(unittest.TestCase):
             found = find_chapter_exit(link["from"], x+w/2, y+h/2)
             self.assertEqual(found, (link["to"], tuple(link["spawn"])), link)
 
+    def test_invalid_saved_village_position_recovers_without_losing_progress(self):
+        from game.scenes.chapter_area_navigation import recover_chapter_position, can_walk_chapter_area
+        from game.scenes.scene_loader import load_scene_data
+        state = {"player": {"x": 485, "y": 145}, "quests": {"un_techo_propio": "find_elder_port"},
+                 "inventory": {"wood": 10}}
+        fixed = recover_chapter_position(state, "brumazul_pueblo", load_scene_data("brumazul_pueblo"))
+        self.assertTrue(fixed)
+        self.assertTrue(can_walk_chapter_area("brumazul_pueblo", state["player"]["x"], state["player"]["y"]))
+        self.assertEqual(state["quests"]["un_techo_propio"], "find_elder_port")
+        self.assertEqual(state["inventory"]["wood"], 10)
+        self.assertFalse(recover_chapter_position(state, "brumazul_pueblo", load_scene_data("brumazul_pueblo")))
+
     def test_inn_round_trip(self):
         for a,b in [("brumazul_pueblo","brumazul_taberna"),
                     ("brumazul_taberna","brumazul_posada"),
