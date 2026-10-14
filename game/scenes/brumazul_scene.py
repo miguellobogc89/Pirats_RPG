@@ -208,10 +208,10 @@ class BrumazulScene(FarmScene):
                 self.process_script()
             return True
         if self.npc_dialogue is not None:
-            if event.type == pygame.KEYDOWN and event.key in (pygame.K_RETURN, pygame.K_SPACE, pygame.K_e, pygame.K_ESCAPE):
+            if (event.type == pygame.KEYDOWN and event.key in (pygame.K_RETURN, pygame.K_SPACE, pygame.K_e, pygame.K_ESCAPE)) or (event.type == pygame.MOUSEBUTTONDOWN and event.button == 1):
                 self.npc_dialogue = None
             return True
-        if (self.tavern or self.village or self.chapter_area) and not self.app.menu_open and event.type == pygame.KEYDOWN and event.key in (pygame.K_e, pygame.K_RETURN):
+        if (self.tavern or self.village or self.chapter_area) and not self.app.menu_open and ((event.type == pygame.KEYDOWN and event.key in (pygame.K_e, pygame.K_RETURN)) or (event.type == pygame.MOUSEBUTTONDOWN and event.button == 1)):
             if self.scene_id == "brumazul_granja" and self.interact_farm():
                 return True
             if self.talk_to_nearby():
@@ -455,8 +455,8 @@ class BrumazulScene(FarmScene):
 
     def draw_door(self, x, y, w, h, cx, cy, label=""):
         rect = pygame.Rect(int(x - cx), int(y - cy), int(w), int(max(h, 8)))
-        pygame.draw.rect(self.app.screen, (129, 94, 54), rect)
-        pygame.draw.rect(self.app.screen, (75, 57, 40), rect, 2)
+        pygame.draw.rect(self.app.screen, PALE, rect)
+        pygame.draw.rect(self.app.screen, LINE, rect, 2)
         if label:
             self.label(label, rect.centerx - min(55, len(label) * 3), rect.y - 19)
 
@@ -514,7 +514,7 @@ class BrumazulScene(FarmScene):
             repaired = progress.get("repaired_fences", [])
             for i, (x, y) in enumerate(layout.get("wood_piles", [])):
                 if i not in collected:
-                    pygame.draw.rect(screen, (129, 94, 54), (x - cx - 11, y - cy - 7, 22, 14))
+                    pygame.draw.rect(screen, LIGHT, (x - cx - 11, y - cy - 7, 22, 14))
                     self.label("MADERA [E]", x - cx - 32, y - cy - 28)
             for gap in layout.get("fence_gaps", []):
                 x, y, w, h = gap["rect"]
