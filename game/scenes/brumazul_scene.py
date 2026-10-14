@@ -380,7 +380,12 @@ class BrumazulScene(FarmScene):
                             self.npc_dialogue = get_chapter_dialogue("elder_farm_ambush")
                         self.autosave()
                         return True
-                    if quests["la_ultima_madriguera"] in ("hunt", "boss", "approach"):
+                    if quests["la_ultima_madriguera"] == "approach":
+                        dispatch_story_event(self.app, "npc_talked", {"npc_id": "anciano_granja"})
+                        self.npc_dialogue = get_chapter_dialogue("elder_farm_guard")
+                        self.autosave()
+                        return True
+                    if quests["la_ultima_madriguera"] in ("hunt", "boss"):
                         self.npc_dialogue = get_chapter_dialogue("elder_farm_guard")
                         return True
                     return False
