@@ -395,8 +395,6 @@ class BrumazulScene(FarmScene):
                     self.npc_dialogue = get_chapter_dialogue("smith_offer")
                 elif smith_stage == "investigate":
                     self.npc_dialogue = get_chapter_dialogue("smith_wait_sylvarin")
-                elif smith_stage == "artisan_explained" and quests["cuando_callan_las_campanas"] != "completed":
-                    self.npc_dialogue = get_chapter_dialogue("smith_wait_sylvarin")
                 elif smith_stage == "artisan_explained":
                     if progress.get("smith_bolt_claimed") or receive(self.app.state, "metal_bolt", 1, receipt_id="chapter01_smith_bolt"):
                         progress["smith_bolt_claimed"] = True
@@ -419,6 +417,9 @@ class BrumazulScene(FarmScene):
                         if metal_stage == "investigate":
                             self.npc_dialogue = get_chapter_dialogue("sylvarin_metal_explained")
                             dispatch_story_event(self.app, "npc_talked", {"npc_id": "sylvarin"})
+                            dispatch_story_event(self.app, "npc_talked", {"npc_id": "sylvarin"})
+                        elif rat_stage == "get_weapon":
+                            self.npc_dialogue = get_chapter_dialogue("sylvarin_need_weapon")
                         elif rat_stage == "not_started":
                             self.npc_dialogue = get_chapter_dialogue("sylvarin_rats_offer")
                             dispatch_story_event(self.app, "npc_talked", {"npc_id": "sylvarin"})
