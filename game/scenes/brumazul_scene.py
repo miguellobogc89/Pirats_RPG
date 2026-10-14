@@ -574,6 +574,11 @@ class BrumazulScene(FarmScene):
                 pygame.draw.rect(screen, LINE if done else INK, (x - cx, y - cy, w, h), 4 if done else 2)
                 if not done:
                     self.label("VALLA ROTA [E]", x - cx - 20, y - cy - 23)
+            gate_done = progress.get("gate_repaired", False)
+            gate_x, gate_y = 770, 445
+            pygame.draw.rect(screen, PALE if not gate_done else LIGHT, (gate_x - cx - 25, gate_y - cy - 13, 50, 26))
+            pygame.draw.rect(screen, LINE, (gate_x - cx - 25, gate_y - cy - 13, 50, 26), 2)
+            self.label("PORTON REPARADO" if gate_done else "PORTON [E / CLIC]", gate_x - cx - 55, gate_y - cy - 35)
             self.label("MADERA: %d  |  VALLAS: %d/3" % (progress.get("wood", 0), len(repaired)), 22, 91)
         for node in layout.get("nodes", []):
             x, y = node["position"]
