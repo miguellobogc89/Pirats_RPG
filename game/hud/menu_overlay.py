@@ -91,6 +91,9 @@ def draw_menu(app):
     elif app.menu_tab == "upgrades":
         draw_upgrades_tab(app)
 
+    elif app.menu_tab == "plants":
+        draw_plants_tab(app)
+
     elif app.menu_tab == "recipes":
         draw_recipes_tab(app)
 
@@ -249,6 +252,16 @@ def draw_dragged_inventory_stack(app, stack, mouse_pos, cell_size):
         selected=True,
         text_color=TEXT_DARK,
     )
+
+
+def draw_plants_tab(app):
+    """Show the original farming state without inventing crops or progress."""
+    farming = app.state.get("farming", {})
+    app.draw_text("Plantas y cultivos", 140, 186, TEXT_DARK, app.big_font)
+    app.draw_text(f"Parcelas preparadas: {len(farming.get('tilled_cells', []))}", 140, 235, TEXT_DARK, app.small_font)
+    app.draw_text(f"Parcelas regadas: {len(farming.get('watered_cells', []))}", 140, 270, TEXT_DARK, app.small_font)
+    app.draw_text(f"Cultivos plantados: {len(farming.get('crops', []))}", 140, 305, TEXT_DARK, app.small_font)
+    app.draw_text("El cultivo en el mundo aun debe conectarse.", 140, 365, TEXT_DARK, app.small_font)
 
 
 def draw_routes_tab(app):
