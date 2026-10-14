@@ -654,6 +654,14 @@ class BrumazulScene(FarmScene):
                     self.draw_door(*door, cx, cy, building.get("label", ""))
                 elif len(door) == 2:
                     self.draw_door(door[0] - 20, door[1] - 5, 40, 10, cx, cy, building.get("label", ""))
+        if self.scene_id == "brumazul_taller_almarin" and "chest" in layout:
+            x, y = layout["chest"]
+            chest_rect = pygame.Rect(int(x - cx - 24), int(y - cy - 17), 48, 34)
+            pygame.draw.rect(screen, (111, 71, 42), chest_rect, border_radius=4)
+            pygame.draw.rect(screen, (56, 39, 28), chest_rect, 3, border_radius=4)
+            pygame.draw.rect(screen, (192, 152, 75), (int(x - cx - 4), int(y - cy - 14), 8, 28))
+            pygame.draw.rect(screen, (222, 185, 98), (int(x - cx - 5), int(y - cy - 3), 10, 9))
+            self.label("COFRE [E]", x - cx - 34, y - cy - 43)
         if self.scene_id == "brumazul_granja":
             progress = self.app.state.setdefault("farm_repairs", {})
             collected = progress.get("collected_wood", [])
