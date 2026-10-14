@@ -120,7 +120,7 @@ class SceneManager:
         if scene_id == "escenario_limpio":
             from game.scenes.escenario_limpio_scene import EscenarioLimpioScene
             return EscenarioLimpioScene
-        if scene_id in ("brumazul_playa", "brumazul_posada", "brumazul_taberna", "brumazul_pueblo"):
+        if scene_id.startswith("brumazul_"):
             from game.scenes.brumazul_scene import BrumazulScene
             return BrumazulScene
         return FarmScene
