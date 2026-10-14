@@ -170,7 +170,7 @@ class BrumazulScene(FarmScene):
             if i not in collected and (math.dist((p["x"], p["y"]), position) <= 70 or (clicked is not None and math.dist(clicked, position) <= 32)):
                 collected.append(i)
                 progress["wood"] += layout.get("wood_per_pile", 5)
-                self.npc_dialogue = ("RECOGIDA", ["+5 madera. Total: %d" % progress["wood"]])
+                self.npc_dialogue = get_chapter_dialogue("farm_wood_pickup", wood=progress["wood"])
                 self.autosave()
                 return True
         # El porton de reparacion esta dentro de la finca, separado del
@@ -182,10 +182,7 @@ class BrumazulScene(FarmScene):
             stage = self.app.state["quests"]["un_techo_propio"]
             if stage == "inspect_gate":
                 dispatch_story_event(self.app, "object_interacted", {"object_id": "farm_gate"})
-                self.npc_dialogue = ("PORTON DE LA FINCA", [
-                    "La puerta necesita 15 de madera y un cerrojo metalico.",
-                    "Consigue el cerrojo y vuelve para repararla.",
-                ])
+                self.npc_dialogue = get_chapter_dialogue("farm_gate_inspect")
             else:
                 wood_cost = layout.get("door_cost", {}).get("wood", 15)
                 bolt_cost = layout.get("door_cost", {}).get("metal_bolt", 1)
@@ -195,12 +192,9 @@ class BrumazulScene(FarmScene):
                     progress["metal_bolt"] = bolts - bolt_cost
                     progress["gate_repaired"] = True
                     dispatch_story_event(self.app, "object_repaired", {"object_id": "farm_gate"})
-                    self.npc_dialogue = ("PORTON REPARADO", ["La puerta de la finca esta asegurada."])
+                    self.npc_dialogue = get_chapter_dialogue("farm_gate_repaired")
                 else:
-                    self.npc_dialogue = ("PORTON DE LA FINCA", [
-                        "Necesitas %d de madera y %d cerrojo. Tienes %d de madera y %d cerrojo."
-                        % (wood_cost, bolt_cost, progress["wood"], bolts),
-                    ])
+                    self.npc_dialogue = get_chapter_dialogue("farm_gate_requirements", cost=wood_cost, bolt_cost=bolt_cost, wood=progress["wood"], bolts=bolts)
             self.autosave()
             return True
         if self.app.state["quests"]["un_techo_propio"] != "repair_fence":
@@ -215,15 +209,15 @@ class BrumazulScene(FarmScene):
                 continue
             cost = gap.get("cost", 10)
             if progress["wood"] < cost:
-                self.npc_dialogue = ("VALLA ROTA", ["Necesitas %d de madera. Tienes %d." % (cost, progress["wood"])])
+                self.npc_dialogue = get_chapter_dialogue("farm_fence_need_wood", cost=cost, wood=progress["wood"])
                 return True
             progress["wood"] -= cost
             repaired.append(gap["id"])
-            self.npc_dialogue = ("VALLA REPARADA", ["Tramos reparados: %d/%d. Madera: %d" % (len(repaired), len(layout["fence_gaps"]), progress["wood"])])
+            self.npc_dialogue = get_chapter_dialogue("farm_fence_repaired", done=len(repaired), total=len(layout["fence_gaps"]), wood=progress["wood"])
             self.autosave()
             if len(repaired) == len(layout["fence_gaps"]):
                 dispatch_story_event(self.app, "object_repaired", {"object_id": "fence"})
-                self.npc_dialogue = ("VALLAS COMPLETADAS", ["Has reparado las tres vallas. Vuelve a hablar con el anciano."])
+                self.npc_dialogue = get_chapter_dialogue("farm_fences_complete")
             return True
         return False
 
