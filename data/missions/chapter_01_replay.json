@@ -1,0 +1,70 @@
+{
+  "neutral_scene": "brumazul_pueblo",
+  "neutral_position": [
+    700,
+    500
+  ],
+  "missions": [
+    {
+      "id": "un_techo_propio",
+      "title": "Un techo propio",
+      "category": "main",
+      "initial": "find_elder",
+      "spawn_scene": "brumazul_granja",
+      "spawn_position": [
+        690,
+        375
+      ],
+      "reset_quests": [
+        "un_techo_propio",
+        "el_hierro_que_canta",
+        "cuando_callan_las_campanas",
+        "la_ultima_madriguera"
+      ],
+      "reset_farm": true
+    },
+    {
+      "id": "la_ultima_madriguera",
+      "title": "La última madriguera",
+      "category": "main",
+      "initial": "ready",
+      "spawn_scene": "brumazul_granja",
+      "spawn_position": [
+        735,
+        375
+      ],
+      "reset_quests": [
+        "la_ultima_madriguera"
+      ]
+    },
+    {
+      "id": "el_hierro_que_canta",
+      "title": "El hierro que canta",
+      "category": "secondary",
+      "initial": "not_started",
+      "spawn_scene": "brumazul_pueblo",
+      "spawn_position": [
+        920,
+        485
+      ],
+      "reset_quests": [
+        "el_hierro_que_canta",
+        "cuando_callan_las_campanas"
+      ]
+    },
+    {
+      "id": "cuando_callan_las_campanas",
+      "title": "Cuando callan las campanas",
+      "category": "secondary",
+      "initial": "not_started",
+      "spawn_scene": "brumazul_taller_sylvarin",
+      "spawn_position": [
+        400,
+        350
+      ],
+      "reset_quests": [
+        "cuando_callan_las_campanas"
+      ]
+    }
+  ]
+}
