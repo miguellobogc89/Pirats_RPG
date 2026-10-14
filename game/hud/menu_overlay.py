@@ -464,40 +464,88 @@ def draw_options_tab(app):
     })
 
 
-def draw_journal_tab(app):
+def journal_visible_missions(app, category=None):
     from game.story.mission_replay import replay_config
     from game.story.chapter_01_quest_manager import ensure_chapter_quests
-    config = replay_config()
+    quests = ensure_chapter_quests(app.state)
+    return [m for m in replay_config()["missions"]
+            if (category is None or m["category"] == category)
+            and quests.get(m["id"], m["initial"]) not in ("not_started", "ready")]
+
+
+def journal_objectives(mission_id):
+    return {
+        "un_techo_propio": [
+            ("find_elder", "Habla con el anciano"),
+            ("repair_fence", "Repara las vallas"),
+            ("get_bolt", "Consigue el cerrojo"),
+            ("find_elder_port", "Reúnete con el anciano en el puerto"),
+        ],
+        "el_hierro_que_canta": [
+            ("investigate", "Investiga el encargo del herrero"),
+            ("artisan_explained", "Habla con Sylvarin"),
+            ("completed", "Regresa al herrero por el cerrojo"),
+        ],
+        "cuando_callan_las_campanas": [
+            ("get_weapon", "Consigue un arma"),
+            ("offered", "Limpia el nido"),
+            ("cleared", "Regresa con Sylvarin"),
+        ],
+        "la_ultima_madriguera": [
+            ("hunt", "Investiga las criaturas de la granja"),
+            ("boss", "Derrota a la criatura del nido"),
+            ("approach", "Habla con el anciano"),
+        ],
+    }.get(mission_id, [])
+
+
+def draw_journal_tab(app):
+    from game.story.chapter_01_quest_manager import ensure_chapter_quests
     quests = ensure_chapter_quests(app.state)
     category = getattr(app, "mission_category", "main")
-    selected = getattr(app, "mission_selected", None)
+    expanded = getattr(app, "mission_expanded", None)
     app.draw_text("Misiones", 140, 180, TEXT_DARK, app.big_font)
     for name, label, x in (("main", "Principales", 140), ("secondary", "Secundarias", 295)):
         rect = pygame.Rect(x, 214, 145, 32)
         pygame.draw.rect(app.screen, (198, 207, 188) if category == name else (220, 214, 201), rect, border_radius=5)
         app.draw_text(label, x + 10, 222, TEXT_DARK, app.small_font)
         app.menu_action_hitboxes.append({"rect": rect, "action": "mission_category", "category": name})
-    missions = [m for m in config["missions"] if m["category"] == category]
+    missions = journal_visible_missions(app, category)
     viewport = pygame.Rect(140, 260, 670, 155)
-    row_h = 43
-    scroll = max(0, min(getattr(app, "mission_scroll", 0), max(0, len(missions) * row_h - viewport.height)))
+    rows = []
+    for mission in missions:
+        objectives = journal_objectives(mission["id"])
+        opened = expanded == mission["id"]
+        height = 40 + (len(objectives) * 25 + 8 if opened else 0)
+        rows.append((mission, objectives, opened, height))
+    total_height = sum(row[3] + 5 for row in rows)
+    scroll = max(0, min(getattr(app, "mission_scroll", 0), max(0, total_height - viewport.height)))
     app.mission_scroll = scroll
     app.screen.set_clip(viewport)
-    for n, mission in enumerate(missions):
-        y = viewport.y + n * row_h - scroll
-        rect = pygame.Rect(145, y, 645, 39)
-        if rect.bottom < viewport.top or rect.top > viewport.bottom:
-            continue
-        pygame.draw.rect(app.screen, (202, 215, 198) if selected == mission["id"] else (231, 227, 215), rect, border_radius=4)
+    y = viewport.y - scroll
+    for mission, objectives, opened, height in rows:
         stage = quests.get(mission["id"], mission["initial"])
         done = stage in ("complete", "completed")
-        marker = "✓" if done else "○"
-        app.draw_text(marker + "  " + mission["title"], 155, y + 8, TEXT_DARK, app.small_font)
-        app.draw_text("Terminada" if done else stage.replace("_", " "), 555, y + 8, TEXT_DARK, app.small_font)
-        app.menu_action_hitboxes.append({"rect": rect.clip(viewport), "action": "mission_select", "mission_id": mission["id"]})
+        header = pygame.Rect(145, y, 645, 39)
+        if header.colliderect(viewport):
+            pygame.draw.rect(app.screen, (202, 215, 198) if opened else (231, 227, 215), header, border_radius=4)
+            app.draw_text(("▾" if opened else "▸") + "  " + mission["title"], 155, y + 8, TEXT_DARK, app.small_font)
+            if done:
+                app.draw_text("✓", 755, y + 8, TEXT_DARK, app.small_font)
+            app.menu_action_hitboxes.append({"rect": header.clip(viewport), "action": "mission_expand", "mission_id": mission["id"]})
+        if opened:
+            keys = [key for key, _ in objectives]
+            current_index = keys.index(stage) if stage in keys else (-1 if stage in ("not_started", "ready") else len(keys))
+            for index, (key, label) in enumerate(objectives):
+                oy = y + 43 + index * 25
+                if viewport.top <= oy < viewport.bottom - 10:
+                    marker = "✓" if done or index < current_index else "○"
+                    app.draw_text(marker + "  " + label, 170, oy, TEXT_DARK, app.small_font)
+        y += height + 5
     app.screen.set_clip(None)
-    if len(missions) * row_h > viewport.height:
+    if total_height > viewport.height:
         app.draw_text("Rueda del ratón para desplazar", 145, 419, TEXT_DARK, app.small_font)
+    selected = getattr(app, "mission_selected", None)
     if selected and any(m["id"] == selected for m in missions):
         rect = pygame.Rect(580, 436, 215, 36)
         draw_panel(app.screen, rect)
