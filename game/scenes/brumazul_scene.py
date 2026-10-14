@@ -270,8 +270,13 @@ class BrumazulScene(FarmScene):
             if self.fade >= 1:
                 self.finish_intro()
         elif self.phase == "free" and self.npc_dialogue is None:
-            self.app.update_farm_scene(dt)
             p = self.app.state["player"]
+            old_position = (p["x"], p["y"])
+            self.app.update_farm_scene(dt)
+            if self.village or self.chapter_area:
+                from game.scenes.chapter_area_navigation import can_walk_chapter_area, find_chapter_exit
+                if not can_walk_chapter_area(self.scene_id, p["x"], p["y"], self.area_layout) and not find_chapter_exit(self.scene_id, p["x"], p["y"], self.area_layout):
+                    p["x"], p["y"] = old_position
             if self.tavern:
                 if p["y"] < 115 and 425 < p["x"] < 550:
                     self.transition("brumazul_posada", "retorno")
@@ -318,7 +323,8 @@ class BrumazulScene(FarmScene):
         s = self.app.screen
         s.fill(WHITE)
         p = self.app.state["player"]
-        world_width, world_height = (1400, 1050) if self.village else (800, 800)
+        world_width = self.area_layout.get("width", 800) if self.chapter_area else (1400 if self.village else 800)
+        world_height = self.area_layout.get("height", 800) if self.chapter_area else (1050 if self.village else 800)
         cx, cy = get_camera_position(p["x"], p["y"], WIDTH, HEIGHT, world_width, world_height)
         if self.beach:
             pygame.draw.rect(s, PAPER, (0, 0, WIDTH, HEIGHT))
