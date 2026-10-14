@@ -195,6 +195,311 @@
       "lines": [
         "Bienvenido a Brumazul."
       ]
+    },
+    "village_smith": {
+      "speaker": "HERRERO",
+      "lines": [
+        "Trabajo el hierro. Busca a Sylvarin si necesitas un cerrojo."
+      ]
+    },
+    "village_botica": {
+      "speaker": "BOTICA",
+      "lines": [
+        "La botica esta abierta."
+      ]
+    },
+    "village_mercader": {
+      "speaker": "MERCADER",
+      "lines": [
+        "Bienvenido a Brumazul."
+      ]
+    },
+    "village_posadera": {
+      "speaker": "POSADERA",
+      "lines": [
+        "La posada esta al norte."
+      ]
+    },
+    "tavern_marinera": {
+      "speaker": "MARINERA",
+      "lines": [
+        "La costa parecia tranquila ayer. Esta manana nadie quiere salir a faenar.",
+        "No te acerques a la playa cuando caiga la noche."
+      ]
+    },
+    "tavern_viajero": {
+      "speaker": "VIAJERO",
+      "lines": [
+        "He recorrido tres islas y ninguna posada sirve un caldo como esta.",
+        "Si buscas la finca Velhart, pregunta en el camino del pueblo."
+      ]
     }
+  },
+  "intro": {
+    "script": [
+      {
+        "speaker": "POSADERA",
+        "text": "Vaya, has despertado. Pensabamos que no lo contarias."
+      },
+      {
+        "speaker": "POSADERA",
+        "text": "Un pescador te encontro al amanecer, tendido junto al camino."
+      },
+      {
+        "speaker": "POSADERA",
+        "text": "Llevabas arena en la ropa y no reaccionabas a nada."
+      },
+      {
+        "speaker": "TU",
+        "text": "Recuerdo la playa. Y algo enorme moviendose en la oscuridad."
+      },
+      {
+        "speaker": "POSADERA",
+        "text": "Aqui conocemos las tormentas y las alimañas. Pero aquello..."
+      },
+      {
+        "speaker": "POSADERA",
+        "text": "Hay alguien que lleva horas esperando a que despiertes."
+      },
+      {
+        "speaker": "@elder_enters",
+        "text": ""
+      },
+      {
+        "speaker": "ANCIANO",
+        "text": "Asi que eres el hijo de Almarin Velhart."
+      },
+      {
+        "speaker": "ANCIANO",
+        "text": "He visto muchos naufragos. Pocos llegan vivos desde esa playa."
+      },
+      {
+        "speaker": "ANCIANO",
+        "text": "Dime, ¿que recuerdas exactamente de la criatura?"
+      },
+      {
+        "speaker": "@choice",
+        "text": ""
+      },
+      {
+        "speaker": "ANCIANO",
+        "text": "Lo que describes confirma mis temores."
+      },
+      {
+        "speaker": "POSADERA",
+        "text": "¿Que ocurre? ¿Acaso sabeis que hay ahi fuera?"
+      },
+      {
+        "speaker": "ANCIANO",
+        "text": "Os agradezco que le hayais cuidado. ¿Nos dejaria a solas?"
+      },
+      {
+        "speaker": "POSADERA",
+        "text": "Por supuesto. Os traere algo de comer mas tarde."
+      },
+      {
+        "speaker": "@innkeeper_exits",
+        "text": ""
+      },
+      {
+        "speaker": "TU",
+        "text": "Ahora que estamos solos, ¿que sabes de esa criatura?"
+      },
+      {
+        "speaker": "ANCIANO",
+        "text": "Mas de lo que me gustaria. Y menos de lo necesario."
+      },
+      {
+        "speaker": "ANCIANO",
+        "text": "Hace años comenzaron a aparecer rastros en la costa."
+      },
+      {
+        "speaker": "ANCIANO",
+        "text": "Animales desaparecidos, marcas en la roca, noches sin aves."
+      },
+      {
+        "speaker": "ANCIANO",
+        "text": "Algunos lo atribuyeron a las mareas. Otros dejaron de salir."
+      },
+      {
+        "speaker": "TU",
+        "text": "¿La habias visto antes?"
+      },
+      {
+        "speaker": "ANCIANO",
+        "text": "No con mis propios ojos. Pero reconozco lo que has contado."
+      },
+      {
+        "speaker": "ANCIANO",
+        "text": "Y lo mas extraño de todo es que hayas sobrevivido."
+      },
+      {
+        "speaker": "ANCIANO",
+        "text": "Una criatura de ese tamaño no suele dejar escapar a su presa."
+      },
+      {
+        "speaker": "TU",
+        "text": "Entonces, ¿por que sigo aqui?"
+      },
+      {
+        "speaker": "ANCIANO",
+        "text": "Esa es precisamente la pregunta que no puedo responder."
+      },
+      {
+        "speaker": "ANCIANO",
+        "text": "Y no pienso inventar una respuesta para tranquilizarte."
+      },
+      {
+        "speaker": "TU",
+        "text": "Has dicho que conocias a mi padre."
+      },
+      {
+        "speaker": "ANCIANO",
+        "text": "Almarin Velhart no era un hombre que buscara reconocimiento."
+      },
+      {
+        "speaker": "ANCIANO",
+        "text": "Era paciente, reservado y mas obstinado que cualquier marinero."
+      },
+      {
+        "speaker": "ANCIANO",
+        "text": "Construyo una finca a las afueras. Trabajaba la tierra con sus manos."
+      },
+      {
+        "speaker": "ANCIANO",
+        "text": "Pero tambien tenia un taller. Alli guardaba sus herramientas y notas."
+      },
+      {
+        "speaker": "ANCIANO",
+        "text": "Nunca me explico del todo en que trabajaba durante las noches."
+      },
+      {
+        "speaker": "TU",
+        "text": "¿Que le ocurrio?"
+      },
+      {
+        "speaker": "ANCIANO",
+        "text": "Su historia no cabe en una conversacion junto a una cama."
+      },
+      {
+        "speaker": "ANCIANO",
+        "text": "Y hay cosas que prefiero comprobar antes de contartelas."
+      },
+      {
+        "speaker": "ANCIANO",
+        "text": "La finca sigue en pie, aunque nadie la cuida desde hace tiempo."
+      },
+      {
+        "speaker": "ANCIANO",
+        "text": "Te pertenece por derecho. Tengo documentos que debes ver."
+      },
+      {
+        "speaker": "ANCIANO",
+        "text": "Cuando hayas descansado, ven a la entrada de la finca."
+      },
+      {
+        "speaker": "TU",
+        "text": "¿Y la criatura?"
+      },
+      {
+        "speaker": "ANCIANO",
+        "text": "No vuelvas a la playa de noche. Ni siquiera por curiosidad."
+      },
+      {
+        "speaker": "ANCIANO",
+        "text": "No puedo protegerte de algo que aun no comprendo."
+      },
+      {
+        "speaker": "ANCIANO",
+        "text": "Por ahora descansa. Hablaremos cuando recuperes fuerzas."
+      },
+      {
+        "speaker": "@elder_exits",
+        "text": ""
+      },
+      {
+        "speaker": "@fade",
+        "text": ""
+      }
+    ],
+    "choices": [
+      "Era enorme y avanzaba lentamente.",
+      "Vi unos ojos brillando entre las sombras.",
+      "Parecia conocer el camino al pueblo."
+    ],
+    "responses": [
+      "Entonces era tan grande como cuentan los viejos relatos...",
+      "Esos ojos... esperaba no volver a oir hablar de ellos.",
+      "Si buscaba el camino al pueblo, estamos ante algo peor."
+    ],
+    "choice_index": 10,
+    "response_index": 11,
+    "question": "¿Que fue lo que viste?"
+  },
+  "npcs": {
+    "village": [
+      {
+        "id": "herrero",
+        "name": "HERRERO",
+        "race": "human",
+        "position": [
+          920,
+          485
+        ],
+        "dialogue": "village_smith"
+      },
+      {
+        "id": "botica",
+        "name": "BOTICA",
+        "race": "human",
+        "position": [
+          1130,
+          475
+        ],
+        "dialogue": "village_botica"
+      },
+      {
+        "id": "mercader",
+        "name": "MERCADER",
+        "race": "human",
+        "position": [
+          910,
+          300
+        ],
+        "dialogue": "village_mercader"
+      },
+      {
+        "id": "posadera",
+        "name": "POSADERA",
+        "race": "human",
+        "position": [
+          1080,
+          265
+        ],
+        "dialogue": "village_posadera"
+      }
+    ],
+    "tavern": [
+      {
+        "id": "marinera",
+        "name": "MARINERA",
+        "race": "human",
+        "position": [
+          370,
+          450
+        ],
+        "dialogue": "tavern_marinera"
+      },
+      {
+        "id": "viajero",
+        "name": "VIAJERO",
+        "race": "human",
+        "position": [
+          555,
+          440
+        ],
+        "dialogue": "tavern_viajero"
+      }
+    ]
   }
 }
