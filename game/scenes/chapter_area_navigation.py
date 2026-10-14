@@ -29,8 +29,10 @@ def transition_chapter_scene(app, scene_id, player, layout=None):
         return False
     target, spawn = destination
     if target in ("brumazul_casa_almarin", "brumazul_taller_almarin"):
-        app.add_log("El edificio permanece cerrado por ahora.")
-        return False
+        from game.story.chapter_01_quest_manager import ensure_chapter_quests
+        if ensure_chapter_quests(app.state)["la_ultima_madriguera"] != "complete":
+            app.add_log("Necesitas las llaves que te entregará el anciano.")
+            return False
     if target == "brumazul_madriguera_artesana":
         from game.inventory.inventory_manager import get_item_quantity
         from game.data.item_database import ITEM_DATABASE
