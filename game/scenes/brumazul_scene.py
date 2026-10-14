@@ -399,15 +399,34 @@ class BrumazulScene(FarmScene):
                         progress["smith_bolt_claimed"] = True
                         quests["el_hierro_que_canta"] = "completed"
                         self.npc_dialogue = get_chapter_dialogue("smith_reward")
-                    elif "chapter01_smith_bolt" in self.app.state.get("item_receipts", []) or quantity(self.app.state, "metal_bolt") > 0:
-                        # Legacy saves may have a receipt/item but no claim flag.
+                    elif quantity(self.app.state, "metal_bolt") > 0:
                         progress["smith_bolt_claimed"] = True
                         quests["el_hierro_que_canta"] = "completed"
                         self.npc_dialogue = get_chapter_dialogue("smith_reward")
+                    elif "chapter01_smith_bolt" in self.app.state.get("item_receipts", []):
+                        # A previous buggy save registered the receipt without
+                        # leaving the item in the inventory. Retry the grant.
+                        self.app.state["item_receipts"].remove("chapter01_smith_bolt")
+                        if receive(self.app.state, "metal_bolt", 1, receipt_id="chapter01_smith_bolt"):
+                            progress["smith_bolt_claimed"] = True
+                            quests["el_hierro_que_canta"] = "completed"
+                            self.npc_dialogue = get_chapter_dialogue("smith_reward")
+                        else:
+                            self.npc_dialogue = get_chapter_dialogue("inventory_full")
                     else:
                         self.npc_dialogue = get_chapter_dialogue("inventory_full")
                 elif smith_stage == "completed" or progress.get("smith_bolt_claimed"):
-                    self.npc_dialogue = get_chapter_dialogue("smith_bolt_delivered")
+                    if stage in ("get_bolt", "inspect_gate") and quantity(self.app.state, "metal_bolt") == 0:
+                        progress["smith_bolt_claimed"] = False
+                        self.app.state.setdefault("item_receipts", [])[:] = [r for r in self.app.state.get("item_receipts", []) if r != "chapter01_smith_bolt"]
+                        if receive(self.app.state, "metal_bolt", 1, receipt_id="chapter01_smith_bolt"):
+                            progress["smith_bolt_claimed"] = True
+                            quests["el_hierro_que_canta"] = "completed"
+                            self.npc_dialogue = get_chapter_dialogue("smith_reward")
+                        else:
+                            self.npc_dialogue = get_chapter_dialogue("inventory_full")
+                    else:
+                        self.npc_dialogue = get_chapter_dialogue("smith_bolt_delivered")
                 else:
                     self.npc_dialogue = get_chapter_dialogue("smith_wait_sylvarin")
                 self.autosave()
