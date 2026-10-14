@@ -216,6 +216,12 @@
       "lines": [
         "Bienvenido. ¿En que puedo ayudarte?"
       ]
+    },
+    "inn_elder_clue": {
+      "speaker": "ANCIANO",
+      "lines": [
+        "Nos encontraremos en el puerto. Alli hablaremos de lo que sucede en la granja."
+      ]
     }
   },
   "intro": {
