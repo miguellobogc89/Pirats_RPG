@@ -4,6 +4,8 @@ El estado del personaje, inventario, recoleccion y menu siguen siendo los del mo
 El prototipo independiente no se modifica.
 """
 import math
+import json
+from pathlib import Path
 import pygame
 
 from core.save_manager import save_state
@@ -81,6 +83,16 @@ RESPONSES = [
     "Esos ojos... esperaba no volver a oir hablar de ellos.",
     "Si buscaba el camino al pueblo, estamos ante algo peor.",
 ]
+VILLAGE_LAYOUT = json.loads(
+    (Path(__file__).resolve().parents[2] / "python_simulator" / "scenes" / "pueblo.json").read_text(encoding="utf-8")
+)
+VILLAGE_NPCS = [
+    ("HERRERO", "human", (920, 485), ["Trabajo el hierro. Busca a Sylvarin si necesitas un cerrojo."]),
+    ("BOTICA", "human", (1130, 475), ["La botica esta abierta."]),
+    ("MERCADER", "human", (910, 300), ["Bienvenido a Brumazul."]),
+    ("POSADERA", "human", (1080, 265), ["La posada esta al norte."]),
+]
+
 TAVERN_NPCS = [
     ("GORATHUN", "gorathun", (280, 280), [
         "Soy Gorathun. Trabajo el hierro. En Brumazul hasta las bisagras se oxidan.",
@@ -295,7 +307,7 @@ class BrumazulScene(FarmScene):
 
     def talk_to_nearby(self):
         p = self.app.state["player"]
-        for name, race, pos, lines in TAVERN_NPCS:
+        for name, race, pos, lines in (VILLAGE_NPCS if self.village else TAVERN_NPCS):
             if math.dist((p["x"], p["y"]), pos) < 65:
                 self.npc_dialogue = (name, lines)
                 return True
@@ -305,7 +317,8 @@ class BrumazulScene(FarmScene):
         s = self.app.screen
         s.fill(WHITE)
         p = self.app.state["player"]
-        cx, cy = get_camera_position(p["x"], p["y"], WIDTH, HEIGHT, 800, 800)
+        world_width, world_height = (1400, 1050) if self.village else (800, 800)
+        cx, cy = get_camera_position(p["x"], p["y"], WIDTH, HEIGHT, world_width, world_height)
         if self.beach:
             pygame.draw.rect(s, PAPER, (0, 0, WIDTH, HEIGHT))
             pygame.draw.rect(s, (239, 239, 239), pygame.Rect(-cx, -cy, 704, 704))
@@ -386,11 +399,21 @@ class BrumazulScene(FarmScene):
 
     def draw_village(self, cx, cy):
         s = self.app.screen
-        for x, y, w, h in ((110, 110, 155, 140), (560, 100, 150, 165), (115, 515, 175, 160), (530, 520, 165, 140)):
+        # Chapter-one geometry; shared with the original simulator scene data.
+        for x, y, w, h in VILLAGE_LAYOUT["walkable"]:
+            pygame.draw.rect(s, PALE, (x - cx, y - cy, w, h))
+        for building in VILLAGE_LAYOUT["buildings"]:
+            x, y, w, h = building["rect"]
             pygame.draw.rect(s, PAPER, (x - cx, y - cy, w, h))
-            pygame.draw.rect(s, LINE, (x - cx, y - cy, w, h), 1)
+            pygame.draw.rect(s, LINE, (x - cx, y - cy, w, h), 2)
+            self.label(building["label"], x - cx + 8, y - cy + 10)
+            dx, dy, dw, dh = building["door"]
+            pygame.draw.rect(s, INK, (dx - cx, dy - cy, dw, max(5, dh)))
+        for name, race, pos, _ in VILLAGE_NPCS:
+            self.actor(name, pygame.Vector2(pos), cx, cy)
+        pygame.draw.rect(s, LINE, (-cx, -cy, 1400, 1050), 2)
         self.label("BRUMAZUL  /  PUEBLO", 22, 18)
-        self.label("La finca de Almarin se encuentra a las afueras.", 22, 43)
+        self.label("E: hablar | Posada, taller, granja, puerto y playa", 22, 43)
 
     def actor(self, name, pos, cx, cy):
         x, y = int(pos.x - cx), int(pos.y - cy)
