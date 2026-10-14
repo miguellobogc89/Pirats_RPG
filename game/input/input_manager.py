@@ -65,6 +65,13 @@ def handle_event(app, event):
         handle_stash_event(app, event)
         return True
 
+    if event.type == pygame.MOUSEWHEEL and app.menu_open and app.menu_tab == "journal":
+        from game.story.mission_replay import replay_config
+        category = getattr(app, "mission_category", "main")
+        count = sum(m["category"] == category for m in replay_config()["missions"])
+        app.mission_scroll = max(0, min(max(0, count * 43 - 155), getattr(app, "mission_scroll", 0) - event.y * 35))
+        return True
+
     if event.type == pygame.MOUSEBUTTONDOWN:
         if event.button == 1:
             if app.menu_open:
@@ -115,6 +122,19 @@ def handle_menu_action_click(app, pos):
             continue
 
         action = hitbox.get("action")
+
+        if action == "mission_category":
+            app.mission_category = hitbox["category"]
+            app.mission_selected = None
+            app.mission_scroll = 0
+            return True
+        if action == "mission_select":
+            app.mission_selected = hitbox["mission_id"]
+            return True
+        if action == "mission_replay":
+            from game.story.mission_replay import replay_mission
+            replay_mission(app, hitbox["mission_id"])
+            return True
 
         if action == "return_to_main_menu":
             app.return_to_main_menu()
