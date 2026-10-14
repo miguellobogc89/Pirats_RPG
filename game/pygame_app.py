@@ -136,7 +136,7 @@ class PygameApp:
         self.scene_world_objects = []
         self.scene_npcs = []
         self.scene_exit_cooldown = 0
-        self.player_speed = 180
+        self.player_speed = 360
         self.interaction_range = 45
 
         self.menu_open = False
