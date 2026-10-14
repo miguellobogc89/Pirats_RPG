@@ -61,3 +61,39 @@ def can_walk_chapter_area(scene_id, x, y, layout=None):
             if rx <= x <= rx + rw and ry <= y <= ry + rh:
                 return False
     return True
+
+
+def recover_chapter_position(state, scene_id, scene_data):
+    """Repair invalid legacy save coordinates without resetting quest or inventory."""
+    if not scene_id.startswith("brumazul_"):
+        return False
+    player = state.get("player")
+    if not isinstance(player, dict):
+        return False
+    x, y = player.get("x"), player.get("y")
+    layout = (scene_data or {}).get("chapter_layout", {})
+    if scene_id == "brumazul_pueblo":
+        source = Path(__file__).resolve().parents[2] / "python_simulator" / "scenes" / "pueblo.json"
+        layout = json.loads(source.read_text(encoding="utf-8"))
+    elif not layout:
+        legacy = scene_id.removeprefix("brumazul_")
+        legacy = {"taberna": "salon_posada", "posada": "habitacion_posada"}.get(legacy, legacy)
+        source = Path(__file__).resolve().parents[2] / "python_simulator" / "scenes" / (legacy + ".json")
+        if source.is_file():
+            layout = json.loads(source.read_text(encoding="utf-8"))
+    if isinstance(x, (int, float)) and isinstance(y, (int, float)):
+        if can_walk_chapter_area(scene_id, x, y, layout):
+            width = layout.get("width", (scene_data or {}).get("width", 50) * (scene_data or {}).get("tile_size", 16))
+            height = layout.get("height", (scene_data or {}).get("height", 50) * (scene_data or {}).get("tile_size", 16))
+            if 0 <= x <= width and 0 <= y <= height:
+                return False
+    # Prefer a safe, scene-specific default; never touch saved mission progress.
+    spawn = (scene_data or {}).get("player_spawn", {})
+    sx, sy = spawn.get("x", 0), spawn.get("y", 0)
+    if not can_walk_chapter_area(scene_id, sx, sy, layout):
+        paths = layout.get("walkable", [])
+        if paths:
+            rx, ry, rw, rh = paths[0]
+            sx, sy = rx + rw / 2, ry + rh / 2
+    player["x"], player["y"] = sx, sy
+    return True
