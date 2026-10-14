@@ -492,7 +492,8 @@
     ],
     "choice_index": 10,
     "response_index": 11,
-    "question": "¿Que fue lo que viste?"
+    "question": "¿Que fue lo que viste?",
+    "player_speaker": "TU"
   },
   "npcs": {
     "village": [
@@ -569,5 +570,11 @@
         "dialogue": "innkeeper_tavern"
       }
     ]
+  },
+  "ui_text": {
+    "mission_started": "MISION: LAS TIERRAS DE ALMARIN - Busca al anciano en la finca",
+    "room_exit_hint": "Puerta al salon: abajo",
+    "tavern_hint": "E: hablar  |  norte: habitacion  |  sur: pueblo",
+    "village_hint": "E: hablar | Posada, taller, granja, puerto y playa"
   }
 }
