@@ -1,0 +1,285 @@
+{
+  "version": 1,
+  "transitions": [
+    {
+      "from": "brumazul_pueblo",
+      "to": "brumazul_taberna",
+      "rect": [
+        1040,
+        245,
+        70,
+        25
+      ],
+      "spawn": [
+        485,
+        710
+      ]
+    },
+    {
+      "from": "brumazul_pueblo",
+      "to": "brumazul_taller_sylvarin",
+      "rect": [
+        1225,
+        425,
+        65,
+        40
+      ],
+      "spawn": [
+        400,
+        555
+      ]
+    },
+    {
+      "from": "brumazul_pueblo",
+      "to": "brumazul_granja",
+      "rect": [
+        95,
+        410,
+        35,
+        90
+      ],
+      "spawn": [
+        680,
+        320
+      ]
+    },
+    {
+      "from": "brumazul_pueblo",
+      "to": "brumazul_puerto",
+      "rect": [
+        580,
+        960,
+        140,
+        50
+      ],
+      "spawn": [
+        400,
+        145
+      ]
+    },
+    {
+      "from": "brumazul_pueblo",
+      "to": "brumazul_playa",
+      "rect": [
+        450,
+        960,
+        90,
+        50
+      ],
+      "spawn": [
+        400,
+        55
+      ]
+    },
+    {
+      "from": "brumazul_taberna",
+      "to": "brumazul_posada",
+      "rect": [
+        430,
+        95,
+        110,
+        30
+      ],
+      "spawn": [
+        485,
+        560
+      ]
+    },
+    {
+      "from": "brumazul_taberna",
+      "to": "brumazul_pueblo",
+      "rect": [
+        430,
+        730,
+        110,
+        30
+      ],
+      "spawn": [
+        1060,
+        410
+      ]
+    },
+    {
+      "from": "brumazul_posada",
+      "to": "brumazul_taberna",
+      "rect": [
+        430,
+        575,
+        110,
+        30
+      ],
+      "spawn": [
+        480,
+        180
+      ]
+    },
+    {
+      "from": "brumazul_granja",
+      "to": "brumazul_pueblo",
+      "rect": [
+        840,
+        330,
+        35,
+        90
+      ],
+      "spawn": [
+        140,
+        455
+      ]
+    },
+    {
+      "from": "brumazul_granja",
+      "to": "brumazul_casa_almarin",
+      "rect": [
+        255,
+        275,
+        35,
+        35
+      ],
+      "spawn": [
+        400,
+        480
+      ]
+    },
+    {
+      "from": "brumazul_granja",
+      "to": "brumazul_taller_almarin",
+      "rect": [
+        450,
+        275,
+        40,
+        35
+      ],
+      "spawn": [
+        400,
+        480
+      ]
+    },
+    {
+      "from": "brumazul_casa_almarin",
+      "to": "brumazul_granja",
+      "rect": [
+        350,
+        545,
+        100,
+        35
+      ],
+      "spawn": [
+        260,
+        310
+      ]
+    },
+    {
+      "from": "brumazul_taller_almarin",
+      "to": "brumazul_granja",
+      "rect": [
+        350,
+        545,
+        100,
+        35
+      ],
+      "spawn": [
+        465,
+        310
+      ]
+    },
+    {
+      "from": "brumazul_puerto",
+      "to": "brumazul_pueblo",
+      "rect": [
+        350,
+        0,
+        100,
+        50
+      ],
+      "spawn": [
+        650,
+        925
+      ]
+    },
+    {
+      "from": "brumazul_puerto",
+      "to": "brumazul_playa",
+      "rect": [
+        0,
+        390,
+        50,
+        100
+      ],
+      "spawn": [
+        650,
+        440
+      ]
+    },
+    {
+      "from": "brumazul_playa",
+      "to": "brumazul_pueblo",
+      "rect": [
+        350,
+        0,
+        100,
+        45
+      ],
+      "spawn": [
+        495,
+        930
+      ]
+    },
+    {
+      "from": "brumazul_playa",
+      "to": "brumazul_puerto",
+      "rect": [
+        665,
+        390,
+        40,
+        100
+      ],
+      "spawn": [
+        75,
+        440
+      ]
+    },
+    {
+      "from": "brumazul_taller_sylvarin",
+      "to": "brumazul_pueblo",
+      "rect": [
+        345,
+        560,
+        110,
+        35
+      ],
+      "spawn": [
+        1255,
+        455
+      ]
+    },
+    {
+      "from": "brumazul_taller_sylvarin",
+      "to": "brumazul_madriguera_artesana",
+      "rect": [
+        635,
+        200,
+        60,
+        130
+      ],
+      "spawn": [
+        125,
+        330
+      ]
+    },
+    {
+      "from": "brumazul_madriguera_artesana",
+      "to": "brumazul_taller_sylvarin",
+      "rect": [
+        65,
+        275,
+        45,
+        110
+      ],
+      "spawn": [
+        605,
+        260
+      ]
+    }
+  ]
+}
