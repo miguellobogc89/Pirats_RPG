@@ -355,6 +355,8 @@ ITEM_DATABASE = {
     'name': 'Regadera', 'type': 'ring', 'icon': 'W', 'sprite': 'assets/items/rings/watering_can.png', 'stackable': False},
     'wizard_hat': {
     'name': 'Wizard sombrero', 'type': 'armor', 'icon': 'W', 'sprite': 'assets/items/armor/wizard_hat.png', 'stackable': False},
+    'metal_bolt': {'name': 'Cerrojo metalico', 'type': 'quest', 'icon': 'C', 'stackable': False},
+    'sylvarin_boots': {'name': 'Botas de Sylvarin', 'type': 'armor', 'icon': 'B', 'stackable': False},
     'wood': {
     'name': 'Madera', 'type': 'resource', 'icon': 'W', 'sprite': 'assets/items/resources/wood.png', 'stackable': True},
     'wood_floor': {
