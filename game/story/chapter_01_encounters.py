@@ -59,6 +59,9 @@ def update(scene, dt):
             scene.encounter_damage_cooldown = 1.2
             scene.app.add_log("Una criatura te ha atacado.")
     if not scene.encounter_units and not scene.encounter_state.get("boss_spawned") and not scene.encounter_state.get("boss_defeated"):
+        if scene.scene_id == "brumazul_granja":
+            from game.story_events.story_event_manager import dispatch_story_event
+            dispatch_story_event(scene.app, "object_interacted", {"object_id": "ambushes_cleared"})
         spawn_boss(scene)
         scene.app.add_log("La maleza se agita... ¡aparece una criatura enorme!")
 
