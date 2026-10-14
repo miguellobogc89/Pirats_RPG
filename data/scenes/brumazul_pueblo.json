@@ -1,12 +1,12 @@
 {
   "id": "brumazul_pueblo",
   "name": "Pueblo de Brumazul",
-  "width": 50,
-  "height": 50,
+  "width": 88,
+  "height": 66,
   "tile_size": 16,
   "player_spawn": {
-    "x": 480,
-    "y": 650
+    "x": 1060,
+    "y": 410
   },
   "objects": [],
   "collisions": [],
@@ -15,13 +15,26 @@
       "id": "entrada",
       "cells": [
         [
-          30,
-          40
+          66,
+          26
         ]
       ],
       "spawn_cell": [
-        30,
-        40
+        66,
+        26
+      ]
+    },
+    {
+      "id": "desde_posada",
+      "cells": [
+        [
+          67,
+          17
+        ]
+      ],
+      "spawn_cell": [
+        67,
+        17
       ]
     }
   ],
