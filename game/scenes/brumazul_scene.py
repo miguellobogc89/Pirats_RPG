@@ -143,6 +143,7 @@ class BrumazulScene(FarmScene):
         self.show_keeper = not self.progress.get("intro_finished", False)
         self.fade = 0.0
         self.npc_dialogue = None
+        self.door_cooldown = 0.8
         if self.beach:
             self.progress["chapter_started"] = True
             self.seed_collectables()
@@ -229,6 +230,7 @@ class BrumazulScene(FarmScene):
 
     def update(self, dt):
         dt = min(dt, 0.05)
+        self.door_cooldown = max(0, self.door_cooldown - dt)
         if self.beach:
             self.app.update_farm_scene(dt)
             if self.app.menu_open or self.app.stash_open:
@@ -277,6 +279,8 @@ class BrumazulScene(FarmScene):
                 from game.scenes.chapter_area_navigation import can_walk_chapter_area, find_chapter_exit
                 if not can_walk_chapter_area(self.scene_id, p["x"], p["y"], self.area_layout) and not find_chapter_exit(self.scene_id, p["x"], p["y"], self.area_layout):
                     p["x"], p["y"] = old_position
+            if self.door_cooldown:
+                return
             if self.tavern:
                 if p["y"] < 225 and 425 < p["x"] < 550:
                     self.transition("brumazul_posada", "retorno")
