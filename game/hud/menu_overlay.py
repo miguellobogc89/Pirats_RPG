@@ -506,11 +506,6 @@ def draw_journal_tab(app):
     quests = ensure_chapter_quests(app.state)
     category = getattr(app, "mission_category", "main")
     expanded = getattr(app, "mission_expanded", None)
-    from game.inventory.inventory_manager import get_item_quantity
-    from game.data.item_database import ITEM_DATABASE
-    if quests.get("cuando_callan_las_campanas") == "get_weapon" and any(item.get("type") == "weapon" and get_item_quantity(app.state, item_id) > 0 for item_id, item in ITEM_DATABASE.items()):
-        from game.story_events.story_event_manager import dispatch_story_event
-        dispatch_story_event(app, "weapon_acquired", {"object_id": "player"})
     app.draw_text("Misiones", 140, 180, TEXT_DARK, app.big_font)
     for name, label, x in (("main", "Principales", 140), ("secondary", "Secundarias", 295)):
         rect = pygame.Rect(x, 214, 145, 32)
