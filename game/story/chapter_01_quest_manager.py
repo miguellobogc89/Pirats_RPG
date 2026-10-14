@@ -58,8 +58,9 @@ def apply_chapter_quest_event(state, event_type, payload=None):
     payload = payload or {}
     quests = ensure_chapter_quests(state)
     results = []
+    previous = dict(quests)
     for quest_id, definition in QUESTS.items():
-        current = quests[quest_id]
+        current = previous[quest_id]
         transition = definition["transitions"].get(current)
         if transition is None:
             continue
@@ -67,9 +68,9 @@ def apply_chapter_quest_event(state, event_type, payload=None):
         target = payload.get("npc_id") if event_type == "npc_talked" else payload.get("object_id")
         if event_type != required_event or target != required_target:
             continue
-        if quest_id == "el_hierro_que_canta" and current == "not_started" and quests["un_techo_propio"] not in ("inspect_gate", "get_bolt", "find_elder_port", "complete"):
+        if quest_id == "el_hierro_que_canta" and current == "not_started" and previous["un_techo_propio"] not in ("inspect_gate", "get_bolt", "find_elder_port", "complete"):
             continue
-        if quest_id == "cuando_callan_las_campanas" and current == "not_started" and quests["el_hierro_que_canta"] not in ("artisan_explained", "completed"):
+        if quest_id == "cuando_callan_las_campanas" and current == "not_started" and previous["el_hierro_que_canta"] not in ("artisan_explained", "completed"):
             continue
         quests[quest_id] = next_stage
         results.append({"quest_id": quest_id, "from": current, "to": next_stage})
