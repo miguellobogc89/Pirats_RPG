@@ -8,6 +8,7 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 from game.hud.menu_overlay import draw_menu, get_menu_tabs, get_menu_tab_at_position
+from game.hud.play_hud import draw_play_hud
 
 ROOT = Path(__file__).resolve().parent
 SAVE = ROOT / "save.json"
@@ -957,8 +958,7 @@ class Game:
         side = pygame.Vector2(-self.facing.y,self.facing.x)
         points = [center+self.facing*16,center-self.facing*12+side*10,center-self.facing*12-side*10]
         pygame.draw.polygon(s,INK,points,1)
-        pygame.draw.rect(s,LINE,(24,67,152,7),1)
-        pygame.draw.rect(s,INK,(25,68,int(150*self.hp/100),5))
+        draw_play_hud(self)
         if self.journal_open:
             self.refresh_menu_state()
             draw_menu(self)
