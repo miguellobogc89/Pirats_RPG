@@ -154,7 +154,7 @@ class BrumazulScene(FarmScene):
             })
         self.progress["beach_drops_spawned"] = True
 
-    def interact_farm(self):
+    def interact_farm(self, click_position=None):
         """Collect original wood piles and repair each original fence gap."""
         from game.story_events.story_event_manager import dispatch_story_event
         p = self.app.state["player"]
@@ -163,8 +163,10 @@ class BrumazulScene(FarmScene):
         collected = progress.setdefault("collected_wood", [])
         repaired = progress.setdefault("repaired_fences", [])
         wood = progress.setdefault("wood", 0)
+        cx, cy = get_camera_position(p["x"], p["y"], WIDTH, HEIGHT, layout.get("width", 900), layout.get("height", 760))
+        clicked = (click_position[0] + cx, click_position[1] + cy) if click_position is not None else None
         for i, position in enumerate(layout.get("wood_piles", [])):
-            if i not in collected and math.dist((p["x"], p["y"]), position) <= 52:
+            if i not in collected and (math.dist((p["x"], p["y"]), position) <= 70 or (clicked is not None and math.dist(clicked, position) <= 32)):
                 collected.append(i)
                 progress["wood"] += layout.get("wood_per_pile", 5)
                 self.npc_dialogue = ("RECOGIDA", ["+5 madera. Total: %d" % progress["wood"]])
@@ -174,7 +176,11 @@ class BrumazulScene(FarmScene):
             return False
         for gap in layout.get("fence_gaps", []):
             x, y, w, h = gap["rect"]
-            if gap["id"] in repaired or not (x - 85 <= p["x"] <= x + w + 85 and y - 85 <= p["y"] <= y + h + 85):
+            if gap["id"] in repaired:
+                continue
+            near_player = x - 90 <= p["x"] <= x + w + 90 and y - 90 <= p["y"] <= y + h + 90
+            on_click = clicked is not None and x - 25 <= clicked[0] <= x + w + 25 and y - 25 <= clicked[1] <= y + h + 25
+            if not (near_player or on_click):
                 continue
             cost = gap.get("cost", 10)
             if progress["wood"] < cost:
@@ -215,7 +221,7 @@ class BrumazulScene(FarmScene):
                 self.npc_dialogue = None
             return True
         if (self.tavern or self.village or self.chapter_area) and not self.app.menu_open and ((event.type == pygame.KEYDOWN and event.key in (pygame.K_e, pygame.K_RETURN)) or (event.type == pygame.MOUSEBUTTONDOWN and event.button == 1)):
-            if self.scene_id == "brumazul_granja" and self.interact_farm():
+            if self.scene_id == "brumazul_granja" and self.interact_farm(event.pos if event.type == pygame.MOUSEBUTTONDOWN else None):
                 return True
             if self.talk_to_nearby():
                 return True
