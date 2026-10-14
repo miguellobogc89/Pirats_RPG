@@ -1,0 +1,200 @@
+{
+  "version": 1,
+  "language": "es",
+  "dialogues": {
+    "farm_intro": {
+      "speaker": "ANCIANO",
+      "lines": [
+        "Bienvenido a las tierras de Almarin.",
+        "Esta finca necesita reparaciones. Recoge madera y arregla las vallas."
+      ]
+    },
+    "farm_fence_end": {
+      "speaker": "ANCIANO",
+      "lines": [
+        "Buen trabajo con las vallas.",
+        "Ahora debemos asegurar la entrada con madera y un cerrojo."
+      ]
+    },
+    "inn_elder_clue": {
+      "speaker": "ANCIANO",
+      "lines": [
+        "Nos encontraremos en el puerto. Alli hablaremos de lo que sucede en la granja."
+      ]
+    },
+    "port_elder_intro": {
+      "speaker": "ANCIANO",
+      "lines": [
+        "Hay criaturas merodeando por la finca.",
+        "Regresa a la granja. Tenemos que investigar."
+      ]
+    },
+    "farm_final": {
+      "speaker": "ANCIANO",
+      "lines": [
+        "Has logrado detener a las criaturas.",
+        "La casa y el taller vuelven a estar a tu disposicion."
+      ]
+    },
+    "herrero_intro": {
+      "speaker": "HERRERO",
+      "lines": [
+        "Bienvenido. ¿En que puedo ayudarte?"
+      ]
+    },
+    "sylvarin_intro": {
+      "speaker": "SYLVARIN",
+      "lines": [
+        "Bienvenido. ¿En que puedo ayudarte?"
+      ]
+    },
+    "botica_intro": {
+      "speaker": "BOTICA",
+      "lines": [
+        "Bienvenido. ¿En que puedo ayudarte?"
+      ]
+    },
+    "mercader_intro": {
+      "speaker": "MERCADER",
+      "lines": [
+        "Bienvenido. ¿En que puedo ayudarte?"
+      ]
+    },
+    "posadera_intro": {
+      "speaker": "POSADERA",
+      "lines": [
+        "Bienvenido. ¿En que puedo ayudarte?"
+      ]
+    },
+    "elder_farm_first": {
+      "speaker": "ANCIANO",
+      "lines": [
+        "Has llegado a la finca de Almarin. Ahora es tuya.",
+        "Antes de entrar debemos arreglar las tres vallas rotas.",
+        "Busca madera por la granja y repara los huecos."
+      ]
+    },
+    "elder_fences_done": {
+      "speaker": "ANCIANO",
+      "lines": [
+        "Buen trabajo con las vallas.",
+        "Ahora debemos asegurar la entrada con madera y un cerrojo.",
+        "La puerta necesita un cerrojo nuevo, y no sera facil conseguirlo.",
+        "Pregunta al herrero del pueblo. Tal vez pueda fabricarte uno."
+      ]
+    },
+    "elder_fences_pending": {
+      "speaker": "ANCIANO",
+      "lines": [
+        "Las vallas necesitan reparacion. Revisa los huecos de la finca."
+      ]
+    },
+    "elder_farm_other": {
+      "speaker": "ANCIANO",
+      "lines": [
+        "Tenemos que continuar con los trabajos de la finca."
+      ]
+    },
+    "smith_idle": {
+      "speaker": "HERRERO",
+      "lines": [
+        "Trabajo el hierro, pero no puedo regalar materiales."
+      ]
+    },
+    "smith_offer": {
+      "speaker": "HERRERO",
+      "lines": [
+        "Un cerrojo como ese es dificil de conseguir.",
+        "Te lo dare si me ayudas con un problema: las ratas del almacen de Sylvarin.",
+        "Habla con Sylvarin en su taller. Averigua que ocurre alli."
+      ]
+    },
+    "smith_wait_sylvarin": {
+      "speaker": "HERRERO",
+      "lines": [
+        "Habla con Sylvarin. Su almacen esta infestado de ratas."
+      ]
+    },
+    "smith_wait_rats": {
+      "speaker": "HERRERO",
+      "lines": [
+        "Primero acaba con las ratas del almacen de Sylvarin."
+      ]
+    },
+    "smith_reward": {
+      "speaker": "HERRERO",
+      "lines": [
+        "Asi que las campanas servian para espantar a las ratas.",
+        "Cumpliste tu parte. Toma el cerrojo que te prometi."
+      ]
+    },
+    "smith_done": {
+      "speaker": "HERRERO",
+      "lines": [
+        "Ya tienes el cerrojo. Suerte con la finca."
+      ]
+    },
+    "sylvarin_offer": {
+      "speaker": "SYLVARIN",
+      "lines": [
+        "Las ratas han ocupado mi almacen. Hay que acabar con ellas y su nido.",
+        "Cuando este despejado, vuelve a hablar conmigo."
+      ]
+    },
+    "sylvarin_done": {
+      "speaker": "SYLVARIN",
+      "lines": [
+        "Gracias por recuperar mi almacen."
+      ]
+    },
+    "farm_wood_pickup": {
+      "speaker": "RECOGIDA",
+      "lines": [
+        "+5 madera. Total: {wood}"
+      ]
+    },
+    "farm_fence_need_wood": {
+      "speaker": "VALLA ROTA",
+      "lines": [
+        "Necesitas {cost} de madera. Tienes {wood}."
+      ]
+    },
+    "farm_fence_repaired": {
+      "speaker": "VALLA REPARADA",
+      "lines": [
+        "Tramos reparados: {done}/{total}. Madera: {wood}"
+      ]
+    },
+    "farm_fences_complete": {
+      "speaker": "VALLAS COMPLETADAS",
+      "lines": [
+        "Has reparado las tres vallas. Vuelve a hablar con el anciano."
+      ]
+    },
+    "farm_gate_inspect": {
+      "speaker": "PORTON DE LA FINCA",
+      "lines": [
+        "La puerta necesita 15 de madera y un cerrojo metalico.",
+        "Consigue el cerrojo y vuelve para repararla."
+      ]
+    },
+    "farm_gate_repaired": {
+      "speaker": "PORTON REPARADO",
+      "lines": [
+        "La puerta de la finca esta asegurada."
+      ]
+    },
+    "farm_gate_requirements": {
+      "speaker": "PORTON DE LA FINCA",
+      "lines": [
+        "Necesitas {cost} de madera y {bolt_cost} cerrojo. Tienes {wood} de madera y {bolts} cerrojo."
+      ]
+    },
+    "generic_villager": {
+      "speaker": "NPC",
+      "lines": [
+        "Bienvenido a Brumazul."
+      ]
+    }
+  }
+}
