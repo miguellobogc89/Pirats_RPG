@@ -31,6 +31,7 @@ ITEM_DATABASE = {
     'name': 'Antiguo pala', 'type': 'tool', 'icon': 'A', 'sprite': 'assets/items/tools/ancient_shovel.png', 'stackable': False, 'tool_type': 'shovel'},
     'ancient_spear': {
     'name': 'Antiguo lanza', 'type': 'weapon', 'icon': 'A', 'sprite': 'assets/items/weapons/ancient_spear.png', 'stackable': False},
+    'father_sword': {'name': 'Espada del padre', 'type': 'weapon', 'icon': 'E', 'sprite': 'assets/items/weapons/iron_sword.png', 'stackable': False},
     'ancient_sword': {
     'name': 'Antiguo espada', 'type': 'weapon', 'icon': 'A', 'sprite': 'assets/items/weapons/ancient_sword.png', 'stackable': False},
     'apple': {
