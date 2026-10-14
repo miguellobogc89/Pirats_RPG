@@ -234,6 +234,12 @@
         "¿Ya tienes un arma? No te acerques al nido sin una.",
         "Cuando estés preparado, entra en el almacén y acaba con las criaturas."
       ]
+    },
+    "smith_bolt_delivered": {
+      "speaker": "HERRERO",
+      "lines": [
+        "Ya te he entregado el cerrojo. Ahora podrás asegurar la entrada de la granja."
+      ]
     }
   },
   "intro": {
