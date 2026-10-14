@@ -62,9 +62,9 @@
       ]
     },
     "farm_wood_pickup": {
-      "speaker": "SISTEMA",
+      "speaker": "RECOGIDA",
       "lines": [
-        "+5 madera. Total: {wood}"
+        "RAMAS RECOGIDAS: +5 MADERA (TOTAL {wood})"
       ]
     },
     "farm_fence_need_wood": {
@@ -101,7 +101,8 @@
     "farm_gate_requirements": {
       "speaker": "SISTEMA",
       "lines": [
-        "Puerta: necesitas {cost} madera y {bolt_cost} cerrojo."
+        "Puerta: necesitas {cost} madera y {bolt_cost} cerrojo.",
+        "Tienes: {wood} madera y {bolts} cerrojo."
       ]
     },
     "generic_villager": {
@@ -175,7 +176,7 @@
     "inventory_full": {
       "speaker": "SISTEMA",
       "lines": [
-        "No tienes espacio suficiente para recibir este objeto."
+        "Comercio pendiente de implementar."
       ]
     },
     "innkeeper_tavern": {
