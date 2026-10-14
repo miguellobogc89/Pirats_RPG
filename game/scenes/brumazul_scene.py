@@ -348,6 +348,7 @@ class BrumazulScene(FarmScene):
                     self.npc_dialogue = get_chapter_dialogue("elder_fences_done")
                 else:
                     self.npc_dialogue = get_chapter_dialogue("elder_fences_pending" if stage == "repair_fence" else "elder_farm_other")
+                self.autosave()
                 return True
         if self.village:
             smith = next((npc for npc in VILLAGE_NPCS if npc[0] == "HERRERO"), None)
