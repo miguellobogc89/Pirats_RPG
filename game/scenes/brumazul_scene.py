@@ -319,6 +319,13 @@ class BrumazulScene(FarmScene):
     def talk_to_nearby(self):
         from game.story_events.story_event_manager import dispatch_story_event
         p = self.app.state["player"]
+        if self.tavern and self.app.state["quests"]["un_techo_propio"] in ("find_elder_port", "complete"):
+            progress = self.app.state.setdefault("brumazul", {})
+            if not progress.get("elder_clue_seen") and math.dist((p["x"], p["y"]), (480, 395)) < 135:
+                progress["elder_clue_seen"] = True
+                self.npc_dialogue = get_chapter_dialogue("inn_elder_clue")
+                self.autosave()
+                return True
         if self.scene_id == "brumazul_puerto":
             elder = self.area_layout.get("elder")
             if elder and math.dist((p["x"], p["y"]), elder) < 90:
