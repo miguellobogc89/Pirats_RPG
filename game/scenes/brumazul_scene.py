@@ -190,7 +190,7 @@ class BrumazulScene(FarmScene):
                 return True
             if self.talk_to_nearby(event.pos if event.type == pygame.MOUSEBUTTONDOWN else None):
                 return True
-        if self.chapter_area and not self.app.menu_open and event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
+        if self.chapter_area and not self.app.menu_open and ((event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE) or (event.type == pygame.MOUSEBUTTONDOWN and event.button == 1)):
             from game.story.chapter_01_encounters import attack as attack_encounter
             if attack_encounter(self):
                 return True
@@ -689,8 +689,9 @@ class BrumazulScene(FarmScene):
         hp = self.app.state.get("health", {})
         maximum = max(1, hp.get("max", 10))
         current = max(0, hp.get("current", maximum))
-        pygame.draw.rect(s, LIGHT, (24, 67, 152, 7), 1)
-        pygame.draw.rect(s, PALE, (25, 68, int(150 * current / maximum), 5))
+        pygame.draw.rect(s, (65, 54, 54), (24, 65, 155, 15))
+        pygame.draw.rect(s, (188, 65, 65), (26, 67, round(151 * min(current, maximum) / maximum), 11))
+        self.label("VIDA " + str(current) + "/" + str(maximum), 25, 45)
         slots = get_hotbar_slots(self.app.state)
         selected = get_active_hotbar_index(self.app.state)
         size, gap = 42, 7
