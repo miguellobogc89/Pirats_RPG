@@ -13,6 +13,7 @@ from game.scenes.farm_scene import FarmScene
 from game.hud.menu_overlay import draw_menu
 from game.hud.stash_overlay import draw_stash_overlay
 from game.inventory.hotbar_manager import get_hotbar_slots, get_active_hotbar_index
+from game.inventory.item_transactions import receive, spend, spend_bundle, quantity, migrate_chapter_items
 from game.world.camera import get_camera_position
 from game.data.item_database import get_item_data
 from game.dialogue.chapter_dialogues import get_chapter_dialogue, get_chapter_intro, get_chapter_npcs
@@ -48,6 +49,7 @@ class BrumazulScene(FarmScene):
         self.app.stash_open = False
         from game.story.chapter_01_quest_manager import ensure_chapter_quests
         ensure_chapter_quests(self.app.state)
+        migrate_chapter_items(self.app.state)
         self.app.state.setdefault("brumazul", {})
         self.progress = self.app.state["brumazul"]
         self.boss = pygame.Vector2(490, 560)
@@ -99,9 +101,10 @@ class BrumazulScene(FarmScene):
         clicked = (click_position[0] + cx, click_position[1] + cy) if click_position is not None else None
         for i, position in enumerate(layout.get("wood_piles", [])):
             if i not in collected and (math.dist((p["x"], p["y"]), position) <= 70 or (clicked is not None and math.dist(clicked, position) <= 32)):
+                if not receive(self.app.state, "wood", layout.get("wood_per_pile", 5)):
+                    return True
                 collected.append(i)
-                progress["wood"] += layout.get("wood_per_pile", 5)
-                self.npc_dialogue = get_chapter_dialogue("farm_wood_pickup", wood=progress["wood"])
+                self.npc_dialogue = get_chapter_dialogue("farm_wood_pickup", wood=quantity(self.app.state, "wood"))
                 self.autosave()
                 return True
         # El porton de reparacion esta dentro de la finca, separado del
@@ -117,15 +120,13 @@ class BrumazulScene(FarmScene):
             else:
                 wood_cost = layout.get("door_cost", {}).get("wood", 15)
                 bolt_cost = layout.get("door_cost", {}).get("metal_bolt", 1)
-                bolts = progress.get("metal_bolt", 0)
-                if progress["wood"] >= wood_cost and bolts >= bolt_cost:
-                    progress["wood"] -= wood_cost
-                    progress["metal_bolt"] = bolts - bolt_cost
+                bolts = quantity(self.app.state, "metal_bolt")
+                if spend_bundle(self.app.state, {"wood": wood_cost, "metal_bolt": bolt_cost}):
                     progress["gate_repaired"] = True
                     dispatch_story_event(self.app, "object_repaired", {"object_id": "farm_gate"})
                     self.npc_dialogue = get_chapter_dialogue("farm_gate_repaired")
                 else:
-                    self.npc_dialogue = get_chapter_dialogue("farm_gate_requirements", cost=wood_cost, bolt_cost=bolt_cost, wood=progress["wood"], bolts=bolts)
+                    self.npc_dialogue = get_chapter_dialogue("farm_gate_requirements", cost=wood_cost, bolt_cost=bolt_cost, wood=quantity(self.app.state, "wood"), bolts=bolts)
             self.autosave()
             return True
         if self.app.state["quests"]["un_techo_propio"] != "repair_fence":
@@ -139,12 +140,13 @@ class BrumazulScene(FarmScene):
             if not (near_player or on_click):
                 continue
             cost = gap.get("cost", 10)
-            if progress["wood"] < cost:
-                self.npc_dialogue = get_chapter_dialogue("farm_fence_need_wood", cost=cost, wood=progress["wood"])
+            if quantity(self.app.state, "wood") < cost:
+                self.npc_dialogue = get_chapter_dialogue("farm_fence_need_wood", cost=cost, wood=quantity(self.app.state, "wood"))
                 return True
-            progress["wood"] -= cost
+            if not spend(self.app.state, "wood", cost):
+                return True
             repaired.append(gap["id"])
-            self.npc_dialogue = get_chapter_dialogue("farm_fence_repaired", done=len(repaired), total=len(layout["fence_gaps"]), wood=progress["wood"])
+            self.npc_dialogue = get_chapter_dialogue("farm_fence_repaired", done=len(repaired), total=len(layout["fence_gaps"]), wood=quantity(self.app.state, "wood"))
             self.autosave()
             if len(repaired) == len(layout["fence_gaps"]):
                 dispatch_story_event(self.app, "object_repaired", {"object_id": "fence"})
@@ -344,10 +346,12 @@ class BrumazulScene(FarmScene):
                 elif smith_stage == "artisan_explained":
                     dispatch_story_event(self.app, "npc_talked", {"npc_id": "herrero"})
                     progress = self.app.state.setdefault("farm_repairs", {})
-                    if not progress.get("smith_bolt_claimed"):
-                        progress["metal_bolt"] = progress.get("metal_bolt", 0) + 1
+                    if progress.get("smith_bolt_claimed") or receive(self.app.state, "metal_bolt", 1, receipt_id="chapter01_smith_bolt"):
                         progress["smith_bolt_claimed"] = True
-                    self.npc_dialogue = get_chapter_dialogue("smith_reward")
+                        self.npc_dialogue = get_chapter_dialogue("smith_reward")
+                    else:
+                        self.npc_dialogue = get_chapter_dialogue("inventory_full")
+                        return True
                 else:
                     self.npc_dialogue = get_chapter_dialogue("smith_done")
                 self.autosave()
@@ -537,7 +541,7 @@ class BrumazulScene(FarmScene):
             pygame.draw.rect(screen, PALE if not gate_done else LIGHT, (gate_x - cx - 25, gate_y - cy - 13, 50, 26))
             pygame.draw.rect(screen, LINE, (gate_x - cx - 25, gate_y - cy - 13, 50, 26), 2)
             self.label("PORTON REPARADO" if gate_done else "PORTON [E / CLIC]", gate_x - cx - 55, gate_y - cy - 35)
-            self.label("MADERA: %d  |  VALLAS: %d/3" % (progress.get("wood", 0), len(repaired)), 22, 91)
+            self.label("MADERA: %d  |  VALLAS: %d/3" % (quantity(self.app.state, "wood"), len(repaired)), 22, 91)
         for node in layout.get("nodes", []):
             x, y = node["position"]
             self.actor(node.get("label", node["id"]), pygame.Vector2(x, y), cx, cy)
