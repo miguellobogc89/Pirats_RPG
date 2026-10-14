@@ -114,10 +114,9 @@ class BrumazulScene(FarmScene):
         gate_marker = (770, 445)
         gate_near = math.dist((p["x"], p["y"]), gate_marker) <= 85
         gate_clicked = clicked is not None and math.dist(clicked, gate_marker) <= 42
-        if (gate_clicked or (clicked is None and gate_near)) and self.app.state["quests"]["un_techo_propio"] in ("inspect_gate", "get_bolt"):
+        if (gate_clicked or (clicked is None and gate_near)) and self.app.state["quests"]["un_techo_propio"] in ("repair_fence", "inspect_gate", "get_bolt"):
             stage = self.app.state["quests"]["un_techo_propio"]
-            if stage == "inspect_gate":
-                dispatch_story_event(self.app, "object_interacted", {"object_id": "farm_gate"})
+            if stage in ("repair_fence", "inspect_gate"):
                 self.npc_dialogue = get_chapter_dialogue("farm_gate_inspect")
             else:
                 wood_cost = layout.get("door_cost", {}).get("wood", 15)
@@ -150,9 +149,6 @@ class BrumazulScene(FarmScene):
             repaired.append(gap["id"])
             self.npc_dialogue = get_chapter_dialogue("farm_fence_repaired", done=len(repaired), total=len(layout["fence_gaps"]), wood=quantity(self.app.state, "wood"))
             self.autosave()
-            if len(repaired) == len(layout["fence_gaps"]):
-                dispatch_story_event(self.app, "object_repaired", {"object_id": "fence"})
-                self.npc_dialogue = get_chapter_dialogue("farm_fences_complete")
             return True
         return False
 
@@ -347,8 +343,8 @@ class BrumazulScene(FarmScene):
                     self.npc_dialogue = get_chapter_dialogue("elder_farm_first")
                     dispatch_story_event(self.app, "npc_talked", {"npc_id": "anciano"})
                 elif len(self.app.state.get("farm_repairs", {}).get("repaired_fences", [])) == len(self.area_layout.get("fence_gaps", [])) and self.area_layout.get("fence_gaps"):
-                    if stage == "repair_fence":
-                        dispatch_story_event(self.app, "object_repaired", {"object_id": "fence"})
+                    if stage in ("repair_fence", "inspect_gate"):
+                        dispatch_story_event(self.app, "npc_talked", {"npc_id": "anciano"})
                     self.npc_dialogue = get_chapter_dialogue("elder_fences_done")
                 else:
                     self.npc_dialogue = get_chapter_dialogue("elder_fences_pending" if stage == "repair_fence" else "elder_farm_other")
