@@ -16,6 +16,7 @@ from game.inventory.hotbar_manager import get_hotbar_slots, get_active_hotbar_in
 from game.world.camera import get_camera_position
 from game.data.item_database import get_item_data
 from game.dialogue.chapter_dialogues import get_chapter_dialogue, get_chapter_intro, get_chapter_npcs
+from game.dialogue.chapter_conversation_renderer import draw_chapter_conversation
 
 WIDTH, HEIGHT = 960, 640
 WHITE = (250, 250, 249)
@@ -586,28 +587,7 @@ class BrumazulScene(FarmScene):
                 self.label((data or {}).get("icon", item_id[:1]).upper(), x + 17, HEIGHT - 34)
 
     def draw_dialogue(self, speaker, message, choices=None, selected=0):
-        s = self.app.screen
-        rect = pygame.Rect(35, HEIGHT - 190, WIDTH - 70, 140)
-        pygame.draw.rect(s, WHITE, rect)
-        pygame.draw.rect(s, LIGHT, rect, 1)
-        self.label(speaker, 55, HEIGHT - 173)
-        if choices:
-            for i, choice in enumerate(choices):
-                self.label(("> " if i == selected else "  ") + choice, 58, HEIGHT - 147 + i * 25)
-        else:
-            # Salto de linea por palabras para textos largos.
-            words, line, y = message.split(), "", HEIGHT - 144
-            for word in words:
-                trial = (line + " " + word).strip()
-                if self.app.small_font.size(trial)[0] > WIDTH - 125 and line:
-                    self.label(line, 58, y)
-                    y += 22
-                    line = word
-                else:
-                    line = trial
-            if line:
-                self.label(line, 58, y)
-        self.label("ENTER / ESPACIO", WIDTH - 175, HEIGHT - 73)
+        draw_chapter_conversation(self, speaker, message, choices, selected)
 
     def label(self, value, x, y):
         self.app.screen.blit(self.app.small_font.render(str(value), True, INK), (int(x), int(y)))
