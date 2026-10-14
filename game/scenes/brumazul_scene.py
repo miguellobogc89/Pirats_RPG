@@ -122,6 +122,8 @@ class BrumazulScene(FarmScene):
         self.beach = self.scene_id == "brumazul_playa"
         self.tavern = self.scene_id == "brumazul_taberna"
         self.village = self.scene_id == "brumazul_pueblo"
+        self.chapter_area = self.scene_id.startswith("brumazul_") and self.scene_id not in ("brumazul_playa", "brumazul_posada", "brumazul_taberna", "brumazul_pueblo")
+        self.area_layout = self.app.scene_data.get("chapter_layout", {}) if self.chapter_area and self.app.scene_data else {}
         self.app.menu_open = False
         self.app.stash_open = False
         self.app.state.setdefault("brumazul", {})
@@ -134,7 +136,7 @@ class BrumazulScene(FarmScene):
         self.index = 0
         self.choice = 0
         self.response = RESPONSES[0]
-        self.phase = "free" if self.beach or self.tavern or self.village or self.progress.get("intro_finished") else "dialogue"
+        self.phase = "free" if self.beach or self.tavern or self.village or self.chapter_area or self.progress.get("intro_finished") else "dialogue"
         self.keeper = pygame.Vector2(480, 395)
         self.elder = pygame.Vector2(470, 625)
         self.show_elder = False
@@ -184,7 +186,7 @@ class BrumazulScene(FarmScene):
             if event.type == pygame.KEYDOWN and event.key in (pygame.K_RETURN, pygame.K_SPACE, pygame.K_e, pygame.K_ESCAPE):
                 self.npc_dialogue = None
             return True
-        if self.tavern and not self.app.menu_open and event.type == pygame.KEYDOWN and event.key in (pygame.K_e, pygame.K_RETURN):
+        if (self.tavern or self.village or self.chapter_area) and not self.app.menu_open and event.type == pygame.KEYDOWN and event.key in (pygame.K_e, pygame.K_RETURN):
             if self.talk_to_nearby():
                 return True
         if self.beach and event.type == pygame.MOUSEBUTTONDOWN and event.button == 1 and not self.app.menu_open:
@@ -275,9 +277,8 @@ class BrumazulScene(FarmScene):
                     self.transition("brumazul_posada", "retorno")
                 elif p["y"] > 745 and 425 < p["x"] < 550:
                     self.transition("brumazul_pueblo", "entrada")
-            elif self.village:
-                if p["y"] < 105 and 425 < p["x"] < 550:
-                    self.transition("brumazul_taberna", "desde_pueblo")
+            elif self.village or self.chapter_area:
+                self.update_chapter_exits(p)
             else:
                 if p["y"] > 575 and 430 < p["x"] < 540:
                     self.transition("brumazul_taberna", "desde_habitacion")
@@ -344,6 +345,8 @@ class BrumazulScene(FarmScene):
             self.draw_tavern(cx, cy)
         elif self.scene_id == "brumazul_pueblo":
             self.draw_village(cx, cy)
+        elif self.chapter_area:
+            self.draw_chapter_area(cx, cy)
         else:
             self.draw_room(cx, cy)
         if not self.tavern and self.scene_id != "brumazul_pueblo":
@@ -396,6 +399,37 @@ class BrumazulScene(FarmScene):
             self.actor(name + " / " + race, pygame.Vector2(pos), cx, cy)
         self.label("POSADA  /  SALON", 22, 18)
         self.label("E: hablar   |   puerta norte: habitacion   |   sur: pueblo", 22, 43)
+
+    def update_chapter_exits(self, player):
+        from game.scenes.chapter_area_navigation import find_chapter_exit
+        target = find_chapter_exit(self.scene_id, player["x"], player["y"], self.area_layout)
+        if target:
+            scene_id, spawn = target
+            if self.app.scene_manager.change_scene(scene_id):
+                self.app.state["player"].update({"x": spawn[0], "y": spawn[1]})
+                self.app.dispatch_scene_entered_event()
+
+    def draw_chapter_area(self, cx, cy):
+        layout = self.area_layout
+        screen = self.app.screen
+        for x, y, w, h in layout.get("walkable", []):
+            pygame.draw.rect(screen, PALE, (x - cx, y - cy, w, h))
+        buildings = list(layout.get("buildings", []))
+        buildings.extend(layout[k] for k in ("house", "workshop") if isinstance(layout.get(k), dict))
+        for building in buildings:
+            if "rect" not in building:
+                continue
+            x, y, w, h = building["rect"]
+            pygame.draw.rect(screen, PAPER, (x - cx, y - cy, w, h))
+            pygame.draw.rect(screen, LINE, (x - cx, y - cy, w, h), 2)
+            self.label(building.get("label", ""), x - cx + 5, y - cy + 8)
+        for node in layout.get("nodes", []):
+            x, y = node["position"]
+            self.actor(node.get("label", node["id"]), pygame.Vector2(x, y), cx, cy)
+        if "elder" in layout:
+            self.actor("ANCIANO", pygame.Vector2(layout["elder"]), cx, cy)
+        pygame.draw.rect(screen, LINE, (-cx, -cy, layout.get("width", 800), layout.get("height", 704)), 2)
+        self.label(self.scene_id.replace("brumazul_", "").upper(), 22, 18)
 
     def draw_village(self, cx, cy):
         s = self.app.screen
