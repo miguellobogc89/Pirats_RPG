@@ -48,8 +48,11 @@ def migrate_chapter_items(state):
         return
     pending = {item: int(progress.get(item, 0)) for item in ("wood", "metal_bolt")}
     for item_id, amount in pending.items():
-        if amount > 0 and not receive(state, item_id, amount):
+        if amount > 0 and not can_add_item(state, item_id, amount):
             return
+    for item_id, amount in pending.items():
+        if amount > 0 and not receive(state, item_id, amount):
+            raise RuntimeError("Legacy inventory migration failed after preflight")
     for item_id in pending:
         progress[item_id] = 0
     progress["inventory_migrated"] = True
