@@ -45,13 +45,15 @@
     "smith_offer": {
       "speaker": "HERRERO",
       "lines": [
-        "Bienvenido. ¿En que puedo ayudarte?"
+        "¿Un cerrojo para la verja de la granja? Puedo fabricártelo, pero antes necesito que averigües algo para mí.",
+        "Ve a hablar con Sylvarin, la artesana. Está trabajando en un asunto que me tiene intrigado. Si descubres qué ocurre, te daré el cerrojo."
       ]
     },
     "smith_wait_sylvarin": {
       "speaker": "HERRERO",
       "lines": [
-        "Bienvenido. ¿En que puedo ayudarte?"
+        "¿Has descubierto ya algo hablando con Sylvarin?",
+        "No me molestes hasta que tengas respuestas. Entonces hablaremos del cerrojo."
       ]
     },
     "smith_reward": {
@@ -150,7 +152,8 @@
     "sylvarin_metal_explained": {
       "speaker": "SYLVARIN",
       "lines": [
-        "Bienvenido. ¿En que puedo ayudarte?"
+        "¿Te envía el herrero? Ya veo. Lo que está intentando entender tiene que ver con unas campanas y las ratas.",
+        "Dile que las campanas sirven para mantenerlas alejadas. Pero aquí todavía tenemos un problema con esas criaturas."
       ]
     },
     "sylvarin_rats_offer": {
