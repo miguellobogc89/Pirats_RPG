@@ -341,15 +341,13 @@ class BrumazulScene(FarmScene):
                     self.npc_dialogue = get_chapter_dialogue("smith_offer")
                 elif smith_stage == "investigate":
                     self.npc_dialogue = get_chapter_dialogue("smith_wait_sylvarin")
-                elif smith_stage == "artisan_explained" and quests["cuando_callan_las_campanas"] == "completed":
+                elif smith_stage == "artisan_explained":
                     dispatch_story_event(self.app, "npc_talked", {"npc_id": "herrero"})
                     progress = self.app.state.setdefault("farm_repairs", {})
                     if not progress.get("smith_bolt_claimed"):
                         progress["metal_bolt"] = progress.get("metal_bolt", 0) + 1
                         progress["smith_bolt_claimed"] = True
                     self.npc_dialogue = get_chapter_dialogue("smith_reward")
-                elif smith_stage == "artisan_explained":
-                    self.npc_dialogue = get_chapter_dialogue("smith_wait_rats")
                 else:
                     self.npc_dialogue = get_chapter_dialogue("smith_done")
                 self.autosave()
@@ -360,8 +358,21 @@ class BrumazulScene(FarmScene):
                     npc_id = node["id"]
                     if npc_id == "sylvarin":
                         quests = self.app.state["quests"]
-                        dispatch_story_event(self.app, "npc_talked", {"npc_id": "sylvarin"})
-                        self.npc_dialogue = get_chapter_dialogue("sylvarin_offer" if quests["cuando_callan_las_campanas"] != "completed" else "sylvarin_done")
+                        metal_stage = quests["el_hierro_que_canta"]
+                        rat_stage = quests["cuando_callan_las_campanas"]
+                        if metal_stage == "investigate":
+                            self.npc_dialogue = get_chapter_dialogue("sylvarin_metal_explained")
+                            dispatch_story_event(self.app, "npc_talked", {"npc_id": "sylvarin"})
+                        elif rat_stage == "not_started":
+                            self.npc_dialogue = get_chapter_dialogue("sylvarin_rats_offer")
+                            dispatch_story_event(self.app, "npc_talked", {"npc_id": "sylvarin"})
+                        elif rat_stage == "cleared":
+                            dispatch_story_event(self.app, "npc_talked", {"npc_id": "sylvarin"})
+                            self.npc_dialogue = get_chapter_dialogue("sylvarin_rats_cleared")
+                        elif rat_stage == "completed":
+                            self.npc_dialogue = get_chapter_dialogue("sylvarin_intro")
+                        else:
+                            self.npc_dialogue = get_chapter_dialogue("sylvarin_rats_pending")
                     else:
                         self.npc_dialogue = get_chapter_dialogue("generic_villager")
                         dispatch_story_event(self.app, "npc_talked", {"npc_id": npc_id})
