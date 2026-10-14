@@ -26,7 +26,8 @@ QUESTS = {
     "cuando_callan_las_campanas": {
         "initial": "not_started",
         "transitions": {
-            "not_started": ("npc_talked", "sylvarin", "offered"),
+            "not_started": ("npc_talked", "sylvarin", "get_weapon"),
+            "get_weapon": ("weapon_acquired", "player", "offered"),
             "offered": ("object_interacted", "rat_nest_cleared", "cleared"),
             "cleared": ("npc_talked", "sylvarin", "completed"),
         },
@@ -65,7 +66,7 @@ def apply_chapter_quest_event(state, event_type, payload=None):
         if transition is None:
             continue
         required_event, required_target, next_stage = transition
-        target = payload.get("npc_id") if event_type == "npc_talked" else payload.get("object_id")
+        target = payload.get("npc_id") if event_type == "npc_talked" else ("player" if event_type == "weapon_acquired" else payload.get("object_id"))
         if event_type != required_event or target != required_target:
             continue
         if quest_id == "el_hierro_que_canta" and current == "not_started" and previous["un_techo_propio"] not in ("inspect_gate", "get_bolt", "find_elder_port", "complete"):
