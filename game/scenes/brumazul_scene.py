@@ -15,6 +15,7 @@ from game.hud.stash_overlay import draw_stash_overlay
 from game.inventory.hotbar_manager import get_hotbar_slots, get_active_hotbar_index
 from game.world.camera import get_camera_position
 from game.data.item_database import get_item_data
+from game.dialogue.chapter_dialogues import get_chapter_dialogue
 
 WIDTH, HEIGHT = 960, 640
 WHITE = (250, 250, 249)
@@ -393,25 +394,14 @@ class BrumazulScene(FarmScene):
             if math.dist((p["x"], p["y"]), elder) < 90:
                 stage = self.app.state["quests"]["un_techo_propio"]
                 if stage == "find_elder":
-                    self.npc_dialogue = ("ANCIANO", [
-                        "Has llegado a la finca de Almarin. Ahora es tuya.",
-                        "Antes de entrar debemos arreglar las tres vallas rotas.",
-                        "Busca madera por la granja y repara los huecos.",
-                    ])
+                    self.npc_dialogue = get_chapter_dialogue("elder_farm_first")
                     dispatch_story_event(self.app, "npc_talked", {"npc_id": "anciano"})
                 elif len(self.app.state.get("farm_repairs", {}).get("repaired_fences", [])) == len(self.area_layout.get("fence_gaps", [])) and self.area_layout.get("fence_gaps"):
                     if stage == "repair_fence":
                         dispatch_story_event(self.app, "object_repaired", {"object_id": "fence"})
-                    self.npc_dialogue = ("ANCIANO", [
-                        "He comprobado las tres vallas. Buen trabajo.",
-                        "La puerta necesita un cerrojo nuevo, y no sera facil conseguirlo.",
-                        "Pregunta al herrero del pueblo. Tal vez pueda fabricarte uno.",
-                    ])
+                    self.npc_dialogue = get_chapter_dialogue("elder_fences_done")
                 else:
-                    self.npc_dialogue = ("ANCIANO", [
-                        "Las vallas necesitan reparacion. Revisa los huecos de la finca."
-                        if stage == "repair_fence" else "Tenemos que continuar con los trabajos de la finca."
-                    ])
+                    self.npc_dialogue = get_chapter_dialogue("elder_fences_pending" if stage == "repair_fence" else "elder_farm_other")
                 return True
         if self.village:
             smith = next((npc for npc in VILLAGE_NPCS if npc[0] == "HERRERO"), None)
@@ -420,30 +410,23 @@ class BrumazulScene(FarmScene):
                 stage = quests["un_techo_propio"]
                 smith_stage = quests["el_hierro_que_canta"]
                 if stage not in ("get_bolt", "inspect_gate", "find_elder_port", "complete"):
-                    self.npc_dialogue = ("HERRERO", ["Trabajo el hierro, pero no puedo regalar materiales."])
+                    self.npc_dialogue = get_chapter_dialogue("smith_idle")
                 elif smith_stage == "not_started":
                     dispatch_story_event(self.app, "npc_talked", {"npc_id": "herrero"})
-                    self.npc_dialogue = ("HERRERO", [
-                        "Un cerrojo como ese es dificil de conseguir.",
-                        "Te lo dare si me ayudas con un problema: las ratas del almacen de Sylvarin.",
-                        "Habla con Sylvarin en su taller. Averigua que ocurre alli.",
-                    ])
+                    self.npc_dialogue = get_chapter_dialogue("smith_offer")
                 elif smith_stage == "investigate":
-                    self.npc_dialogue = ("HERRERO", ["Habla con Sylvarin. Su almacen esta infestado de ratas."])
+                    self.npc_dialogue = get_chapter_dialogue("smith_wait_sylvarin")
                 elif smith_stage == "artisan_explained" and quests["cuando_callan_las_campanas"] == "completed":
                     dispatch_story_event(self.app, "npc_talked", {"npc_id": "herrero"})
                     progress = self.app.state.setdefault("farm_repairs", {})
                     if not progress.get("smith_bolt_claimed"):
                         progress["metal_bolt"] = progress.get("metal_bolt", 0) + 1
                         progress["smith_bolt_claimed"] = True
-                    self.npc_dialogue = ("HERRERO", [
-                        "Asi que las campanas servian para espantar a las ratas.",
-                        "Cumpliste tu parte. Toma el cerrojo que te prometi.",
-                    ])
+                    self.npc_dialogue = get_chapter_dialogue("smith_reward")
                 elif smith_stage == "artisan_explained":
-                    self.npc_dialogue = ("HERRERO", ["Primero acaba con las ratas del almacen de Sylvarin."])
+                    self.npc_dialogue = get_chapter_dialogue("smith_wait_rats")
                 else:
-                    self.npc_dialogue = ("HERRERO", ["Ya tienes el cerrojo. Suerte con la finca."])
+                    self.npc_dialogue = get_chapter_dialogue("smith_done")
                 self.autosave()
                 return True
         if self.chapter_area:
@@ -453,10 +436,7 @@ class BrumazulScene(FarmScene):
                     if npc_id == "sylvarin":
                         quests = self.app.state["quests"]
                         dispatch_story_event(self.app, "npc_talked", {"npc_id": "sylvarin"})
-                        self.npc_dialogue = ("SYLVARIN", [
-                            "Las ratas han ocupado mi almacen. Hay que acabar con ellas y su nido.",
-                            "Cuando este despejado, vuelve a hablar conmigo.",
-                        ] if quests["cuando_callan_las_campanas"] != "completed" else ["Gracias por recuperar mi almacen."])
+                        self.npc_dialogue = get_chapter_dialogue("sylvarin_offer" if quests["cuando_callan_las_campanas"] != "completed" else "sylvarin_done")
                     else:
                         self.npc_dialogue = (node.get("label", npc_id), ["Bienvenido a Brumazul."])
                         dispatch_story_event(self.app, "npc_talked", {"npc_id": npc_id})
