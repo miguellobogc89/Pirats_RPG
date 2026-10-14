@@ -15,7 +15,7 @@ def initialize(scene):
     state = scene.app.state.setdefault("chapter_encounters", {}).setdefault(key, {})
     scene.encounter_state = state
     scene.encounter_units = [
-        {"id": str(i), "x": float(x), "y": float(y), "hp": 3 if key == "farm_ambush" else 2,
+        {"id": str(i), "x": float(x), "y": float(y), "hp": 3 if key == "farm_ambush" else 2, "max_hp": 3 if key == "farm_ambush" else 2,
          "awake": False, "cooldown": 0.0}
         for i, (x, y) in enumerate(scene.area_layout.get(positions_key, []))
         if str(i) not in state.get("defeated", [])
@@ -31,7 +31,7 @@ def initialize(scene):
 def spawn_boss(scene):
     x, y = scene.encounter_boss_position
     scene.encounter_boss = {"id": "boss", "x": float(x), "y": float(y),
-                            "hp": 12, "awake": True, "cooldown": 0.0}
+                            "hp": 12, "max_hp": 12, "awake": True, "cooldown": 0.0}
     scene.encounter_state["boss_spawned"] = True
 
 
@@ -55,10 +55,10 @@ def update(scene, dt):
             enemy["y"] += (player["y"] - enemy["y"]) / distance * step
         if distance < 39 and scene.encounter_damage_cooldown <= 0:
             health = scene.app.state.get("health", {})
-            health["current"] = max(1, health.get("current", 10) - (3 if enemy["id"] == "boss" else 1))
+            health["current"] = max(0, health.get("current", health.get("max", 10)) - (3 if enemy["id"] == "boss" else 1))
             scene.encounter_damage_cooldown = 1.2
             scene.app.add_log("Una criatura te ha atacado.")
-    if not scene.encounter_units and not scene.encounter_state.get("boss_spawned"):
+    if not scene.encounter_units and not scene.encounter_state.get("boss_spawned") and not scene.encounter_state.get("boss_defeated"):
         spawn_boss(scene)
         scene.app.add_log("La maleza se agita... ¡aparece una criatura enorme!")
 
@@ -112,4 +112,9 @@ def draw(scene, cx, cy):
         radius = 23 if boss else 12
         pygame.draw.circle(scene.app.screen, (112, 58, 56) if enemy["awake"] else (75, 111, 65), (x, y), radius)
         pygame.draw.circle(scene.app.screen, (42, 39, 36), (x, y), radius, 2)
-        scene.label("JEFE" if boss else ("CRIATURA" if enemy["awake"] else "MALEZA"), x - 25, y - radius - 20)
+        scene.label("JEFE" if boss else ("CRIATURA" if enemy["awake"] else "MALEZA"), x - 25, y - radius - 32)
+        bar_width = 62 if boss else 42
+        left, top = x - bar_width // 2, y - radius - 13
+        pygame.draw.rect(scene.app.screen, (57, 45, 45), (left, top, bar_width, 7))
+        pygame.draw.rect(scene.app.screen, (192, 77, 67), (left + 1, top + 1, round((bar_width - 2) * max(0, enemy["hp"]) / enemy["max_hp"]), 5))
+        scene.label(str(enemy["hp"]) + "/" + str(enemy["max_hp"]), left + bar_width + 4, top - 4)
