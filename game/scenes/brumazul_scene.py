@@ -508,6 +508,21 @@ class BrumazulScene(FarmScene):
                     self.draw_door(*door, cx, cy, building.get("label", ""))
                 elif len(door) == 2:
                     self.draw_door(door[0] - 20, door[1] - 5, 40, 10, cx, cy, building.get("label", ""))
+        if self.scene_id == "brumazul_granja":
+            progress = self.app.state.setdefault("farm_repairs", {})
+            collected = progress.get("collected_wood", [])
+            repaired = progress.get("repaired_fences", [])
+            for i, (x, y) in enumerate(layout.get("wood_piles", [])):
+                if i not in collected:
+                    pygame.draw.rect(screen, (129, 94, 54), (x - cx - 11, y - cy - 7, 22, 14))
+                    self.label("MADERA [E]", x - cx - 32, y - cy - 28)
+            for gap in layout.get("fence_gaps", []):
+                x, y, w, h = gap["rect"]
+                done = gap["id"] in repaired
+                pygame.draw.rect(screen, LINE if done else (151, 81, 67), (x - cx, y - cy, w, h), 4 if done else 2)
+                if not done:
+                    self.label("VALLA ROTA [E]", x - cx - 20, y - cy - 23)
+            self.label("MADERA: %d  |  VALLAS: %d/3" % (progress.get("wood", 0), len(repaired)), 22, 91)
         for node in layout.get("nodes", []):
             x, y = node["position"]
             self.actor(node.get("label", node["id"]), pygame.Vector2(x, y), cx, cy)
