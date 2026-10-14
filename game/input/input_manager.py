@@ -184,6 +184,9 @@ def handle_stash_event(app, event):
                     app.add_log("Coloca el item antes de cerrar el cofre.")
                 return
 
+            from core.save_manager import save_state
+            save_state(app.state)
+            app.slot_ui_state.clear()
             app.stash_open = False
             return
 
