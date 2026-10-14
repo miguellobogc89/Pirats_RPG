@@ -202,6 +202,14 @@ class BrumazulScene(FarmScene):
                     ensure_stash_state(self.app.state)
                     self.app.stash_open = True
                 return True
+        # A left-click during an active nearby encounter is an attack, not NPC interaction.
+        if self.chapter_area and not self.app.menu_open and event.type == pygame.MOUSEBUTTONDOWN and event.button == 1 and hasattr(self, "encounter_units"):
+            player = self.app.state["player"]
+            enemies = self.encounter_units + ([self.encounter_boss] if self.encounter_boss else [])
+            if any(math.dist((player["x"], player["y"]), (enemy["x"], enemy["y"])) < 85 for enemy in enemies):
+                from game.story.chapter_01_encounters import attack as attack_encounter
+                if attack_encounter(self):
+                    return True
         if (self.tavern or self.village or self.chapter_area) and not self.app.menu_open and ((event.type == pygame.KEYDOWN and event.key in (pygame.K_e, pygame.K_RETURN)) or (event.type == pygame.MOUSEBUTTONDOWN and event.button == 1)):
             if self.scene_id == "brumazul_granja" and self.interact_farm(event.pos if event.type == pygame.MOUSEBUTTONDOWN else None):
                 return True
