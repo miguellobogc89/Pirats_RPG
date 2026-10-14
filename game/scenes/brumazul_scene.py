@@ -406,10 +406,7 @@ class BrumazulScene(FarmScene):
             return False
         for name, race, pos, dialogue_id in (VILLAGE_NPCS if self.village else TAVERN_NPCS):
             if math.dist((p["x"], p["y"]), pos) < 65:
-                if self.tavern and name == "POSADERA" and self.app.state["quests"]["un_techo_propio"] in ("find_elder_port", "complete"):
-                    self.npc_dialogue = get_chapter_dialogue("innkeeper_port_clue")
-                else:
-                    self.npc_dialogue = get_chapter_dialogue(dialogue_id)
+                self.npc_dialogue = get_chapter_dialogue(dialogue_id)
                 dispatch_story_event(self.app, "npc_talked", {"npc_id": name.lower()})
                 return True
         return False
