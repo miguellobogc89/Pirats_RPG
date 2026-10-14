@@ -14,11 +14,10 @@ SCENE_IDS = {
 
 
 def find_chapter_exit(scene_id, x, y, layout=None):
+    """Resolve every chapter door in one place; arrival points never overlap exits."""
     if scene_id == "brumazul_pueblo":
-        if 425 <= x <= 550 and y <= 105:
-            return "brumazul_taberna", (485, 700)
-        if 1035 <= x <= 1115 and 245 <= y <= 270:
-            return "brumazul_taberna", (485, 700)
+        if (425 <= x <= 550 and y <= 105) or (1035 <= x <= 1115 and 245 <= y <= 270):
+            return "brumazul_taberna", (485, 540)
         if 1225 <= x <= 1285 and 425 <= y <= 450:
             return "brumazul_taller_sylvarin", (400, 555)
         if x <= 115 and 410 <= y <= 500:
@@ -27,6 +26,14 @@ def find_chapter_exit(scene_id, x, y, layout=None):
             return "brumazul_puerto", (400, 145)
         if 450 <= x < 580 and y >= 960:
             return "brumazul_playa", (400, 55)
+    if scene_id == "brumazul_taberna":
+        if 425 <= x <= 550 and y <= 225:
+            return "brumazul_posada", (400, 440)
+        if 425 <= x <= 550 and y >= 620:
+            return "brumazul_pueblo", (485, 145)
+    if scene_id == "brumazul_posada":
+        if 430 <= x <= 540 and y >= 575:
+            return "brumazul_taberna", (485, 540)
     if scene_id == "brumazul_granja":
         if x >= 842 and 330 <= y <= 420:
             return "brumazul_pueblo", (145, 455)
@@ -50,6 +57,20 @@ def find_chapter_exit(scene_id, x, y, layout=None):
         if rect and target and spawn and rect[0] <= x <= rect[0] + rect[2] and rect[1] <= y <= rect[1] + rect[3]:
             return target, tuple(spawn)
     return None
+
+
+def transition_chapter_scene(app, scene_id, player, layout=None):
+    """Apply destination and coordinates through the common scene manager."""
+    destination = find_chapter_exit(scene_id, player["x"], player["y"], layout)
+    if destination is None:
+        return False
+    target, spawn = destination
+    if not app.scene_manager.change_scene(target):
+        return False
+    app.state["player"].update({"x": spawn[0], "y": spawn[1]})
+    app.dispatch_scene_entered_event()
+    return True
+
 
 def can_walk_chapter_area(scene_id, x, y, layout=None):
     """Collision against walkable paths and building footprints (world pixels)."""
