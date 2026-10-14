@@ -260,6 +260,37 @@
       "lines": [
         "Si buscas al anciano, esta en el puerto."
       ]
+    },
+    "elder_port_followup": {
+      "speaker": "ANCIANO",
+      "lines": [
+        "Hay criaturas merodeando por la finca.",
+        "Regresa a la granja. Tenemos que investigar."
+      ]
+    },
+    "elder_port_idle": {
+      "speaker": "ANCIANO",
+      "lines": [
+        "Nos encontraremos en el puerto. Alli hablaremos de lo que sucede en la granja."
+      ]
+    },
+    "elder_farm_after_gate": {
+      "speaker": "ANCIANO",
+      "lines": [
+        "Nos encontraremos en el puerto. Alli hablaremos de lo que sucede en la granja."
+      ]
+    },
+    "smith_gate_repaired": {
+      "speaker": "HERRERO",
+      "lines": [
+        "Espero que ese cerrojo funcionara."
+      ]
+    },
+    "smith_trade": {
+      "speaker": "HERRERO",
+      "lines": [
+        "Bienvenido. ¿En que puedo ayudarte?"
+      ]
     }
   },
   "intro": {
