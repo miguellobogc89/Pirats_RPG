@@ -26,7 +26,7 @@ QUESTS = {
     "cuando_callan_las_campanas": {
         "initial": "not_started",
         "transitions": {
-            "not_started": ("npc_talked", "sylvarin", "get_weapon"),
+            "not_started": ("rat_nest_offered", "sylvarin", "get_weapon"),
             "get_weapon": ("weapon_acquired", "player", "offered"),
             "offered": ("object_interacted", "rat_nest_cleared", "cleared"),
             "cleared": ("npc_talked", "sylvarin", "completed"),
