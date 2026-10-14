@@ -78,7 +78,10 @@ def draw_menu(app):
     draw_content_panel(app.screen, MENU_CONTENT_RECT, padding=12)
     app.menu_action_hitboxes = []
 
-    if app.menu_tab == "inventory":
+    if app.menu_tab in getattr(app, "unavailable_menu_tabs", ()):
+        app.draw_text("Esta seccion aun no esta disponible en el capitulo 1.", 140, 225, TEXT_DARK, app.small_font)
+
+    elif app.menu_tab == "inventory":
         draw_inventory_tab(app)
 
     elif app.menu_tab == "routes":
