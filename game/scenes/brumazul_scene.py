@@ -283,16 +283,9 @@ class BrumazulScene(FarmScene):
                     p["x"], p["y"] = old_position
             if self.door_cooldown:
                 return
-            if self.tavern:
-                if p["y"] < 225 and 425 < p["x"] < 550:
-                    self.transition("brumazul_posada", "retorno")
-                elif p["y"] > 620 and 425 < p["x"] < 550:
-                    self.transition("brumazul_pueblo", "entrada")
-            elif self.village or self.chapter_area:
-                self.update_chapter_exits(p)
-            else:
-                if p["y"] > 575 and 430 < p["x"] < 540:
-                    self.transition("brumazul_taberna", "desde_habitacion")
+            from game.scenes.chapter_area_navigation import transition_chapter_scene
+            if transition_chapter_scene(self.app, self.scene_id, p, self.area_layout):
+                self.autosave()
 
     def wake_at_inn(self):
         self.app.state["health"]["current"] = self.app.state["health"]["max"]
@@ -508,14 +501,9 @@ class BrumazulScene(FarmScene):
         self.label("E: hablar  |  norte: habitacion  |  sur: pueblo", 22, 43)
 
     def update_chapter_exits(self, player):
-        from game.scenes.chapter_area_navigation import find_chapter_exit
-        target = find_chapter_exit(self.scene_id, player["x"], player["y"], self.area_layout)
-        if target:
-            scene_id, spawn = target
-            if self.app.scene_manager.change_scene(scene_id):
-                self.app.state["player"].update({"x": spawn[0], "y": spawn[1]})
-                self.app.dispatch_scene_entered_event()
-                self.autosave()
+        from game.scenes.chapter_area_navigation import transition_chapter_scene
+        if transition_chapter_scene(self.app, self.scene_id, player, self.area_layout):
+            self.autosave()
 
     def draw_chapter_area(self, cx, cy):
         layout = self.area_layout
