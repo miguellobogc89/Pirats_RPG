@@ -484,7 +484,7 @@ def journal_objectives(mission_id):
         "el_hierro_que_canta": [
             ("investigate", "Investiga el encargo del herrero"),
             ("artisan_explained", "Habla con Sylvarin"),
-            ("completed", "Regresa al herrero por el cerrojo"),
+            ("completed", "Recibe el cerrojo del herrero"),
         ],
         "cuando_callan_las_campanas": [
             ("get_weapon", "Consigue un arma"),
@@ -536,6 +536,13 @@ def draw_journal_tab(app):
         if opened:
             keys = [key for key, _ in objectives]
             current_index = keys.index(stage) if stage in keys else (-1 if stage in ("not_started", "ready") else len(keys))
+            if mission["id"] == "un_techo_propio" and stage == "get_bolt":
+                from game.inventory.item_transactions import quantity
+                if quantity(app.state, "metal_bolt") > 0 or app.state.get("farm_repairs", {}).get("smith_bolt_claimed"):
+                    current_index = keys.index("find_elder_port")
+            if mission["id"] == "el_hierro_que_canta" and stage == "completed":
+                from game.inventory.item_transactions import quantity
+                done = quantity(app.state, "metal_bolt") > 0 or app.state.get("farm_repairs", {}).get("smith_bolt_claimed", False)
             for index, (key, label) in enumerate(objectives):
                 oy = y + 43 + index * 25
                 if viewport.top <= oy < viewport.bottom - 10:
