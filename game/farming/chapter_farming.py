@@ -30,12 +30,16 @@ def interact(scene, screen_pos):
     state = app.state
     ensure_farming_state(state)
     crop = get_crop_at_cell(state, gx, gy)
-    if crop is not None and crop.get("dead", False) and can_interact_cell(
-        player, gx, gy, mode="eight", include_occupied=True
-    ):
-        face_target(player, gx, gy)
-        harvest_crop(state, tx, ty)
-        app.add_log("Retiras la planta seca.")
+    if crop is not None and crop.get("dead", False):
+        # Dead crops are obstacles: only the scythe can clear them,
+        # and only from one of the four cardinal adjacent tiles.
+        if get_active_tool(state) == "scythe" and can_interact_cell(
+            player, gx, gy, mode="cardinal"
+        ):
+            face_target(player, gx, gy)
+            result = harvest_crop(state, tx, ty)
+            if result["status"] == "removed_dead":
+                app.add_log("Retiras la planta seca.")
         return True
 
     # Harvest takes priority over equipped tools, including on the player's tile.
