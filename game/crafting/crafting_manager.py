@@ -1,72 +1,58 @@
+"""Headless crafting engine: recipes + inventory + optional context -> result."""
 from game.data.recipe_database import get_recipe_data
-from game.inventory.inventory_manager import has_item, add_item, remove_item
+from game.inventory.item_transactions import quantity, exchange
+from game.inventory.inventory_manager import can_add_item, get_inventory_grid
+from copy import deepcopy
 
 
-def can_craft(state, recipe_id):
+def check_requirements(state, recipe, context=None):
+    """Future-proof recipe requirements. No station/skill requirement by default."""
+    context = context or {}
+    requirements = recipe.get("requirements", {})
+    station = requirements.get("station")
+    if station and station not in context.get("stations", []):
+        return "missing_station"
+    for skill_id, minimum in requirements.get("skills", {}).items():
+        if state.get("skills", {}).get(skill_id, {}).get("level", 0) < minimum:
+            return "missing_skill"
+    return None
+
+
+def check_craft(state, recipe_id, context=None):
     recipe = get_recipe_data(recipe_id)
-
     if recipe is None:
-        return False
+        return "recipe_not_found"
+    if check_requirements(state, recipe, context):
+        return check_requirements(state, recipe, context)
+    ingredients = recipe.get("ingredients", {})
+    if any(quantity(state, item_id) < amount for item_id, amount in ingredients.items()):
+        return "missing_resources"
+    # Preflight output capacity on a copy AFTER spending the ingredients.
+    from game.inventory.item_transactions import spend, can_receive
+    simulation = {"inventory": deepcopy(state["inventory"])} if "inventory" in state else {}
+    if any(not spend(simulation, item_id, amount) for item_id, amount in ingredients.items()):
+        return "missing_resources"
+    if not can_receive(simulation, recipe["result_item"], recipe["result_amount"]):
+        return "inventory_full"
+    return "ready"
 
-    ingredients = recipe["ingredients"]
 
-    for item_id, amount_required in ingredients.items():
-        quantity = get_item_quantity(state, item_id)
-
-        if quantity < amount_required:
-            return False
-
-    return True
+def can_craft(state, recipe_id, context=None):
+    return check_craft(state, recipe_id, context) == "ready"
 
 
-def craft_item(state, recipe_id, skill_manager=None):
+def craft_item(state, recipe_id, skill_manager=None, context=None):
+    status = check_craft(state, recipe_id, context)
+    if status != "ready":
+        return {"status": status, "skill_result": None}
     recipe = get_recipe_data(recipe_id)
-
-    if recipe is None:
-        return {
-            "status": "recipe_not_found",
-            "skill_result": None,
-        }
-
-    if not can_craft(state, recipe_id):
-        return {
-            "status": "missing_resources",
-            "skill_result": None,
-        }
-
-    ingredients = recipe["ingredients"]
-
-    for item_id, amount_required in ingredients.items():
-        remove_item(state, item_id, amount_required)
-
-    add_item(
-        state,
-        recipe["result_item"],
-        recipe["result_amount"],
-    )
-
-    skill_result = None
-
-    if skill_manager is not None:
-        skill_result = skill_manager.register_action("item_crafted")
-
-    return {
-        "status": "crafted",
-        "skill_result": skill_result,
-    }
+    if not exchange(state, recipe["ingredients"], {recipe["result_item"]: recipe["result_amount"]}):
+        return {"status": "inventory_full", "skill_result": None}
+    skill_result = skill_manager.register_action("item_crafted") if skill_manager else None
+    return {"status": "crafted", "skill_result": skill_result,
+            "item_id": recipe["result_item"], "amount": recipe["result_amount"]}
 
 
 def get_item_quantity(state, item_id):
-    inventory = state["inventory"]["grid"]
-
-    total = 0
-
-    for row in inventory:
-        for slot in row:
-            if slot is None:
-                continue
-
-            if slot["item_id"] == item_id:
-                total += slot["amount"]
-
-    return total
+    """Compatibility for callers using the original June API."""
+    return quantity(state, item_id)
