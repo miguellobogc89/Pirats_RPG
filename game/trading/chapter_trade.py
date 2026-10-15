@@ -3,6 +3,7 @@ import pygame
 from game.data.item_database import get_item_data
 from game.inventory.inventory_state import ensure_inventory_state
 from game.inventory.item_transactions import receive, spend, quantity
+from game.inventory.inventory_manager import can_add_item
 from game.ui.sprite_renderer import draw_item_sprite
 
 SHOPS = {
@@ -24,25 +25,32 @@ def sell_price(item_id):
     return max(1, int((prices[0] if prices else 10) * SELL_FACTOR))
 
 
-def execute(state, action):
-    if not action:
-        return False, "Selecciona un objeto."
-    kind, item_id, amount = action
+def execute(state, action, count=1):
+    """Commit one validated bulk trade without partial inventory or gold changes."""
+    if not action or not isinstance(count, int) or count < 1:
+        return False, "Selecciona una cantidad válida."
+    kind, item_id, shop_id = action
     if kind == "buy":
-        price = next((price for item, price in available_items(amount) if item == item_id), None)
+        price = next((price for item, price in available_items(shop_id) if item == item_id), None)
         if price is None:
             return False, "Artículo no disponible."
-        gold = state.setdefault("resources", {}).get("gold", 0)
-        if gold < price:
+        total = price * count
+        resources = state.setdefault("resources", {})
+        if resources.get("gold", 0) < total:
             return False, "No tienes suficiente oro."
-        if not receive(state, item_id, 1):
-            return False, "Inventario lleno."
-        state["resources"]["gold"] = gold - price
+        if not can_add_item(state, item_id, count):
+            return False, "No hay espacio suficiente en el inventario."
+        if not receive(state, item_id, count):
+            return False, "No se pudo completar la compra."
+        resources["gold"] -= total
         return True, "Compra realizada."
     if kind == "sell":
-        if quantity(state, item_id) < 1 or not spend(state, item_id, 1):
-            return False, "Ya no tienes ese objeto."
-        state.setdefault("resources", {})["gold"] = state["resources"].get("gold", 0) + sell_price(item_id)
+        if quantity(state, item_id) < count:
+            return False, "No tienes esa cantidad de objetos."
+        if not spend(state, item_id, count):
+            return False, "No se pudo completar la venta."
+        resources = state.setdefault("resources", {})
+        resources["gold"] = resources.get("gold", 0) + sell_price(item_id) * count
         return True, "Venta realizada."
     return False, "Operación no válida."
 
@@ -98,16 +106,85 @@ def draw(scene):
         text(data["name"][:8], rect.x + 4, rect.y + 34)
         text(str(count) + "/" + str(sell_price(item)), rect.x + 32, rect.y + 8)
         scene.shop_hitboxes.append((rect, "sell", item))
-    text("Rueda: más objetos | ENTER: aceptar | ESC: salir", 390, 570)
+    text("Rueda: más objetos | ESC: salir", 390, 570)
+    if scene.shop_selection is not None:
+        draw_confirmation(scene)
+
+
+def draw_confirmation(scene):
+    app = scene.app
+    screen = app.screen
+    kind, item_id, shop_id = scene.shop_selection
+    item = get_item_data(item_id) or {}
+    price = (next((price for product, price in available_items(shop_id) if product == item_id), 0)
+             if kind == "buy" else sell_price(item_id))
+    count = getattr(scene, "shop_quantity", 1)
+    panel = pygame.Rect(215, 164, 530, 300)
+    pygame.draw.rect(screen, (245, 245, 245), panel)
+    pygame.draw.rect(screen, (75, 75, 75), panel, 3)
+    font, small = app.font, app.small_font
+    def label(value, x, y, use_font=small):
+        screen.blit(use_font.render(str(value), True, (45, 45, 45)), (x, y))
+    label(item.get("name", item_id), 240, 187, font)
+    description = item.get("description") or ("Objeto de tipo " + item.get("type", "general") + ".")
+    label(description[:66], 240, 224)
+    if kind == "sell":
+        label("Disponibles: " + str(quantity(app.state, item_id)), 240, 251)
+    label("Precio unidad: " + str(price) + " oro", 240, 278)
+    label("Cantidad:", 240, 316)
+    scene.shop_modal_hitboxes = []
+    for x, sign in ((423, "-"), (543, "+")):
+        rect = pygame.Rect(x, 306, 45, 42)
+        pygame.draw.rect(screen, (222, 222, 222), rect)
+        pygame.draw.rect(screen, (100, 100, 100), rect, 2)
+        label(sign, x + 15, 313, font)
+        scene.shop_modal_hitboxes.append((rect, "decrease" if sign == "-" else "increase"))
+    label(str(count), 497, 313, font)
+    label("Total: " + str(price * count) + " oro", 240, 362, font)
+    for x, title, action in ((240, "COMPRAR" if kind == "buy" else "VENDER", "confirm"),
+                             (510, "CANCELAR", "cancel")):
+        rect = pygame.Rect(x, 400, 205, 44)
+        pygame.draw.rect(screen, (224, 224, 224), rect)
+        pygame.draw.rect(screen, (100, 100, 100), rect, 2)
+        label(title, x + 29, 410)
+        scene.shop_modal_hitboxes.append((rect, action))
+
+
+def change_quantity(scene, step):
+    if scene.shop_selection is None:
+        return
+    kind, item_id, shop_id = scene.shop_selection
+    limit = quantity(scene.app.state, item_id) if kind == "sell" else 99
+    scene.shop_quantity = max(1, min(max(1, limit), getattr(scene, "shop_quantity", 1) + step))
 
 
 def handle_event(scene, event):
+    if scene.shop_selection is not None:
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_ESCAPE:
+                scene.shop_selection = None
+            elif event.key == pygame.K_RETURN:
+                confirm(scene)
+            elif event.key in (pygame.K_RIGHT, pygame.K_UP, pygame.K_PLUS, pygame.K_EQUALS):
+                change_quantity(scene, 1)
+            elif event.key in (pygame.K_LEFT, pygame.K_DOWN, pygame.K_MINUS):
+                change_quantity(scene, -1)
+        elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+            for rect, action in getattr(scene, "shop_modal_hitboxes", []):
+                if rect.collidepoint(event.pos):
+                    if action == "increase":
+                        change_quantity(scene, 1)
+                    elif action == "decrease":
+                        change_quantity(scene, -1)
+                    elif action == "cancel":
+                        scene.shop_selection = None
+                    elif action == "confirm":
+                        confirm(scene)
+                    break
+        return True
     if event.type == pygame.KEYDOWN:
         if event.key == pygame.K_ESCAPE:
             scene.shop_id = None
-            scene.shop_selection = None
-        elif event.key == pygame.K_RETURN:
-            confirm(scene)
         return True
     if event.type == pygame.MOUSEWHEEL:
         count = len(inventory_stacks(scene.app.state))
@@ -119,21 +196,20 @@ def handle_event(scene, event):
                 continue
             if kind == "exit":
                 scene.shop_id = None
-                scene.shop_selection = None
+            elif kind in ("buy", "sell"):
+                scene.shop_selection = (kind, item, scene.shop_id if kind == "buy" else None)
+                scene.shop_quantity = 1
             elif kind == "accept":
-                confirm(scene)
-            elif kind == "buy":
-                scene.shop_selection = ("buy", item, scene.shop_id)
-            elif kind == "sell":
-                scene.shop_selection = ("sell", item, None)
+                scene.app.add_log("Selecciona un objeto para comprar o vender.")
             break
         return True
     return True
 
 
 def confirm(scene):
-    success, message = execute(scene.app.state, scene.shop_selection)
+    success, message = execute(scene.app.state, scene.shop_selection, getattr(scene, "shop_quantity", 1))
     scene.app.add_log(message)
     if success:
         scene.autosave()
         scene.shop_selection = None
+        scene.shop_quantity = 1
