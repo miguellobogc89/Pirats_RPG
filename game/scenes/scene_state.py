@@ -6,6 +6,8 @@ DEFAULT_SCENE_STATE = {
     "tilled_cells": [],
     "watered_cells": [],
     "crops": [],
+    "tilled_idle_days": {},
+    "wild_bushes": [],
 }
 
 
@@ -18,6 +20,8 @@ def create_default_scene_state():
         "tilled_cells": [],
         "watered_cells": [],
         "crops": [],
+    "tilled_idle_days": {},
+    "wild_bushes": [],
     }
 
 
