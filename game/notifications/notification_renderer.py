@@ -47,38 +47,57 @@ def draw_corner_notifications(app, notifications):
 
 
 def draw_loot_notifications(app, notifications):
-    loot_notifications = [
-        notification
-        for notification in notifications
-        if notification["type"] == "loot"
-    ]
-    x = app.screen.get_width() - LOOT_WIDTH - 18
-    y = app.screen.get_height() - LOOT_HEIGHT - 92
+    from game.data.item_database import get_item_data
+    from game.ui.sprite_renderer import draw_item_sprite
+    entries = [n for n in notifications if n["type"] == "loot"]
+    x = app.screen.get_width() - 98
+    y = app.screen.get_height() - 100
+    for n in reversed(entries):
+        rect = pygame.Rect(x, y, 78, 46)
+        surface = pygame.Surface(rect.size, pygame.SRCALPHA)
+        draw_panel(surface, surface.get_rect())
+        data = get_item_data(n["item_id"]) if n.get("item_id") else None
+        icon_rect = pygame.Rect(7, 6, 34, 34)
+        if not data or draw_item_sprite(surface, data, icon_rect, padding=2) is None:
+            pygame.draw.rect(surface, WOOD_MID, icon_rect, border_radius=4)
+            glyph = app.small_font.render((data or {}).get("icon", "?"), True, TEXT_LIGHT)
+            surface.blit(glyph, glyph.get_rect(center=icon_rect.center))
+        count = app.small_font.render("x" + str(n.get("amount", 1)), True, TEXT_DARK)
+        surface.blit(count, (45, (rect.height - count.get_height()) // 2))
+        surface.set_alpha(get_notification_alpha(n))
+        app.screen.blit(surface, rect.topleft)
+        y -= 52
 
-    for notification in reversed(loot_notifications):
-        rect = pygame.Rect(x, y, LOOT_WIDTH, LOOT_HEIGHT)
-        draw_notification_box(app, rect, notification, app.small_font, compact=True)
-        y -= LOOT_HEIGHT + GAP
+
+def important_panel_rect(screen):
+    return pygame.Rect((screen.get_width() - 520) // 2,
+                       (screen.get_height() - 194) // 2, 520, 194)
+
+
+def important_button_rect(screen):
+    panel = important_panel_rect(screen)
+    return pygame.Rect(panel.centerx - 72, panel.bottom - 53, 144, 36)
 
 
 def draw_center_notifications(app, notifications):
-    center_notifications = [
-        notification
-        for notification in notifications
-        if notification["type"] == "center"
-    ]
-
-    if not center_notifications:
+    important = next((n for n in notifications if n["type"] == "center"), None)
+    if important is None:
         return
-
-    notification = center_notifications[-1]
-    rect = pygame.Rect(
-        (app.screen.get_width() - CENTER_WIDTH) // 2,
-        (app.screen.get_height() - CENTER_HEIGHT) // 2,
-        CENTER_WIDTH,
-        CENTER_HEIGHT,
-    )
-    draw_notification_box(app, rect, notification, app.big_font, centered=True)
+    veil = pygame.Surface(app.screen.get_size(), pygame.SRCALPHA)
+    veil.fill((20, 18, 15, 130))
+    app.screen.blit(veil, (0, 0))
+    rect = important_panel_rect(app.screen)
+    draw_panel(app.screen, rect)
+    title = app.font.render(important.get("title") or "Aviso importante", True, TEXT_DARK)
+    app.screen.blit(title, title.get_rect(center=(rect.centerx, rect.top + 34)))
+    lines = wrap_text(important["message"], app.small_font, rect.width - 44, max_lines=3)
+    for i, line in enumerate(lines):
+        line_surf = app.small_font.render(line, True, TEXT_DARK)
+        app.screen.blit(line_surf, line_surf.get_rect(center=(rect.centerx, rect.top + 75 + i * 23)))
+    button = important_button_rect(app.screen)
+    pygame.draw.rect(app.screen, WOOD_DARK, button, border_radius=5)
+    label = app.font.render("Aceptar", True, TEXT_LIGHT)
+    app.screen.blit(label, label.get_rect(center=button.center))
 
 
 def draw_notification_box(app, rect, notification, font, compact=False, centered=False):
