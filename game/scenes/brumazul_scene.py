@@ -227,6 +227,13 @@ class BrumazulScene(FarmScene):
                     if self.port_departure:
                         self.phase = "port_departure"
             return True
+        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1 and not self.app.menu_open and not self.app.stash_open:
+            from game.hud.hotbar_widget import hotbar_hit_index
+            from game.inventory.hotbar_manager import set_active_hotbar_index
+            index = hotbar_hit_index(self.app, event.pos)
+            if index is not None:
+                set_active_hotbar_index(self.app.state, index)
+                return True
         if self.scene_id in ("brumazul_casa_almarin", "brumazul_taller_almarin") and not self.app.menu_open and not self.app.stash_open and (
             (event.type == pygame.KEYDOWN and event.key in (pygame.K_e, pygame.K_RETURN))
             or (event.type == pygame.MOUSEBUTTONDOWN and event.button == 1)
