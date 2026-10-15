@@ -69,6 +69,12 @@ class BrumazulScene(FarmScene):
         self.npc_dialogue = None
         self.npc_dialogue_index = 0
         self.sleep_confirmation = False
+        self.shop_id = None
+        self.shop_prompt = None
+        self.shop_selection = None
+        self.shop_hitboxes = []
+        self.shop_page = 0
+        self.shop_talk_bypass = False
         self.port_departure = False
         self.port_departure_progress = 0.0
         self.door_cooldown = 0.8
@@ -176,6 +182,26 @@ class BrumazulScene(FarmScene):
                     self.response = RESPONSES[self.choice]
                 self.index += 1
                 self.process_script()
+            return True
+        if self.shop_id is not None:
+            from game.trading.chapter_trade import handle_event as handle_trade_event
+            return handle_trade_event(self, event)
+        if self.shop_prompt is not None:
+            if event.type == pygame.KEYDOWN:
+                if event.key in (pygame.K_1, pygame.K_h):
+                    self.shop_talk_bypass = True
+                    self.shop_prompt = None
+                    try:
+                        self.talk_to_nearby()
+                    finally:
+                        self.shop_talk_bypass = False
+                elif event.key in (pygame.K_2, pygame.K_c, pygame.K_RETURN):
+                    self.shop_id = self.shop_prompt
+                    self.shop_prompt = None
+                    self.shop_selection = None
+                    self.shop_page = 0
+                elif event.key in (pygame.K_3, pygame.K_ESCAPE):
+                    self.shop_prompt = None
             return True
         if self.sleep_confirmation:
             if event.type == pygame.KEYDOWN:
@@ -381,6 +407,18 @@ class BrumazulScene(FarmScene):
     def talk_to_nearby(self, click_position=None):
         from game.story_events.story_event_manager import dispatch_story_event
         p = self.app.state["player"]
+        if not self.shop_talk_bypass:
+            if self.village:
+                for name, race, pos, dialogue_id in VILLAGE_NPCS:
+                    npc_id = {"HERRERO": "herrero", "BOTICA": "botica", "HERBOLARIO": "herbolario"}.get(name)
+                    if npc_id and math.dist((p["x"], p["y"]), pos) < 90:
+                        self.shop_prompt = npc_id
+                        return True
+            if self.chapter_area:
+                for node in self.area_layout.get("nodes", []):
+                    if node["id"] == "sylvarin" and math.dist((p["x"], p["y"]), node["position"]) < node.get("radius", 65):
+                        self.shop_prompt = "sylvarin"
+                        return True
         if self.tavern and self.app.state["quests"]["un_techo_propio"] in ("find_elder_port", "complete"):
             progress = self.app.state.setdefault("brumazul", {})
             if not progress.get("elder_clue_seen") and math.dist((p["x"], p["y"]), (480, 395)) < 135:
@@ -601,6 +639,13 @@ class BrumazulScene(FarmScene):
                 self.draw_dialogue(who, self.response if self.index == INTRO["response_index"] else line)
         if self.npc_dialogue:
             self.draw_dialogue(self.npc_dialogue[0], self.npc_dialogue[1][self.npc_dialogue_index])
+        if self.shop_prompt is not None:
+            from game.trading.chapter_trade import SHOPS
+            shop = SHOPS[self.shop_prompt]
+            self.draw_dialogue(shop["name"], shop["greeting"] + "  [1] Hablar   [2] Comerciar   [3] Salir")
+        if self.shop_id is not None:
+            from game.trading.chapter_trade import draw as draw_trade
+            draw_trade(self)
         if self.sleep_confirmation:
             self.draw_dialogue("DESCANSAR", "¿Quieres dormir hasta las 06:00 del día siguiente? [S / ENTER] Sí   [N / ESC] No")
         if self.phase in ("fade", "port_fade"):
