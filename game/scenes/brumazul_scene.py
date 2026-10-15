@@ -168,6 +168,8 @@ class BrumazulScene(FarmScene):
             if not spend(self.app.state, "wood", cost):
                 return True
             repaired.append(gap["id"])
+            from game.notifications import notify_quest
+            notify_quest(self.app, f"Has arreglado {len(repaired)} de {len(layout['fence_gaps'])} vallas.")
             self.npc_dialogue = get_chapter_dialogue("farm_fence_repaired", done=len(repaired), total=len(layout["fence_gaps"]), wood=quantity(self.app.state, "wood"))
             self.autosave()
             return True
@@ -467,11 +469,15 @@ class BrumazulScene(FarmScene):
                 if stage == "find_elder_port":
                     self.npc_dialogue = get_chapter_dialogue("elder_port_followup")
                     if receive(self.app.state, "father_sword", 1, receipt_id="chapter01_father_sword") or "chapter01_father_sword" in self.app.state.get("item_receipts", []):
+                        from game.notifications import notify_important
+                        notify_important(self.app, "Has recibido la espada del padre.", "Objeto importante")
                         dispatch_story_event(self.app, "npc_talked", {"npc_id": "anciano_puerto"})
                         self.port_departure = True
                         self.port_departure_progress = 0.0
                     else:
                         self.npc_dialogue = get_chapter_dialogue("inventory_full")
+                        from game.notifications import notify_important
+                        notify_important(self.app, "Tu inventario está lleno. Libera espacio y vuelve a hablar con el personaje.", "Inventario lleno")
                 else:
                     self.npc_dialogue = get_chapter_dialogue("elder_port_idle")
                 self.autosave()
@@ -537,6 +543,8 @@ class BrumazulScene(FarmScene):
                     self.npc_dialogue = get_chapter_dialogue("smith_wait_sylvarin")
                 elif smith_stage == "artisan_explained" and not progress.get("smith_bolt_claimed"):
                     if receive(self.app.state, "metal_bolt", 1, receipt_id="chapter01_smith_bolt"):
+                        from game.notifications import notify_important
+                        notify_important(self.app, "Has recibido un cerrojo.", "Objeto de misión")
                         progress["smith_bolt_claimed"] = True
                         quests["el_hierro_que_canta"] = "completed"
                         self.npc_dialogue = get_chapter_dialogue("smith_reward")
@@ -675,6 +683,8 @@ class BrumazulScene(FarmScene):
         pygame.draw.circle(s, (65, 65, 65), tip, 3)
         from game.hud.hud_renderer import draw_hud
         draw_hud(self.app)
+        from game.notifications import draw_notifications
+        draw_notifications(self.app)
         if self.app.menu_open:
             draw_menu(self.app)
         if self.app.stash_open:
