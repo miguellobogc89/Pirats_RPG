@@ -3,6 +3,7 @@ import pygame
 from game.data.item_database import get_item_data
 from game.inventory.inventory_state import ensure_inventory_state
 from game.inventory.item_transactions import receive, spend, quantity
+from game.ui.sprite_renderer import draw_item_sprite
 
 SHOPS = {
     "herrero": {"name": "HERRERO", "greeting": "El hierro no espera. ¿Buscas algo o vienes a charlar?", "items": [("iron_ingot", 22), ("copper_ingot", 12), ("iron_ore", 9), ("iron_sword", 95)]},
@@ -79,19 +80,23 @@ def draw(scene):
         selected = scene.shop_selection == ("buy", item, scene.shop_id)
         frame(rect, (220, 220, 220) if selected else (250, 250, 250))
         data = get_item_data(item)
-        text(data.get("icon", "?"), rect.x + 12, rect.y + 12, font)
+        if draw_item_sprite(screen, data, pygame.Rect(rect.x + 7, rect.y + 5, 35, 35), padding=2) is None:
+            text(data.get("icon", "?"), rect.x + 12, rect.y + 12, font)
         text(data["name"], rect.x + 50, rect.y + 13)
         text(str(price) + " oro", rect.right - 105, rect.y + 13)
         scene.shop_hitboxes.append((rect, "buy", item))
     text("VENDER  (clic para seleccionar)", 390, 390)
     frame(pygame.Rect(375, 410, 485, 151))
-    for i, (item, count) in enumerate(inventory_stacks(app.state)[scene.shop_page * 8:scene.shop_page * 8 + 8]):
-        col, row = i % 4, i // 4
-        rect = pygame.Rect(387 + col * 115, 421 + row * 65, 107, 58)
+    for i, (item, count) in enumerate(inventory_stacks(app.state)[scene.shop_page * 14:scene.shop_page * 14 + 14]):
+        col, row = i % 7, i // 7
+        rect = pygame.Rect(385 + col * 67, 421 + row * 65, 62, 58)
         selected = scene.shop_selection == ("sell", item, None)
         frame(rect, (220, 220, 220) if selected else (250, 250, 250))
-        text(get_item_data(item)["name"][:11], rect.x + 5, rect.y + 7)
-        text(str(count) + " / " + str(sell_price(item)), rect.x + 5, rect.y + 31)
+        data = get_item_data(item)
+        if draw_item_sprite(screen, data, pygame.Rect(rect.x + 4, rect.y + 3, 29, 29), padding=1) is None:
+            text(data.get("icon", "?"), rect.x + 8, rect.y + 7)
+        text(data["name"][:8], rect.x + 4, rect.y + 34)
+        text(str(count) + "/" + str(sell_price(item)), rect.x + 32, rect.y + 8)
         scene.shop_hitboxes.append((rect, "sell", item))
     text("Rueda: más objetos | ENTER: aceptar | ESC: salir", 390, 570)
 
@@ -106,7 +111,7 @@ def handle_event(scene, event):
         return True
     if event.type == pygame.MOUSEWHEEL:
         count = len(inventory_stacks(scene.app.state))
-        scene.shop_page = max(0, min(max(0, (count - 1) // 8), scene.shop_page - event.y))
+        scene.shop_page = max(0, min(max(0, (count - 1) // 14), scene.shop_page - event.y))
         return True
     if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
         for rect, kind, item in scene.shop_hitboxes:
