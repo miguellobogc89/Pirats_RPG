@@ -6,27 +6,21 @@ from game.world.grid_manager import world_to_grid
 
 
 def ensure_farming_state(state):
-    if "farming" not in state:
-        state["farming"] = {}
+    """Expose a compatibility view of the canonical per-scene farming state.
 
-    if "tilled_cells" not in state["farming"]:
-        state["farming"]["tilled_cells"] = []
-
-    if "watered_cells" not in state["farming"]:
-        state["farming"]["watered_cells"] = []
-
-    if "crops" not in state["farming"]:
-        state["farming"]["crops"] = []
-
+    The scene entry owns the data. Older callers may still use state["farming"],
+    but that mapping contains references to the scene's collections, not copies.
+    """
     scene_state = get_current_scene_state(state)
     normalize_scene_crops(scene_state["crops"])
     state["farming"] = {
-        "tilled_idle_days": scene_state["tilled_idle_days"],
-        "wild_bushes": scene_state["wild_bushes"],
-        "tilled_cells": scene_state["tilled_cells"],
-        "watered_cells": scene_state["watered_cells"],
-        "crops": scene_state["crops"],
+        key: scene_state[key]
+        for key in (
+            "tilled_idle_days", "wild_bushes", "tilled_cells",
+            "watered_cells", "crops",
+        )
     }
+    return scene_state
 
 
 def normalize_scene_crops(crops):
