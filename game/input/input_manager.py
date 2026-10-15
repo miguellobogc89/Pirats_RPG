@@ -160,6 +160,22 @@ def handle_menu_key(app, key):
         cycle_active_hotbar_slot(app)
         return
 
+    if app.menu_tab == "recipes" and key in NUMBER_KEYS:
+        from game.data.recipe_database import get_all_recipes
+        from game.crafting.crafting_manager import craft_item
+        recipe_ids = list(get_all_recipes())
+        index = NUMBER_KEYS.index(key)
+        if index < len(recipe_ids):
+            recipe_id = recipe_ids[index]
+            result = craft_item(app.state, recipe_id, app.skill_manager)
+            if result["status"] == "crafted":
+                app.add_log("Fabricado: " + get_all_recipes()[recipe_id]["name"])
+                if result["skill_result"] is not None:
+                    app.add_log("Artesanía +10 XP")
+            else:
+                app.add_log("No se puede fabricar: " + result["status"])
+        return
+
     if key in NUMBER_KEYS:
         select_active_hotbar_slot(app, NUMBER_KEYS.index(key))
         return
