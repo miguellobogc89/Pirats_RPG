@@ -674,10 +674,10 @@ class BrumazulScene(FarmScene):
         if self.scene_id == "brumazul_casa_almarin" and "bed" in layout:
             x, y = layout["bed"]
             bed = pygame.Rect(int(x - cx - 27), int(y - cy - 39), 54, 78)
-            pygame.draw.rect(screen, (125, 67, 33), bed, border_radius=5)
-            pygame.draw.rect(screen, (234, 192, 116), bed.inflate(-8, -8), border_radius=4)
-            pygame.draw.rect(screen, (247, 242, 226), (bed.x + 8, bed.y + 7, bed.width - 16, 17), border_radius=4)
-            pygame.draw.rect(screen, (41, 117, 182), (bed.x + 7, bed.y + 28, bed.width - 14, bed.height - 37), border_radius=3)
+            pygame.draw.rect(screen, (125, 125, 125), bed, border_radius=5)
+            pygame.draw.rect(screen, (205, 205, 205), bed.inflate(-8, -8), border_radius=4)
+            pygame.draw.rect(screen, (240, 240, 240), (bed.x + 8, bed.y + 7, bed.width - 16, 17), border_radius=4)
+            pygame.draw.rect(screen, (160, 160, 160), (bed.x + 7, bed.y + 28, bed.width - 14, bed.height - 37), border_radius=3)
             self.label("CAMA [E]", x - cx - 31, y - cy - 60)
         if self.scene_id == "brumazul_taller_almarin" and "chest" in layout:
             x, y = layout["chest"]
