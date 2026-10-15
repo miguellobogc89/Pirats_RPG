@@ -163,6 +163,11 @@ class PygameApp:
         self.state = state
         ensure_scene_state(self.state)
         ensure_stash_state(self.state)
+        from game.inventory.item_transactions import receive
+        if not self.state.get("crafting_demo_materials_granted"):
+            grants = {"wood": 99, "stone": 60, "rope": 30}
+            if all(receive(self.state, item_id, amount) for item_id, amount in grants.items()):
+                self.state["crafting_demo_materials_granted"] = True
 
         self.cartography_manager = CartographyManager()
         self.cartography_manager.load_from_data(
