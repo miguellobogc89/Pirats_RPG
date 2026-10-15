@@ -3,7 +3,7 @@ import random
 from game.inventory.item_transactions import receive
 from game.world.action_range import can_interact_point
 from game.data.item_database import get_item_data
-from game.notifications import notify
+from game.notifications import notify_loot
 from game.story_events import dispatch_story_event
 
 
@@ -65,7 +65,7 @@ def update_collectables(app):
             item_name = item_data["name"]
 
         app.add_log(f"Recoges {item_name} x{collectable['amount']}.")
-        notify(app, f"+{collectable['amount']} {item_name}", "loot")
+        notify_loot(app, collectable["item_id"], collectable["amount"])
         app.skill_manager.register_action("collectable_picked")
         dispatch_story_event(
             app,
