@@ -105,11 +105,19 @@ def handle_event(app, event):
                     app.menu_tab = clicked_tab
                     return True
             else:
-                handle_game_key(app, pygame.K_e)
+                if app.placement_mode:
+                    from game.construction.placement_mode import place_at_mouse
+                    place_at_mouse(app, event.pos)
+                else:
+                    handle_game_key(app, pygame.K_e)
                 return True
 
     if event.type == pygame.KEYDOWN:
         if event.key == pygame.K_ESCAPE:
+            if app.placement_mode and not app.menu_open:
+                from game.construction.placement_mode import stop_placement
+                stop_placement(app)
+                return True
             if app.menu_open and app.slot_ui_state.is_dragging:
                 if not cancel_inventory_drag(app):
                     app.add_log("Coloca el item antes de cerrar el inventario.")
@@ -572,50 +580,9 @@ def handle_game_key(app, key):
 
 
 def handle_interaction_key(app):
-    if app.placement_mode and app.placement_item_id is not None:
-        from game.construction.construction_manager import place_object
-        from game.inventory.inventory_manager import remove_item
-        from game.world.grid_manager import world_to_grid
-
-        item_data = get_item_data(app.placement_item_id)
-        footprint = item_data.get("footprint", [1, 1])
-
-        mouse_x, mouse_y = pygame.mouse.get_pos()
-        player = app.state["player"]
-
-        camera_x, camera_y = get_camera_position(
-            player["x"],
-            player["y"],
-            app.screen.get_width(),
-            app.screen.get_height(),
-            app.get_scene_world_width() if hasattr(app, "get_scene_world_width") else WORLD_WIDTH,
-            app.get_scene_world_height() if hasattr(app, "get_scene_world_height") else WORLD_HEIGHT,
-        )
-
-        world_mouse_x = mouse_x + camera_x
-        world_mouse_y = mouse_y + camera_y
-
-        grid_x, grid_y = world_to_grid(world_mouse_x, world_mouse_y)
-
-        placed = place_object(
-            app.state,
-            app.placement_item_id,
-            grid_x,
-            grid_y,
-            footprint[0],
-            footprint[1],
-        )
-
-        if not placed:
-            return
-
-        removed = remove_item(app.state, app.placement_item_id, 1)
-
-        if removed:
-            app.skill_manager.register_action("object_placed")
-
-        app.placement_mode = False
-        app.placement_item_id = None
+    if app.placement_mode:
+        from game.construction.placement_mode import place_at_mouse
+        place_at_mouse(app, pygame.mouse.get_pos())
         return
 
     if app.nearby_object is not None:
