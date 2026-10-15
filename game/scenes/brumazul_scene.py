@@ -587,9 +587,8 @@ class BrumazulScene(FarmScene):
             pygame.draw.circle(s, LIGHT, (int(p["x"] - cx), int(p["y"] - cy - 15)), 8, 1)
         else:
             pygame.draw.circle(s, LINE, (int(p["x"] - cx), int(p["y"] - cy)), 13, 1)
-        self.draw_minimal_hud()
-        from game.hud.hotbar_widget import draw_hotbar_widget
-        draw_hotbar_widget(self.app)
+        from game.hud.hud_renderer import draw_hud
+        draw_hud(self.app)
         if self.app.menu_open:
             draw_menu(self.app)
         if self.app.stash_open:
@@ -675,10 +674,10 @@ class BrumazulScene(FarmScene):
         if self.scene_id == "brumazul_casa_almarin" and "bed" in layout:
             x, y = layout["bed"]
             bed = pygame.Rect(int(x - cx - 27), int(y - cy - 39), 54, 78)
-            pygame.draw.rect(screen, (112, 76, 47), bed, border_radius=5)
-            pygame.draw.rect(screen, (224, 205, 171), bed.inflate(-8, -8), border_radius=4)
+            pygame.draw.rect(screen, (125, 67, 33), bed, border_radius=5)
+            pygame.draw.rect(screen, (234, 192, 116), bed.inflate(-8, -8), border_radius=4)
             pygame.draw.rect(screen, (247, 242, 226), (bed.x + 8, bed.y + 7, bed.width - 16, 17), border_radius=4)
-            pygame.draw.rect(screen, (89, 135, 166), (bed.x + 7, bed.y + 28, bed.width - 14, bed.height - 37), border_radius=3)
+            pygame.draw.rect(screen, (41, 117, 182), (bed.x + 7, bed.y + 28, bed.width - 14, bed.height - 37), border_radius=3)
             self.label("CAMA [E]", x - cx - 31, y - cy - 60)
         if self.scene_id == "brumazul_taller_almarin" and "chest" in layout:
             x, y = layout["chest"]
@@ -752,15 +751,6 @@ class BrumazulScene(FarmScene):
         x, y = int(pos.x - cx), int(pos.y - cy)
         pygame.draw.circle(self.app.screen, LINE, (x, y), 15, 1)
         self.label(name, x - 35, y - 33)
-
-    def draw_minimal_hud(self):
-        s = self.app.screen
-        hp = self.app.state.get("health", {})
-        maximum = max(1, hp.get("max", 10))
-        current = max(0, hp.get("current", maximum))
-        pygame.draw.rect(s, (65, 54, 54), (24, 65, 155, 15))
-        pygame.draw.rect(s, (188, 65, 65), (26, 67, round(151 * min(current, maximum) / maximum), 11))
-        self.label("VIDA " + str(current) + "/" + str(maximum), 25, 45)
 
     def draw_dialogue(self, speaker, message, choices=None, selected=0):
         draw_chapter_conversation(self, speaker, message, choices, selected)
