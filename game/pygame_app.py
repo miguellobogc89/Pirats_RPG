@@ -391,7 +391,9 @@ class PygameApp:
 
             self.resolve_completed_expedition(region_name)
 
-        dead_crops = advance_farming_day(self.state)
+        dead_crops = advance_farming_day(self.state, "brumazul_granja")
+        if self.state.get("current_scene") != "brumazul_granja":
+            dead_crops.extend(advance_farming_day(self.state))
 
         for crop in dead_crops:
             self.add_log("Una planta se ha secado.")
