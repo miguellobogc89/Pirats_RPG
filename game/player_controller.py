@@ -2,6 +2,7 @@ import pygame
 
 from game.construction.construction_manager import is_cell_occupied
 from game.world.grid_manager import world_to_grid
+from game.world.occupancy import movement_multiplier
 from game.world.world_config import WORLD_WIDTH, WORLD_HEIGHT
 
 PLAYER_FOOT_OFFSET_Y = 6
@@ -40,6 +41,7 @@ def update_player_movement(state, speed, dt, world_width=WORLD_WIDTH, world_heig
     if dx != 0 or dy != 0:
         length = (dx * dx + dy * dy) ** 0.5
 
+        speed *= movement_multiplier(state, player["x"], player["y"])
         next_x = player["x"] + dx / length * speed * dt
         next_y = player["y"] + dy / length * speed * dt
 
