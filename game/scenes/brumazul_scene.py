@@ -251,6 +251,10 @@ class BrumazulScene(FarmScene):
                 from game.story.chapter_01_encounters import attack as attack_encounter
                 if attack_encounter(self):
                     return True
+        if self.scene_id == "brumazul_granja" and not self.app.menu_open and event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+            from game.farming.chapter_farming import interact as interact_farming
+            if interact_farming(self, event.pos):
+                return True
         if (self.tavern or self.village or self.chapter_area) and not self.app.menu_open and ((event.type == pygame.KEYDOWN and event.key in (pygame.K_e, pygame.K_RETURN)) or (event.type == pygame.MOUSEBUTTONDOWN and event.button == 1)):
             if self.scene_id == "brumazul_granja" and self.interact_farm(event.pos if event.type == pygame.MOUSEBUTTONDOWN else None):
                 return True
@@ -696,6 +700,11 @@ class BrumazulScene(FarmScene):
         screen = self.app.screen
         for x, y, w, h in layout.get("walkable", []):
             pygame.draw.rect(screen, PALE, (x - cx, y - cy, w, h))
+        if self.scene_id == "brumazul_granja":
+            from game.world.grid_renderer import draw_tilled_cells, draw_watered_cells, draw_crops
+            draw_tilled_cells(screen, self.app.state, cx, cy)
+            draw_watered_cells(screen, self.app.state, cx, cy)
+            draw_crops(screen, self.app.state, cx, cy)
         buildings = list(layout.get("buildings", []))
         buildings.extend(layout[k] for k in ("house", "workshop") if isinstance(layout.get(k), dict))
         for building in buildings:
