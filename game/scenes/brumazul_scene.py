@@ -239,10 +239,10 @@ class BrumazulScene(FarmScene):
             return True
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1 and not self.app.menu_open and not self.app.stash_open:
             from game.hud.hotbar_widget import hotbar_hit_index
-            from game.inventory.hotbar_manager import set_active_hotbar_index
+            from game.input.input_manager import select_active_hotbar_slot
             index = hotbar_hit_index(self.app, event.pos)
             if index is not None:
-                set_active_hotbar_index(self.app.state, index)
+                select_active_hotbar_slot(self.app, index)
                 return True
         if self.scene_id in ("brumazul_casa_almarin", "brumazul_taller_almarin") and not self.app.menu_open and not self.app.stash_open and (
             (event.type == pygame.KEYDOWN and event.key in (pygame.K_e, pygame.K_RETURN))
@@ -269,6 +269,11 @@ class BrumazulScene(FarmScene):
                 if attack_encounter(self):
                     return True
         if self.scene_id == "brumazul_granja" and not self.app.menu_open and event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+            from game.inventory.hotbar_manager import get_active_tool
+            if get_active_tool(self.app.state) == "hoe":
+                from game.input.input_manager import try_remove_placed_with_hoe
+                if try_remove_placed_with_hoe(self.app, event.pos):
+                    return True
             from game.farming.chapter_farming import interact as interact_farming
             from game.inventory.hotbar_manager import get_active_item_data, get_active_tool
             active_item = get_active_item_data(self.app.state)
