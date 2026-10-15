@@ -79,7 +79,8 @@ def attack(scene):
         return True
     player = scene.app.state["player"]
     enemies = scene.encounter_units + ([scene.encounter_boss] if scene.encounter_boss else [])
-    targets = [e for e in enemies if math.dist((player["x"], player["y"]), (e["x"], e["y"])) < 85]
+    from game.world.action_range import can_interact_point
+    targets = [e for e in enemies if can_interact_point(player, e["x"], e["y"])]
     if not targets:
         return False
     enemy = min(targets, key=lambda e: math.dist((player["x"], player["y"]), (e["x"], e["y"])))
