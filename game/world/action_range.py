@@ -17,7 +17,7 @@ def reachable_cells(player, mode="cardinal"):
     return {(x + dx, y + dy) for dx, dy in offsets}
 
 def can_interact_cell(player, gx, gy, include_occupied=False, mode="cardinal"):
-    return (gx, gy) in reachable_cells(player, mode)
+    return (gx, gy) in reachable_cells(player, mode) or (include_occupied and (gx, gy) in occupied_cells(player))
 
 def can_interact_point(player, x, y):
     return can_interact_cell(player, int(x // TILE_SIZE), int(y // TILE_SIZE))
