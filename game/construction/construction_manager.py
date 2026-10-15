@@ -14,12 +14,12 @@ def ensure_construction_state(state):
     state["construction"]["placed_objects"] = scene_state["placed_objects"]
 
 
-def is_cell_occupied(state, grid_x, grid_y):
+def is_cell_occupied(state, grid_x, grid_y, world_objects=None):
     ensure_construction_state(state)
 
     if is_map_cell_blocked(grid_x, grid_y):
         return True
-    if is_world_object_cell_blocked(state, grid_x, grid_y):
+    if is_world_object_cell_blocked(state, grid_x, grid_y, world_objects):
         return True
 
     for obj in state["placed_objects"]:
