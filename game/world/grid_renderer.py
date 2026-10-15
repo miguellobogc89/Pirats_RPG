@@ -177,6 +177,8 @@ def draw_farm_reach_grid(screen, player, camera_x, camera_y, bounds):
     for gx in range(x0, x1 + 1):
         for gy in range(y0, y1 + 1):
             rect = pygame.Rect(int(gx * TILE_SIZE - camera_x), int(gy * TILE_SIZE - camera_y), TILE_SIZE, TILE_SIZE)
-            if (gx, gy) in reach:
-                pygame.draw.rect(screen, (195, 195, 195), rect)
+            if (gx, gy) in feet:
+                pygame.draw.rect(screen, (185, 185, 185), rect)
+            elif (gx, gy) in reach:
+                pygame.draw.rect(screen, (224, 224, 224), rect)
             pygame.draw.rect(screen, (225, 225, 225), rect, 1)
