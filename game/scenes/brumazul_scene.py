@@ -260,7 +260,15 @@ class BrumazulScene(FarmScene):
                     return True
         if self.scene_id == "brumazul_granja" and not self.app.menu_open and event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             from game.farming.chapter_farming import interact as interact_farming
-            if interact_farming(self, event.pos):
+            from game.inventory.hotbar_manager import get_active_item_data, get_active_tool
+            active_item = get_active_item_data(self.app.state)
+            farming_selected = get_active_tool(self.app.state) in ("hoe", "watering_can") or (
+                active_item is not None and active_item.get("type") == "seed"
+            )
+            if farming_selected:
+                # Farming clicks are tile-specific. Never pass a missed tile click
+                # to nearby-object, generic interaction or combat handlers.
+                interact_farming(self, event.pos)
                 return True
         if (self.tavern or self.village or self.chapter_area) and not self.app.menu_open and ((event.type == pygame.KEYDOWN and event.key in (pygame.K_e, pygame.K_RETURN)) or (event.type == pygame.MOUSEBUTTONDOWN and event.button == 1)):
             if self.scene_id == "brumazul_granja" and self.interact_farm(event.pos if event.type == pygame.MOUSEBUTTONDOWN else None):
