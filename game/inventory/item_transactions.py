@@ -19,7 +19,7 @@ def receive(state, item_id, amount=1, *, receipt_id=None):
     receipts = state.setdefault("item_receipts", [])
     if receipt_id is not None and receipt_id in receipts:
         return False
-    if not can_add_item(state, item_id, amount):
+    if not can_receive(state, item_id, amount):
         return False
     if not add_item(state, item_id, amount):
         return False
