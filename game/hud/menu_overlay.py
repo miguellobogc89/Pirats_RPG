@@ -5,7 +5,7 @@ from game.inventory.hotbar_manager import get_active_hotbar_index
 from game.inventory.inventory_state import INVENTORY_COLUMNS, INVENTORY_ROWS
 from game.data.item_database import get_item_data
 from game.data.recipe_database import get_all_recipes
-from game.crafting.crafting_manager import can_craft, craft_item
+from game.crafting.crafting_manager import can_craft, check_craft
 from game.skills.skill_database import SKILL_DATABASE
 from game.ui.ui_components import (
     TEXT_DARK,
@@ -362,7 +362,6 @@ def draw_recipes_tab(app):
 
     recipes = get_all_recipes()
     recipe_keys = list(recipes.keys())
-    keys = pygame.key.get_pressed()
 
     y = 226
 
@@ -372,7 +371,7 @@ def draw_recipes_tab(app):
 
         status = "OK"
         if not craftable:
-            status = "Faltan recursos"
+            status = check_craft(app.state, recipe_id).replace("_", " ")
 
         app.draw_text(
             f"{index + 1}. {recipe['name']} - {status}",
@@ -400,26 +399,6 @@ def draw_recipes_tab(app):
             TEXT_DARK,
             app.small_font,
         )
-
-        if keys[pygame.K_1 + index]:
-            result = craft_item(
-                app.state,
-                recipe_id,
-                app.skill_manager,
-            )
-
-            if result["status"] == "crafted":
-                app.add_log(f"Fabricado: {recipe['name']}")
-
-                skill_result = result["skill_result"]
-
-                if skill_result is not None:
-                    app.add_log("Artesanía +10 XP")
-
-                    if skill_result["leveled_up"]:
-                        app.add_log(f"Artesanía sube a nivel {skill_result['level']}.")
-            else:
-                app.add_log("No tienes recursos suficientes.")
 
         y += 58
 
