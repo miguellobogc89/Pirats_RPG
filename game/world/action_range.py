@@ -1,25 +1,32 @@
-"""Shared tile interaction reach: occupied tiles and edge-sharing neighbors."""
+"""Tile-based action ranges, anchored to the one tile beneath the player."""
 from game.world.grid_manager import TILE_SIZE
 
+CARDINAL = ((0, -1), (0, 1), (-1, 0), (1, 0))
+EIGHT = tuple((dx, dy) for dy in (-1, 0, 1) for dx in (-1, 0, 1) if dx or dy)
+
+def player_cell(player):
+    return int(player["x"] // TILE_SIZE), int(player["y"] // TILE_SIZE)
+
 def occupied_cells(player, width=26, height=26):
-    """All tiles touched by the visible player marker (normally up to four)."""
-    x, y = player["x"], player["y"]
-    left, right = x - width / 2, x + width / 2
-    top, bottom = y - height / 2, y + height / 2
-    epsilon = 0.0001
-    return {(gx, gy)
-            for gx in range(int(left // TILE_SIZE), int((right - epsilon) // TILE_SIZE) + 1)
-            for gy in range(int(top // TILE_SIZE), int((bottom - epsilon) // TILE_SIZE) + 1)}
+    """The single logical tile under the player."""
+    return {player_cell(player)}
 
-def reachable_cells(player):
-    """Tiles beneath the player plus cardinal neighbors; never diagonals."""
-    occupied = occupied_cells(player)
-    cardinal = ((-1, 0), (1, 0), (0, -1), (0, 1))
-    return occupied | {(x + dx, y + dy) for x, y in occupied for dx, dy in cardinal}
+def reachable_cells(player, mode="cardinal"):
+    x, y = player_cell(player)
+    offsets = EIGHT if mode == "eight" else CARDINAL
+    return {(x + dx, y + dy) for dx, dy in offsets}
 
-def can_interact_cell(player, gx, gy, include_occupied=False):
-    # Retain the optional argument for existing farming callers.
-    return (gx, gy) in reachable_cells(player)
+def can_interact_cell(player, gx, gy, include_occupied=False, mode="cardinal"):
+    return (gx, gy) in reachable_cells(player, mode)
 
 def can_interact_point(player, x, y):
     return can_interact_cell(player, int(x // TILE_SIZE), int(y // TILE_SIZE))
+
+def face_target(player, gx, gy):
+    """Face the clicked tile without changing position."""
+    px, py = player_cell(player)
+    dx, dy = gx - px, gy - py
+    if abs(dx) >= abs(dy) and dx:
+        player["direction"] = "right" if dx > 0 else "left"
+    elif dy:
+        player["direction"] = "down" if dy > 0 else "up"
