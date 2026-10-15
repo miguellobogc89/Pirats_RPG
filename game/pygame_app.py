@@ -270,6 +270,13 @@ class PygameApp:
 
     def handle_events(self):
         for event in pygame.event.get():
+            from game.notifications import active_important, handle_notification_event
+            if active_important(self):
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    raise SystemExit
+                handle_notification_event(self, event)
+                continue
             if self.mode == "main_menu":
                 handle_main_menu_event(self, event)
             elif self.mode == "character_creation":
@@ -280,7 +287,7 @@ class PygameApp:
 
 
     def update(self, dt):
-        if self.mode == "game":
+        if self.mode == "game" and not __import__("game.notifications", fromlist=["active_important"]).active_important(self):
             update_dialogue(self, dt)
             self.scene_manager.update(dt)
 
