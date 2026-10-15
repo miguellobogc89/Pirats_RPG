@@ -14,8 +14,11 @@ def reachable_cells(player):
     return {(x + dx, y + dy) for x, y in occupied
             for dx in (-1, 0, 1) for dy in (-1, 0, 1)} - occupied
 
-def can_interact_cell(player, gx, gy):
-    return (gx, gy) in reachable_cells(player)
+def can_interact_cell(player, gx, gy, include_occupied=False):
+    cells = reachable_cells(player)
+    if include_occupied:
+        cells |= occupied_cells(player)
+    return (gx, gy) in cells
 
 def can_interact_point(player, x, y):
     return can_interact_cell(player, int(x // TILE_SIZE), int(y // TILE_SIZE))
