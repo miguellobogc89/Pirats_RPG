@@ -28,17 +28,16 @@ def interact(scene, screen_pos):
     tx, ty = gx * TILE_SIZE + TILE_SIZE // 2, gy * TILE_SIZE + TILE_SIZE // 2
     if not can_walk_chapter_area(scene.scene_id, tx, ty, scene.area_layout):
         return False
-    tool = get_active_tool(app.state)
-    item = get_active_item_data(app.state)
-    mode = "eight" if tool == "watering_can" or (item and item.get("type") == "seed") else "cardinal"
-    if not can_interact_cell(player, gx, gy, mode=mode, include_occupied=(mode == "eight")):
-        return False
-    face_target(player, gx, gy)
-
     state = app.state
     ensure_farming_state(state)
     crop = get_crop_at_cell(state, gx, gy)
-    if crop is not None and is_crop_ready(crop) and (gx, gy) != world_to_grid(player["x"], player["y"]):
+
+    # Harvest takes priority over equipped tools, including on the player's tile.
+    # Harvest reach is independent of the selected tool: 8 neighbors + own tile.
+    if crop is not None and is_crop_ready(crop) and can_interact_cell(
+        player, gx, gy, mode="eight", include_occupied=True
+    ):
+        face_target(player, gx, gy)
         from game.data.crop_database import get_crop_data
         data = get_crop_data(crop["crop_id"])
         if data and can_add_item(state, data["harvest_item"], data.get("harvest_amount", 1)):
@@ -50,6 +49,13 @@ def interact(scene, screen_pos):
         else:
             app.add_log("Inventario lleno.")
         return True
+
+    tool = get_active_tool(state)
+    item = get_active_item_data(state)
+    mode = "eight" if tool == "watering_can" or (item and item.get("type") == "seed") else "cardinal"
+    if not can_interact_cell(player, gx, gy, mode=mode, include_occupied=(mode == "eight")):
+        return False
+    face_target(player, gx, gy)
 
     if tool == "hoe":
         if till_cell(state, tx, ty):
