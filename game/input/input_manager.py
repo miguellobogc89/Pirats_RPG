@@ -108,6 +108,8 @@ def handle_event(app, event):
                 if app.placement_mode:
                     from game.construction.placement_mode import place_at_mouse
                     place_at_mouse(app, event.pos)
+                elif get_active_tool(app.state) == "hoe" and try_remove_placed_with_hoe(app, event.pos):
+                    pass
                 else:
                     handle_game_key(app, pygame.K_e)
                 return True
@@ -678,3 +680,25 @@ def change_app_scene(app, scene_id, payload=None):
     from game.scenes.scene_manager import change_scene
 
     change_scene(app.state, scene_id, payload=payload)
+
+
+def try_remove_placed_with_hoe(app, mouse_pos):
+    """Remove an adjacent placed item with the hoe; allow own cell to recover traps."""
+    from game.world.grid_manager import world_to_grid
+    from game.construction.construction_manager import remove_placed_object
+    player = app.state["player"]
+    camera_x, camera_y = get_camera_position(
+        player["x"], player["y"], app.screen.get_width(), app.screen.get_height(),
+        app.get_scene_world_width(), app.get_scene_world_height())
+    gx, gy = world_to_grid(mouse_pos[0] + camera_x, mouse_pos[1] + camera_y)
+    px, py = world_to_grid(player["x"], player["y"] + 6)
+    if abs(gx - px) + abs(gy - py) > 1:
+        return False
+    result = remove_placed_object(app.state, gx, gy)
+    if result == "removed":
+        app.add_log("Objeto recuperado con la azada.")
+        return True
+    if result == "inventory_full":
+        app.add_log("Inventario lleno: libera un hueco para recogerlo.")
+        return True
+    return False
