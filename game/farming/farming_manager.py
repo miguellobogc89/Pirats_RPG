@@ -24,9 +24,7 @@ def advance_farming_day(state, scene_id=None):
 
     for crop in farming["crops"][:]:
         if crop.get("dead", False):
-            crop["dead_days"] = crop.get("dead_days", 0) + 1
-            if crop["dead_days"] >= FARMING_RULES["dead_crop_removal_days"]:
-                farming["crops"].remove(crop)
+            # Dead crops remain until cleared with the scythe.
             continue
 
         crop_data = get_crop_data(crop["crop_id"])
