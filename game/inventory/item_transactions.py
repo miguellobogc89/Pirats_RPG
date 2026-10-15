@@ -78,7 +78,9 @@ def exchange(state, costs, rewards):
     if any(quantity(state, item_id) < n for item_id, n in costs.items()):
         return False
     from game.inventory.inventory_manager import get_inventory_grid
-    snapshot = deepcopy(get_inventory_grid(state))
+    grid = get_inventory_grid(state)
+    snapshot = deepcopy(grid)
+    success = False
     try:
         for item_id, amount in costs.items():
             if not spend(state, item_id, amount):
@@ -86,13 +88,8 @@ def exchange(state, costs, rewards):
         for item_id, amount in rewards.items():
             if not can_receive(state, item_id, amount) or not receive(state, item_id, amount):
                 return False
+        success = True
         return True
     finally:
-        # Restore original slots if any operation failed.
-        # A successful transaction is detected by comparing expected net quantities.
-        if any(quantity(state, item_id) != sum(
-            slot["amount"] for row in snapshot for slot in row
-            if slot is not None and slot["item_id"] == item_id
-        ) - costs.get(item_id, 0) + rewards.get(item_id, 0)
-               for item_id in set(costs) | set(rewards)):
-            get_inventory_grid(state)[:] = snapshot
+        if not success:
+            grid[:] = snapshot
