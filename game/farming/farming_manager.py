@@ -1,6 +1,7 @@
 """Daily farming coordinator and backward-compatible public API."""
 import random
 from game.data.crop_database import get_crop_data
+from game.farming.farming_config import FARMING_RULES
 from game.scenes.scene_state import ensure_scene_state_entry
 from game.farming.farming_state import ensure_farming_state, normalize_scene_crops
 from game.farming.crop_manager import (
@@ -24,7 +25,7 @@ def advance_farming_day(state, scene_id=None):
     for crop in farming["crops"][:]:
         if crop.get("dead", False):
             crop["dead_days"] = crop.get("dead_days", 0) + 1
-            if crop["dead_days"] >= 2:
+            if crop["dead_days"] >= FARMING_RULES["dead_crop_removal_days"]:
                 farming["crops"].remove(crop)
             continue
 
@@ -42,14 +43,14 @@ def advance_farming_day(state, scene_id=None):
         else:
             crop["dry_days"] += 1
 
-            if crop["dry_days"] >= crop_data.get("max_dry_days", 2):
+            if crop["dry_days"] >= crop_data.get("max_dry_days", FARMING_RULES["default_max_dry_days"]):
                 crop["dead"] = True
                 crop["dead_days"] = 0
                 dead_crops.append(crop)
 
     advance_soil_day(farming)
 
-    if scene_id == "brumazul_granja" and random.random() < 0.1:
+    if random.random() < FARMING_RULES["wild_growth_chance_by_scene"].get(scene_id, 0.0):
         spawn_wild_bush(state, farming)
 
     farming["watered_cells"].clear()
