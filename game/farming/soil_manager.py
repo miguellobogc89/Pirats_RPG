@@ -4,6 +4,7 @@ from game.farming.farming_config import FARMING_RULES
 from game.scenes.scene_state import get_current_scene_state
 from game.farming.farming_state import ensure_farming_state
 from game.farming.crop_manager import get_crop_at_cell
+from game.world.occupancy import blocks_farming
 
 def till_cell(state, world_x, world_y):
     ensure_farming_state(state)
@@ -11,7 +12,7 @@ def till_cell(state, world_x, world_y):
     cell = list(world_to_grid(world_x, world_y))
 
     farming = state["farming"]
-    if cell in farming["tilled_cells"] or cell in farming["wild_bushes"]:
+    if cell in farming["tilled_cells"] or blocks_farming(state, cell[0], cell[1]):
         return False
     if get_crop_at_cell(state, cell[0], cell[1]) is not None:
         return False
