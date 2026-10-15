@@ -8,12 +8,12 @@ from game.world.collision_manager import BLOCKED_CELLS, get_scene_collision_rect
 from game.ui.sprite_renderer import draw_item_sprite
 
 
-GRID_COLOR = (90, 130, 80)
-TILLED_COLOR = (115, 78, 45)
-WATERED_COLOR = (72, 82, 95)
-SEED_COLOR = (225, 200, 60)
-SPROUT_COLOR = (80, 170, 70)
-GROWN_COLOR = (210, 175, 45)
+GRID_COLOR = (175, 175, 175)
+TILLED_COLOR = (207, 207, 207)
+WATERED_COLOR = (176, 176, 176)
+SEED_COLOR = (100, 100, 100)
+SPROUT_COLOR = (90, 90, 90)
+GROWN_COLOR = (65, 65, 65)
 
 
 def draw_world_grid(screen, camera_x, camera_y, world_width=WORLD_WIDTH, world_height=WORLD_HEIGHT):
@@ -56,43 +56,29 @@ def draw_tilled_cells(screen, state, camera_x, camera_y):
         pygame.draw.rect(screen, TILLED_COLOR, rect)
 
 def draw_crops(screen, state, camera_x, camera_y):
+    """Simple monochrome seed, sprout and mature maize silhouettes."""
     crops = get_current_scene_state(state).get("crops", [])
-
     for crop in crops:
-        world_x, world_y = grid_to_world(crop["grid_x"], crop["grid_y"])
-
-        screen_x = int(world_x - camera_x)
-        screen_y = int(world_y - camera_y)
-
+        x, y = grid_to_world(crop["grid_x"], crop["grid_y"])
+        x, y = int(x - camera_x), int(y - camera_y)
         stage = crop.get("stage", 0)
-
-        sprite_item_id = "corn_seed"
-        sprite_size = 18
-
-        if stage == 1:
-            sprite_item_id = "corn_seed"
-            sprite_size = 24
-
-        elif stage >= 2:
-            sprite_item_id = "corn"
-            sprite_size = 34
-
-        item_data = get_item_data(sprite_item_id)
-
-        if item_data is None:
+        if stage == 0:
+            for dx, dy in ((10, 19), (16, 17), (22, 20)):
+                pygame.draw.circle(screen, SEED_COLOR, (x + dx, y + dy), 2)
             continue
+        height = min(27, 7 + stage * 7)
+        bottom = y + 28
+        pygame.draw.line(screen, SPROUT_COLOR, (x + 16, bottom), (x + 16, bottom - height), 2)
+        pygame.draw.line(screen, SPROUT_COLOR, (x + 16, bottom - height // 2),
+                         (x + 9, bottom - height // 2 - 6), 2)
+        if stage >= 2:
+            pygame.draw.line(screen, SPROUT_COLOR, (x + 16, bottom - height // 2 - 3),
+                             (x + 24, bottom - height // 2 - 10), 2)
+        if stage >= 3:
+            for dx, dy in ((-5, -11), (5, -15), (-3, -22)):
+                pygame.draw.ellipse(screen, GROWN_COLOR, (x + 16 + dx, bottom + dy, 6, 10))
 
-        draw_item_sprite(
-            screen,
-            item_data,
-            pygame.Rect(
-                screen_x + (TILE_SIZE - sprite_size) // 2,
-                screen_y + TILE_SIZE - sprite_size,
-                sprite_size,
-                sprite_size,
-            ),
-            padding=0,
-        )
+
 
 def draw_watered_cells(screen, state, camera_x, camera_y):
     farming = get_current_scene_state(state)
