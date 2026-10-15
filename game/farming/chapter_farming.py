@@ -9,8 +9,7 @@ from game.inventory.inventory_manager import remove_item
 from game.inventory.item_transactions import receive
 from game.inventory.inventory_manager import can_add_item
 from game.world.grid_manager import world_to_grid
-from game.world.action_range import can_interact_cell
-from game.player_controller import position_for_tile_action
+from game.world.action_range import can_interact_cell, face_target
 from game.world.grid_manager import TILE_SIZE
 from game.scenes.chapter_area_navigation import can_walk_chapter_area
 
@@ -29,20 +28,12 @@ def interact(scene, screen_pos):
     tx, ty = gx * TILE_SIZE + TILE_SIZE // 2, gy * TILE_SIZE + TILE_SIZE // 2
     if not can_walk_chapter_area(scene.scene_id, tx, ty, scene.area_layout):
         return False
-    # The movement controller decides where the player stands before acting.
-    # Never move to a tile that intersects buildings or leaves the walkable area.
-    def valid_standing(x, y):
-        if not can_walk_chapter_area(scene.scene_id, x, y, scene.area_layout):
-            return False
-        from game.construction.construction_manager import is_cell_occupied
-        return not is_cell_occupied(app.state, *world_to_grid(x, y + 9))
-    placement = position_for_tile_action(player, (gx, gy), valid_standing)
-    if placement is None:
+    tool = get_active_tool(app.state)
+    item = get_active_item_data(app.state)
+    mode = "eight" if tool == "watering_can" or (item and item.get("type") == "seed") else "cardinal"
+    if not can_interact_cell(player, gx, gy, mode=mode):
         return False
-    next_x, next_y, facing = placement
-    player["x"], player["y"], player["direction"] = next_x, next_y, facing
-    if not can_interact_cell(player, gx, gy):
-        return False
+    face_target(player, gx, gy)
 
     state = app.state
     ensure_farming_state(state)
@@ -60,8 +51,6 @@ def interact(scene, screen_pos):
             app.add_log("Inventario lleno.")
         return True
 
-    tool = get_active_tool(state)
-    item = get_active_item_data(state)
     if tool == "hoe":
         if till_cell(state, tx, ty):
             app.add_log("Tierra arada.")
