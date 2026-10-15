@@ -1,6 +1,6 @@
 """Shared occupancy rules for world objects, ground items, and vegetation."""
 from game.scenes.scene_state import get_current_scene_state
-from game.world.grid_manager import TILE_SIZE, world_to_grid
+from game.world.grid_manager import world_to_grid
 
 BUSH_SPEED_MULTIPLIER = 0.60
 BLOCKING_TYPES = frozenset(("tree", "rock", "ground_item", "item"))
@@ -27,7 +27,7 @@ def cell_occupants(state, gx, gy, world_objects=None):
         if _covers(obj, gx, gy):
             occupants.append({"type": "placed", "blocks_movement": True, "blocks_farming": True})
     for obj in (world_objects if world_objects is not None else state.get("world_objects", [])):
-        if _covers(obj, gx, gy):
+        if _covers(obj, gx, gy) and not obj.get("removed", False):
             occupants.append(obj)
     for item in state.get("collectables", []):
         if item.get("scene_id", state.get("current_scene")) == state.get("current_scene") and _covers(item, gx, gy):
