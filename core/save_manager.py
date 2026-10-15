@@ -24,8 +24,13 @@ def save_state(state):
     save_path = get_save_slot_path(save_slot_id)
     save_path.parent.mkdir(parents=True, exist_ok=True)
 
+    # Farming lives in scene_states; the top-level key is only a runtime alias.
+    from game.farming.farming_manager import ensure_farming_state
+    ensure_farming_state(state)
+    serialized_state = {key: value for key, value in state.items() if key != "farming"}
+
     with save_path.open("w", encoding="utf-8") as file:
-        json.dump(state, file, indent=2, ensure_ascii=False)
+        json.dump(serialized_state, file, indent=2, ensure_ascii=False)
 
     return save_path
 
