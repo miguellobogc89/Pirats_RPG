@@ -141,6 +141,8 @@ def draw_confirmation(scene):
         scene.shop_modal_hitboxes.append((rect, "decrease" if sign == "-" else "increase"))
     label(str(count), 497, 313, font)
     label("Total: " + str(price * count) + " oro", 240, 362, font)
+    if getattr(scene, "shop_error", None):
+        label(scene.shop_error, 455, 369)
     for x, title, action in ((240, "COMPRAR" if kind == "buy" else "VENDER", "confirm"),
                              (510, "CANCELAR", "cancel")):
         rect = pygame.Rect(x, 400, 205, 44)
@@ -199,6 +201,7 @@ def handle_event(scene, event):
             elif kind in ("buy", "sell"):
                 scene.shop_selection = (kind, item, scene.shop_id if kind == "buy" else None)
                 scene.shop_quantity = 1
+                scene.shop_error = None
             elif kind == "accept":
                 scene.app.add_log("Selecciona un objeto para comprar o vender.")
             break
@@ -209,6 +212,10 @@ def handle_event(scene, event):
 def confirm(scene):
     success, message = execute(scene.app.state, scene.shop_selection, getattr(scene, "shop_quantity", 1))
     scene.app.add_log(message)
+    if not success:
+        scene.shop_error = "No tienes suficiente dinero." if message == "No tienes suficiente oro." else message
+        return
+    scene.shop_error = None
     if success:
         scene.autosave()
         scene.shop_selection = None
