@@ -36,6 +36,7 @@ def normalize_scene_crops(crops):
         crop.setdefault("dry_days", 0)
         crop.setdefault("times_watered", 0)
         crop.setdefault("dead", False)
+        crop.setdefault("dead_days", 0)
 
 
 def till_cell(state, world_x, world_y):
@@ -111,6 +112,7 @@ def plant_crop(state, world_x, world_y, crop_id):
         "dry_days": 0,
         "times_watered": 0,
         "dead": False,
+        "dead_days": 0,
     }
 
     state["farming"]["tilled_idle_days"].pop(f"{grid_x},{grid_y}", None)
@@ -129,8 +131,11 @@ def advance_farming_day(state, scene_id=None):
 
     dead_crops = []
 
-    for crop in farming["crops"]:
+    for crop in farming["crops"][:]:
         if crop.get("dead", False):
+            crop["dead_days"] = crop.get("dead_days", 0) + 1
+            if crop["dead_days"] >= 2:
+                farming["crops"].remove(crop)
             continue
 
         crop_data = get_crop_data(crop["crop_id"])
@@ -149,6 +154,7 @@ def advance_farming_day(state, scene_id=None):
 
             if crop["dry_days"] >= crop_data.get("max_dry_days", 2):
                 crop["dead"] = True
+                crop["dead_days"] = 0
                 dead_crops.append(crop)
 
     occupied = {(crop["grid_x"], crop["grid_y"]) for crop in farming["crops"]}
