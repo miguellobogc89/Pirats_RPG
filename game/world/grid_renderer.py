@@ -62,6 +62,12 @@ def draw_crops(screen, state, camera_x, camera_y):
         x, y = grid_to_world(crop["grid_x"], crop["grid_y"])
         x, y = int(x - camera_x), int(y - camera_y)
         stage = crop.get("stage", 0)
+        if crop.get("dead", False):
+            pygame.draw.line(screen, (115, 95, 75), (x + 16, y + 28), (x + 19, y + 18), 3)
+            pygame.draw.line(screen, (115, 95, 75), (x + 19, y + 18), (x + 24, y + 24), 2)
+            pygame.draw.line(screen, (150, 125, 90), (x + 18, y + 22), (x + 10, y + 25), 2)
+            pygame.draw.ellipse(screen, (135, 110, 78), (x + 21, y + 22, 8, 4))
+            continue
         if stage == 0:
             for dx, dy in ((10, 19), (16, 17), (22, 20)):
                 pygame.draw.circle(screen, SEED_COLOR, (x + dx, y + dy), 2)
@@ -182,3 +188,12 @@ def draw_farm_reach_grid(screen, player, camera_x, camera_y, bounds, mode="cardi
             elif (gx, gy) in reach:
                 pygame.draw.rect(screen, (224, 224, 224), rect)
             pygame.draw.rect(screen, (225, 225, 225), rect, 1)
+
+def draw_wild_bushes(screen, state, camera_x, camera_y):
+    """Draw wild shrub silhouettes."""
+    bushes = get_current_scene_state(state).get("wild_bushes", [])
+    for gx, gy in bushes:
+        wx, wy = grid_to_world(gx, gy)
+        x, y = int(wx - camera_x), int(wy - camera_y)
+        pygame.draw.polygon(screen, (78, 105, 71), [(x+4,y+25),(x+8,y+13),(x+14,y+16),(x+17,y+7),(x+23,y+15),(x+28,y+13),(x+29,y+26)])
+        pygame.draw.polygon(screen, (105, 132, 85), [(x+6,y+22),(x+12,y+11),(x+18,y+17),(x+22,y+10),(x+27,y+23)])
