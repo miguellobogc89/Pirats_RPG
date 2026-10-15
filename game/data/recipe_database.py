@@ -8,6 +8,9 @@ RECIPE_DATABASE = {
         "result_item": "campfire",
         "result_amount": 1,
     },
+    "wooden_chest": {"name": "Caja de madera", "ingredients": {"wood": 20, "stone": 2}, "result_item": "wooden_chest", "result_amount": 1},
+    "wood_floor": {"name": "Suelo de madera", "ingredients": {"wood": 4}, "result_item": "wood_floor", "result_amount": 1},
+    "wooden_fence": {"name": "Valla de madera", "ingredients": {"wood": 6, "rope": 2}, "result_item": "wooden_fence", "result_amount": 1},
 }
 
 
