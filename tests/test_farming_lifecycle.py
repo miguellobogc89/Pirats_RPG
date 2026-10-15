@@ -2,7 +2,7 @@ import unittest
 from unittest.mock import patch
 
 from game.farming.farming_manager import advance_farming_day
-from game.farming.crop_manager import plant_crop, get_crop_at_cell, is_crop_ready
+from game.farming.crop_manager import plant_crop, get_crop_at_cell, is_crop_ready, harvest_crop
 from game.farming.soil_manager import till_cell
 from game.scenes.scene_state import get_current_scene_state
 from game.world.grid_manager import TILE_SIZE
@@ -36,6 +36,11 @@ class FarmingLifecycleTests(unittest.TestCase):
             advance_farming_day(self.state, "brumazul_granja")
             self.assertTrue(crop["dead"])
             self.assertFalse(is_crop_ready(crop))
+            advance_farming_day(self.state, "brumazul_granja")
+            advance_farming_day(self.state, "brumazul_granja")
+            self.assertIs(get_crop_at_cell(self.state, 5, 5), crop)
+            self.assertEqual(harvest_crop(self.state, *center(5, 5))["status"], "removed_dead")
+            self.assertIsNone(get_crop_at_cell(self.state, 5, 5))
 
     def test_scene_isolation(self):
         get_current_scene_state(self.state)["wild_bushes"].append([4, 5])
