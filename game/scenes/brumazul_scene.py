@@ -111,6 +111,30 @@ class BrumazulScene(FarmScene):
             })
         self.progress["beach_drops_spawned"] = True
 
+    def try_chop_notification_demo_tree(self, mouse_pos):
+        """Single test tree: chop with an axe, then collect several wood drops."""
+        from game.inventory.hotbar_manager import get_active_tool
+        if get_active_tool(self.app.state) != "axe" or self.app.state.get("notification_demo_tree_cut"):
+            return False
+        player = self.app.state["player"]
+        cx, cy = get_camera_position(player["x"], player["y"], WIDTH, HEIGHT,
+                                     self.area_layout.get("width", 900), self.area_layout.get("height", 760))
+        target = (680, 285)
+        if math.dist((mouse_pos[0] + cx, mouse_pos[1] + cy), target) > 43:
+            return False
+        if math.dist((player["x"], player["y"]), target) > 100:
+            self.app.add_log("Acércate al árbol para talarlo.")
+            return True
+        from game.collectable_manager import spawn_collectables_from_drops
+        self.app.state["notification_demo_tree_cut"] = True
+        spawn_collectables_from_drops(self.app.state,
+                                      [{"item_id": "wood", "amount": 3},
+                                       {"item_id": "wood", "amount": 2},
+                                       {"item_id": "wood", "amount": 4}], *target)
+        self.app.add_log("Árbol talado. Acércate a recoger la madera.")
+        self.autosave()
+        return True
+
     def interact_farm(self, click_position=None):
         """Collect original wood piles and repair each original fence gap."""
         from game.story_events.story_event_manager import dispatch_story_event
@@ -270,6 +294,9 @@ class BrumazulScene(FarmScene):
                 from game.story.chapter_01_encounters import attack as attack_encounter
                 if attack_encounter(self):
                     return True
+        if self.scene_id == "brumazul_granja" and not self.app.menu_open and event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+            if self.try_chop_notification_demo_tree(event.pos):
+                return True
         if self.scene_id == "brumazul_granja" and not self.app.menu_open and event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             from game.inventory.hotbar_manager import get_active_tool
             if get_active_tool(self.app.state) == "hoe":
@@ -766,6 +793,11 @@ class BrumazulScene(FarmScene):
             draw_watered_cells(screen, self.app.state, cx, cy)
             draw_crops(screen, self.app.state, cx, cy)
             draw_wild_bushes(screen, self.app.state, cx, cy)
+        if self.scene_id == "brumazul_granja" and not self.app.state.get("notification_demo_tree_cut"):
+            from game.ui.sprite_renderer import draw_sprite_centered
+            if draw_sprite_centered(screen, "assets/world/tree.png", 680 - cx, 285 - cy, 76, 110) is None:
+                pygame.draw.circle(screen, (86, 119, 73), (int(680 - cx), int(270 - cy)), 31)
+                pygame.draw.rect(screen, (117, 81, 52), (672 - cx, 285 - cy, 16, 34))
         buildings = list(layout.get("buildings", []))
         buildings.extend(layout[k] for k in ("house", "workshop") if isinstance(layout.get(k), dict))
         for building in buildings:
