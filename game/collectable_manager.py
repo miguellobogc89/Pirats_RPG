@@ -1,6 +1,7 @@
 import random
 
 from game.inventory.item_transactions import receive
+from game.world.action_range import can_interact_point
 from game.data.item_database import get_item_data
 from game.notifications import notify
 from game.story_events import dispatch_story_event
@@ -44,7 +45,7 @@ def update_collectables(app):
         dy = collectable["y"] - player["y"]
         distance = (dx * dx + dy * dy) ** 0.5
 
-        if distance > COLLECT_RADIUS:
+        if not can_interact_point(player, collectable["x"], collectable["y"]):
             continue
 
         added = receive(
