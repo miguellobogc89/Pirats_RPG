@@ -31,6 +31,13 @@ def interact(scene, screen_pos):
     state = app.state
     ensure_farming_state(state)
     crop = get_crop_at_cell(state, gx, gy)
+    if crop is not None and crop.get("dead", False) and can_interact_cell(
+        player, gx, gy, mode="eight", include_occupied=True
+    ):
+        face_target(player, gx, gy)
+        harvest_crop(state, tx, ty)
+        app.add_log("Retiras la planta seca.")
+        return True
 
     # Harvest takes priority over equipped tools, including on the player's tile.
     # Harvest reach is independent of the selected tool: 8 neighbors + own tile.
@@ -57,7 +64,13 @@ def interact(scene, screen_pos):
         return False
     face_target(player, gx, gy)
 
+    if tool == "scythe" and [gx, gy] in state["farming"]["wild_bushes"]:
+        state["farming"]["wild_bushes"].remove([gx, gy])
+        app.add_log("Has despejado un arbusto.")
+        return True
     if tool == "hoe":
+        if [gx, gy] in state["farming"]["wild_bushes"]:
+            return True
         if till_cell(state, tx, ty):
             app.add_log("Tierra arada.")
         return True
