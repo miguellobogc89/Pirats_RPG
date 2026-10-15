@@ -723,7 +723,7 @@ class BrumazulScene(FarmScene):
         for x, y, w, h in layout.get("walkable", []):
             pygame.draw.rect(screen, PALE, (x - cx, y - cy, w, h))
         if self.scene_id == "brumazul_granja":
-            from game.world.grid_renderer import draw_tilled_cells, draw_watered_cells, draw_crops, draw_farm_reach_grid
+            from game.world.grid_renderer import draw_tilled_cells, draw_watered_cells, draw_crops, draw_wild_bushes, draw_farm_reach_grid
             from game.inventory.hotbar_manager import get_active_tool, get_active_item_data
             active_item = get_active_item_data(self.app.state)
             mode = "eight" if get_active_tool(self.app.state) == "watering_can" or (
@@ -733,6 +733,7 @@ class BrumazulScene(FarmScene):
             draw_tilled_cells(screen, self.app.state, cx, cy)
             draw_watered_cells(screen, self.app.state, cx, cy)
             draw_crops(screen, self.app.state, cx, cy)
+            draw_wild_bushes(screen, self.app.state, cx, cy)
         buildings = list(layout.get("buildings", []))
         buildings.extend(layout[k] for k in ("house", "workshop") if isinstance(layout.get(k), dict))
         for building in buildings:
