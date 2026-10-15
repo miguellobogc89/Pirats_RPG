@@ -44,8 +44,16 @@ def till_cell(state, world_x, world_y):
 
     cell = list(world_to_grid(world_x, world_y))
 
-    if cell in state["farming"]["tilled_cells"]:
+    farming = state["farming"]
+    if cell in farming["tilled_cells"] or cell in farming["wild_bushes"]:
         return False
+    if get_crop_at_cell(state, cell[0], cell[1]) is not None:
+        return False
+    scene_state = get_current_scene_state(state)
+    for obj in scene_state.get("placed_objects", []):
+        if (obj["grid_x"] <= cell[0] < obj["grid_x"] + obj.get("width", 1)
+                and obj["grid_y"] <= cell[1] < obj["grid_y"] + obj.get("height", 1)):
+            return False
 
     state["farming"]["tilled_cells"].append(cell)
     state["farming"]["tilled_idle_days"].pop(f"{cell[0]},{cell[1]}", None)
@@ -201,7 +209,7 @@ def is_crop_ready(crop):
 
     days_per_stage = crop_data.get("days_per_stage", [])
 
-    return crop["stage"] >= len(days_per_stage)
+    return not crop.get("dead", False) and crop["stage"] >= len(days_per_stage)
 
 
 def harvest_crop(state, world_x, world_y):
