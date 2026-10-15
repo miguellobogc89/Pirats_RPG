@@ -6,8 +6,7 @@ from game.farming.farming_manager import (
 )
 from game.inventory.hotbar_manager import get_active_item_data, get_active_tool, get_active_item_id
 from game.inventory.inventory_manager import remove_item
-from game.inventory.item_transactions import receive
-from game.inventory.inventory_manager import can_add_item
+from game.inventory.item_transactions import receive, spend
 from game.world.grid_manager import world_to_grid
 from game.world.action_range import can_interact_cell, face_target
 from game.world.grid_manager import TILE_SIZE
@@ -47,14 +46,20 @@ def interact(scene, screen_pos):
         face_target(player, gx, gy)
         from game.data.crop_database import get_crop_data
         data = get_crop_data(crop["crop_id"])
-        if data and can_add_item(state, data["harvest_item"], data.get("harvest_amount", 1)):
-            result = harvest_crop(state, tx, ty)
-            if result["status"] == "harvested":
-                if receive(state, result["item_id"], result["amount"]):
-                    app.add_log(f"Cosechas {result['amount']} {result['item_id']}.")
+        if data:
+            item_id = data["harvest_item"]
+            amount = data.get("harvest_amount", 1)
+            # Reserve the reward before removing the crop: failed inventory
+            # transactions must never destroy a harvest.
+            if receive(state, item_id, amount):
+                result = harvest_crop(state, tx, ty)
+                if result["status"] == "harvested":
+                    app.add_log(f"Cosechas {amount} {item_id}.")
                     app.skill_manager.register_action("crop_harvested")
-        else:
-            app.add_log("Inventario lleno.")
+                else:
+                    spend(state, item_id, amount)
+            else:
+                app.add_log("Inventario lleno.")
         return True
 
     tool = get_active_tool(state)
