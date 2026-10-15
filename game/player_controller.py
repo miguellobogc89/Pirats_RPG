@@ -10,7 +10,7 @@ PLAYER_COLLISION_WIDTH = 10
 PLAYER_COLLISION_HEIGHT = 6
 
 
-def update_player_movement(state, speed, dt, world_width=WORLD_WIDTH, world_height=WORLD_HEIGHT):
+def update_player_movement(state, speed, dt, world_width=WORLD_WIDTH, world_height=WORLD_HEIGHT, world_objects=None):
     keys = pygame.key.get_pressed()
     player = state["player"]
 
@@ -61,7 +61,7 @@ def update_player_movement(state, speed, dt, world_width=WORLD_WIDTH, world_heig
         blocked = False
 
         for grid_x, grid_y in collision_points:
-            if is_cell_occupied(state, grid_x, grid_y):
+            if is_cell_occupied(state, grid_x, grid_y, world_objects):
                 blocked = True
                 break
 
