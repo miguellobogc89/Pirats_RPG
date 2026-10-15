@@ -31,4 +31,5 @@ def get_scene_collision_rects():
     return list(SCENE_COLLISION_RECTS)
 
 def is_world_object_cell_blocked(state, grid_x, grid_y):
-    return False
+    from game.world.occupancy import blocks_movement
+    return blocks_movement(state, grid_x, grid_y)
