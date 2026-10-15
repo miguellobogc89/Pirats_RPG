@@ -501,6 +501,10 @@ class PygameApp:
             if visible.colliderect(self.screen.get_rect()):
                 pygame.draw.rect(self.screen, collision_color, visible, 1)
 
+        if self.placement_mode:
+            from game.construction.placement_mode import draw_placement_preview
+            draw_placement_preview(self)
+
         if self.hud_visible:
             draw_hud(self)
 
