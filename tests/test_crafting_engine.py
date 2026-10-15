@@ -8,7 +8,7 @@ from game.inventory.item_transactions import exchange, can_receive
 
 class CraftingEngineTests(unittest.TestCase):
     def setUp(self):
-        self.state = {}
+        self.state = {"inventory": {"grid": [[None] * 8 for _ in range(2)]}}
 
     def test_missing_resources_do_not_mutate_inventory(self):
         self.assertEqual(craft_item(self.state, "campfire")["status"], "missing_resources")
