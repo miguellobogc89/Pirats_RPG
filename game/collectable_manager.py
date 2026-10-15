@@ -64,7 +64,7 @@ def update_collectables(app):
         if item_data is not None:
             item_name = item_data["name"]
 
-        app.add_log(f"Recoges {item_name} x{collectable['amount']}.")
+        app.add_log(f"Recoges {item_name} x{collectable['amount']}.", show_notification=False)
         notify_loot(app, collectable["item_id"], collectable["amount"])
         app.skill_manager.register_action("collectable_picked")
         dispatch_story_event(
