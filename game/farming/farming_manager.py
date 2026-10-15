@@ -37,7 +37,7 @@ def normalize_scene_crops(crops):
 def till_cell(state, world_x, world_y):
     ensure_farming_state(state)
 
-    cell = world_to_grid(world_x, world_y)
+    cell = list(world_to_grid(world_x, world_y))
 
     if cell in state["farming"]["tilled_cells"]:
         return False
@@ -63,12 +63,12 @@ def water_cell(state, world_x, world_y):
 
 def is_tilled(state, grid_x, grid_y):
     ensure_farming_state(state)
-    return (grid_x, grid_y) in state["farming"]["tilled_cells"]
+    return [grid_x, grid_y] in state["farming"]["tilled_cells"]
 
 
 def is_watered(state, grid_x, grid_y):
     ensure_farming_state(state)
-    return (grid_x, grid_y) in state["farming"]["watered_cells"]
+    return [grid_x, grid_y] in state["farming"]["watered_cells"]
 
 
 def get_crop_at_cell(state, grid_x, grid_y):
@@ -109,12 +109,18 @@ def plant_crop(state, world_x, world_y, crop_id):
     return "planted"
 
 
-def advance_farming_day(state):
-    ensure_farming_state(state)
+def advance_farming_day(state, scene_id=None):
+    if scene_id is None:
+        ensure_farming_state(state)
+        farming = state["farming"]
+    else:
+        from game.scenes.scene_state import ensure_scene_state_entry
+        farming = ensure_scene_state_entry(state, scene_id)
+        normalize_scene_crops(farming["crops"])
 
     dead_crops = []
 
-    for crop in state["farming"]["crops"]:
+    for crop in farming["crops"]:
         if crop.get("dead", False):
             continue
 
@@ -123,7 +129,7 @@ def advance_farming_day(state):
         if crop_data is None:
             continue
 
-        watered = is_watered(state, crop["grid_x"], crop["grid_y"])
+        watered = [crop["grid_x"], crop["grid_y"]] in farming["watered_cells"]
 
         if watered:
             crop["dry_days"] = 0
@@ -132,11 +138,9 @@ def advance_farming_day(state):
         else:
             crop["dry_days"] += 1
 
-            if crop["dry_days"] >= crop_data.get("max_dry_days", 2):
-                crop["dead"] = True
-                dead_crops.append(crop)
+            # First iteration: lack of watering pauses growth; crops do not die.
 
-    state["farming"]["watered_cells"].clear()
+    farming["watered_cells"].clear()
 
     return dead_crops
 
