@@ -1,5 +1,6 @@
 """Soil preparation, watering, and idle-soil decay."""
 from game.world.grid_manager import world_to_grid
+from game.farming.farming_config import FARMING_RULES
 from game.scenes.scene_state import get_current_scene_state
 from game.farming.farming_state import ensure_farming_state
 from game.farming.crop_manager import get_crop_at_cell
@@ -55,6 +56,6 @@ def advance_soil_day(farming):
             idle.pop(key, None)
             continue
         idle[key] = idle.get(key, 0) + 1
-        if idle[key] >= 7:
+        if idle[key] >= FARMING_RULES["tilled_soil_reset_days"]:
             farming["tilled_cells"].remove(cell)
             idle.pop(key, None)
