@@ -361,6 +361,8 @@ ITEM_DATABASE = {
     'sylvarin_boots': {'name': 'Botas de Sylvarin', 'type': 'armor', 'icon': 'B', 'stackable': False},
     'wood': {
     'name': 'Madera', 'type': 'resource', 'icon': 'W', 'sprite': 'assets/items/resources/wood.png', 'stackable': True},
+    'wooden_chest': {'name': 'Caja de madera', 'type': 'placeable', 'icon': 'C', 'stackable': True, 'footprint': [1, 1]},
+    'wooden_fence': {'name': 'Valla de madera', 'type': 'placeable', 'icon': 'V', 'stackable': True, 'footprint': [1, 1]},
     'wood_floor': {
     'name': 'Suelo de madera', 'type': 'placeable', 'icon': 'W', 'sprite': 'assets/items/building/wood_floor.png', 'stackable': True},
     'wooden_hammer': {
