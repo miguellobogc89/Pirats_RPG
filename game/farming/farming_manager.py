@@ -14,10 +14,8 @@ from game.farming.wild_growth_manager import spawn_wild_bush
 
 def advance_farming_day(state, scene_id=None):
     if scene_id is None:
-        ensure_farming_state(state)
-        farming = state["farming"]
+        farming = ensure_farming_state(state)
     else:
-        from game.scenes.scene_state import ensure_scene_state_entry
         farming = ensure_scene_state_entry(state, scene_id)
         normalize_scene_crops(farming["crops"])
 
