@@ -1,5 +1,6 @@
 """Wild vegetation spawning."""
 import random
+from game.world.occupancy import blocks_farming
 
 def spawn_wild_bush(state, farming):
     """One bush on an unoccupied, walkable tile of the chapter farm."""
@@ -22,7 +23,7 @@ def spawn_wild_bush(state, farming):
     candidates = []
     for gy in range(2, int(layout["height"] // TILE_SIZE) - 1):
         for gx in range(2, int(layout["width"] // TILE_SIZE) - 1):
-            if (gx, gy) in occupied:
+            if (gx, gy) in occupied or blocks_farming(state, gx, gy):
                 continue
             x, y = (gx + .5) * TILE_SIZE, (gy + .5) * TILE_SIZE
             if not can_walk_chapter_area("brumazul_granja", x, y, layout):
