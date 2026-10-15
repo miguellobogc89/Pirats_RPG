@@ -1,5 +1,4 @@
 """Mouse-driven farming on the existing chapter grid and inventory systems."""
-import math
 
 from game.farming.farming_manager import (
     till_cell, water_cell, plant_crop, harvest_crop, get_crop_at_cell,
@@ -10,6 +9,7 @@ from game.inventory.inventory_manager import remove_item
 from game.inventory.item_transactions import receive
 from game.inventory.inventory_manager import can_add_item
 from game.world.grid_manager import world_to_grid
+from game.world.action_range import can_interact_cell
 from game.scenes.chapter_area_navigation import can_walk_chapter_area
 
 
@@ -25,7 +25,7 @@ def interact(scene, screen_pos):
     wx, wy = screen_pos[0] + cx, screen_pos[1] + cy
     gx, gy = world_to_grid(wx, wy)
     tx, ty = gx * 32 + 16, gy * 32 + 16
-    if math.dist((player["x"], player["y"]), (tx, ty)) > 95:
+    if not can_interact_cell(player, gx, gy):
         return False
     if not can_walk_chapter_area(scene.scene_id, tx, ty, scene.area_layout):
         return False
