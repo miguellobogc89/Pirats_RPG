@@ -165,3 +165,20 @@ def draw_collision_debug(screen, camera_x, camera_y):
         )
 
         pygame.draw.rect(screen, (255, 80, 80), rect, 2)
+
+def draw_farm_reach_grid(screen, player, camera_x, camera_y, bounds):
+    """Debug grid and reach overlay, monochrome and only on chapter farm."""
+    from game.world.action_range import occupied_cells, reachable_cells
+    left, top, width, height = bounds
+    x0, y0 = int(left // TILE_SIZE), int(top // TILE_SIZE)
+    x1, y1 = int((left + width) // TILE_SIZE), int((top + height) // TILE_SIZE)
+    reach = reachable_cells(player)
+    feet = occupied_cells(player)
+    for gx in range(x0, x1 + 1):
+        for gy in range(y0, y1 + 1):
+            rect = pygame.Rect(int(gx * TILE_SIZE - camera_x), int(gy * TILE_SIZE - camera_y), TILE_SIZE, TILE_SIZE)
+            if (gx, gy) in feet:
+                pygame.draw.rect(screen, (165, 165, 165), rect)
+            elif (gx, gy) in reach:
+                pygame.draw.rect(screen, (221, 221, 221), rect)
+            pygame.draw.rect(screen, (225, 225, 225), rect, 1)
