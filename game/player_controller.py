@@ -58,16 +58,32 @@ def update_player_movement(state, speed, dt, world_width=WORLD_WIDTH, world_heig
             world_to_grid(right, bottom),
         ]
 
-        blocked = False
+        # Allow escape from a cell that became occupied (e.g. a placed object).
+        # Never enter another blocked cell; slide along obstacles per axis.
+        current_cells = {
+            world_to_grid(player["x"] - PLAYER_COLLISION_WIDTH // 2, player["y"] + PLAYER_FOOT_OFFSET_Y),
+            world_to_grid(player["x"] + PLAYER_COLLISION_WIDTH // 2, player["y"] + PLAYER_FOOT_OFFSET_Y),
+            world_to_grid(player["x"] - PLAYER_COLLISION_WIDTH // 2, player["y"] + PLAYER_FOOT_OFFSET_Y + PLAYER_COLLISION_HEIGHT),
+            world_to_grid(player["x"] + PLAYER_COLLISION_WIDTH // 2, player["y"] + PLAYER_FOOT_OFFSET_Y + PLAYER_COLLISION_HEIGHT),
+        }
 
-        for grid_x, grid_y in collision_points:
-            if is_cell_occupied(state, grid_x, grid_y, world_objects):
-                blocked = True
-                break
+        def can_move_to(x, y):
+            left = x - PLAYER_COLLISION_WIDTH // 2
+            right = x + PLAYER_COLLISION_WIDTH // 2
+            top = y + PLAYER_FOOT_OFFSET_Y
+            bottom = top + PLAYER_COLLISION_HEIGHT
+            points = (world_to_grid(left, top), world_to_grid(right, top),
+                      world_to_grid(left, bottom), world_to_grid(right, bottom))
+            return all(cell in current_cells or not is_cell_occupied(state, *cell, world_objects)
+                       for cell in points)
 
-        if not blocked:
-            player["x"] = next_x
-            player["y"] = next_y
+        if can_move_to(next_x, next_y):
+            player["x"], player["y"] = next_x, next_y
+        else:
+            if can_move_to(next_x, player["y"]):
+                player["x"] = next_x
+            if can_move_to(player["x"], next_y):
+                player["y"] = next_y
 
     player["x"] = max(20, min(world_width - 20, player["x"]))
     player["y"] = max(20, min(world_height - 20, player["y"]))
