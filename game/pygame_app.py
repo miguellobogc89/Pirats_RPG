@@ -297,6 +297,7 @@ class PygameApp:
             dt,
             self.get_scene_world_width(),
             self.get_scene_world_height(),
+            self.get_active_world_objects(),
         )
         self.update_scene_exit_transition(dt)
         update_collectables(self)
