@@ -83,11 +83,19 @@ def position_for_tile_action(player, target, walkable=None):
     tx, ty = target
     reach = reachable_cells(player)
     if target in reach:
-        candidates = [target]
-    else:
-        candidates = [(tx + dx, ty + dy) for dx, dy in
-                      ((-1, 0), (1, 0), (0, -1), (0, 1))
-                      if (tx + dx, ty + dy) in reach]
+        # Already within reach: turn in place, never snap onto the clicked tile.
+        dx = tx * TILE_SIZE + TILE_SIZE / 2 - player["x"]
+        dy = ty * TILE_SIZE + TILE_SIZE / 2 - player["y"]
+        if abs(dx) > abs(dy):
+            direction = "right" if dx > 0 else "left"
+        elif abs(dy) > 0:
+            direction = "down" if dy > 0 else "up"
+        else:
+            direction = player.get("direction", "down")
+        return player["x"], player["y"], direction
+    candidates = [(tx + dx, ty + dy) for dx, dy in
+                  ((-1, 0), (1, 0), (0, -1), (0, 1))
+                  if (tx + dx, ty + dy) in reach]
     candidates.sort(key=lambda c: (c[0] * TILE_SIZE + TILE_SIZE / 2 - player["x"]) ** 2
                     + (c[1] * TILE_SIZE + TILE_SIZE / 2 - player["y"]) ** 2)
     for sx, sy in candidates:
