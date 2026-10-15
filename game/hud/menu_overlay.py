@@ -358,49 +358,8 @@ def draw_upgrades_tab(app):
 
 
 def draw_recipes_tab(app):
-    app.draw_text("Pulsa numero para fabricar.", 140, 186, TEXT_DARK)
-
-    recipes = get_all_recipes()
-    recipe_keys = list(recipes.keys())
-
-    y = 226
-
-    for index, recipe_id in enumerate(recipe_keys):
-        recipe = recipes[recipe_id]
-        craftable = can_craft(app.state, recipe_id)
-
-        status = "OK"
-        if not craftable:
-            status = check_craft(app.state, recipe_id).replace("_", " ")
-
-        app.draw_text(
-            f"{index + 1}. {recipe['name']} - {status}",
-            140,
-            y,
-            TEXT_DARK,
-            app.small_font,
-        )
-
-        ingredient_texts = []
-
-        for item_id, amount in recipe["ingredients"].items():
-            item_data = get_item_data(item_id)
-
-            item_name = item_id
-            if item_data is not None:
-                item_name = item_data["name"]
-
-            ingredient_texts.append(f"{item_name} x{amount}")
-
-        app.draw_text(
-            " + ".join(ingredient_texts),
-            170,
-            y + 20,
-            TEXT_DARK,
-            app.small_font,
-        )
-
-        y += 58
+    from game.hud.recipe_catalogue import draw_recipes
+    draw_recipes(app)
 
 
 def draw_skills_tab(app):
