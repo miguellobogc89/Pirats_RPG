@@ -76,6 +76,7 @@ from game.world.grid_renderer import (
     draw_tilled_cells,
     draw_watered_cells,
     draw_crops,
+    draw_wild_bushes,
     draw_placed_objects,
     draw_occupied_cells_debug,
     draw_collision_debug,
@@ -466,6 +467,7 @@ class PygameApp:
         draw_tilled_cells(self.screen, self.state, camera_x, camera_y)
         draw_watered_cells(self.screen, self.state, camera_x, camera_y)
         draw_crops(self.screen, self.state, camera_x, camera_y)
+        draw_wild_bushes(self.screen, self.state, camera_x, camera_y)
         draw_placed_objects(self.screen,self.state,camera_x,camera_y)
 
         self.draw_map()
