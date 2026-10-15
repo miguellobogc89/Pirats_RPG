@@ -724,7 +724,12 @@ class BrumazulScene(FarmScene):
             pygame.draw.rect(screen, PALE, (x - cx, y - cy, w, h))
         if self.scene_id == "brumazul_granja":
             from game.world.grid_renderer import draw_tilled_cells, draw_watered_cells, draw_crops, draw_farm_reach_grid
-            draw_farm_reach_grid(screen, self.app.state["player"], cx, cy, (45, 45, 810, 670))
+            from game.inventory.hotbar_manager import get_active_tool, get_active_item_data
+            active_item = get_active_item_data(self.app.state)
+            mode = "eight" if get_active_tool(self.app.state) == "watering_can" or (
+                active_item and active_item.get("type") == "seed"
+            ) else "cardinal"
+            draw_farm_reach_grid(screen, self.app.state["player"], cx, cy, (45, 45, 810, 670), mode)
             draw_tilled_cells(screen, self.app.state, cx, cy)
             draw_watered_cells(screen, self.app.state, cx, cy)
             draw_crops(screen, self.app.state, cx, cy)
