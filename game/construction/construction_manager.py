@@ -64,3 +64,20 @@ def place_object(state, item_id, grid_x, grid_y, width, height):
     })
 
     return True
+
+
+def remove_placed_object(state, grid_x, grid_y):
+    """Pick up a placed object, including a footprint cell under the player."""
+    from game.inventory.item_transactions import can_receive, receive
+    placed = get_current_scene_state(state)["placed_objects"]
+    for obj in reversed(placed):
+        if (obj["grid_x"] <= grid_x < obj["grid_x"] + obj["width"] and
+                obj["grid_y"] <= grid_y < obj["grid_y"] + obj["height"]):
+            item_id = obj["item_id"]
+            if not can_receive(state, item_id, 1):
+                return "inventory_full"
+            if not receive(state, item_id, 1):
+                return "inventory_full"
+            placed.remove(obj)
+            return "removed"
+    return "not_found"
