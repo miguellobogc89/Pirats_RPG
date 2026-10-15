@@ -123,7 +123,8 @@ def draw_placed_objects(screen, state, camera_x, camera_y):
 
         item_data = get_item_data(obj["item_id"])
         if item_data is not None:
-            draw_item_sprite(screen, item_data, rect, padding=2)
+            if draw_item_sprite(screen, item_data, rect, padding=2) is None:
+                draw_placeable_fallback(screen, obj["item_id"], rect)
 
 def draw_occupied_cells_debug(screen, state, camera_x, camera_y):
     placed_objects = get_current_scene_state(state).get("placed_objects", [])
@@ -200,3 +201,26 @@ def draw_wild_bushes(screen, state, camera_x, camera_y):
         x, y = int(wx - camera_x), int(wy - camera_y)
         pygame.draw.polygon(screen, (78, 105, 71), [(x+4,y+25),(x+8,y+13),(x+14,y+16),(x+17,y+7),(x+23,y+15),(x+28,y+13),(x+29,y+26)])
         pygame.draw.polygon(screen, (105, 132, 85), [(x+6,y+22),(x+12,y+11),(x+18,y+17),(x+22,y+10),(x+27,y+23)])
+
+
+def draw_placeable_fallback(screen, item_id, rect):
+    """Visible world art for placeables that do not yet have PNG assets."""
+    import pygame
+    inset = rect.inflate(-max(4, rect.width // 10), -max(4, rect.height // 10))
+    if item_id == "wooden_chest":
+        pygame.draw.rect(screen, (106, 65, 37), inset, border_radius=3)
+        pygame.draw.rect(screen, (174, 112, 59), inset.inflate(-6, -6), border_radius=2)
+        pygame.draw.line(screen, (83, 54, 31), (inset.left, inset.centery), (inset.right, inset.centery), 3)
+        pygame.draw.rect(screen, (222, 183, 79), (rect.centerx - 3, rect.centery - 4, 6, 9))
+    elif item_id == "wooden_fence":
+        for x in (inset.left + 3, inset.right - 7):
+            pygame.draw.rect(screen, (118, 73, 43), (x, inset.top, 6, inset.height))
+        for y in (inset.top + inset.height // 3, inset.top + 2 * inset.height // 3):
+            pygame.draw.rect(screen, (174, 116, 65), (inset.left, y, inset.width, 6))
+    elif item_id == "wood_floor":
+        pygame.draw.rect(screen, (167, 113, 70), inset)
+        for y in (inset.top + inset.height // 3, inset.top + 2 * inset.height // 3):
+            pygame.draw.line(screen, (108, 71, 44), (inset.left, y), (inset.right, y), 2)
+    else:
+        pygame.draw.rect(screen, (129, 95, 61), inset, border_radius=3)
+        pygame.draw.rect(screen, (77, 58, 43), inset, 2, border_radius=3)
