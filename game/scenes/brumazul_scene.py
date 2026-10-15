@@ -649,6 +649,13 @@ class BrumazulScene(FarmScene):
             draw_encounters(self, cx, cy)
         else:
             self.draw_room(cx, cy)
+        # Brumazul uses its own renderer; include constructions and live preview here.
+        from game.world.grid_renderer import draw_placed_objects
+        draw_placed_objects(s, self.app.state, cx, cy)
+        if self.app.placement_mode:
+            from game.construction.placement_mode import draw_placement_preview
+            draw_placement_preview(self.app)
+
         if not self.tavern and self.scene_id != "brumazul_pueblo":
             pygame.draw.circle(s, LINE, (int(p["x"] - cx), int(p["y"] - cy)), 13, 1)
             pygame.draw.circle(s, LIGHT, (int(p["x"] - cx), int(p["y"] - cy - 15)), 8, 1)
