@@ -26,7 +26,9 @@ def placement_target(app, mouse_pos):
     cx, cy = get_camera_position(player["x"], player["y"], app.screen.get_width(),
                                  app.screen.get_height(), app.get_scene_world_width(), app.get_scene_world_height())
     gx, gy = world_to_grid(mouse_pos[0] + cx, mouse_pos[1] + cy)
-    valid = (gx >= 0 and gy >= 0 and
+    player_gx, player_gy = world_to_grid(player["x"], player["y"] + 6)
+    overlaps_player = gx <= player_gx < gx + width and gy <= player_gy < gy + height
+    valid = (gx >= 0 and gy >= 0 and not overlaps_player and
              (gx + width) * TILE_SIZE <= app.get_scene_world_width() and
              (gy + height) * TILE_SIZE <= app.get_scene_world_height() and
              can_place_object(app.state, gx, gy, width, height))
