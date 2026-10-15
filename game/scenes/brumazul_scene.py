@@ -131,7 +131,7 @@ class BrumazulScene(FarmScene):
                                       [{"item_id": "wood", "amount": 3},
                                        {"item_id": "wood", "amount": 2},
                                        {"item_id": "wood", "amount": 4}], *target)
-        self.app.add_log("Árbol talado. Acércate a recoger la madera.")
+        self.app.add_log("Árbol talado. Acércate a recoger la madera.", show_notification=False)
         self.autosave()
         return True
 
