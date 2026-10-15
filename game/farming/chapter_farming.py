@@ -25,7 +25,7 @@ def interact(scene, screen_pos):
     wx, wy = screen_pos[0] + cx, screen_pos[1] + cy
     gx, gy = world_to_grid(wx, wy)
     tx, ty = gx * 32 + 16, gy * 32 + 16
-    if not can_interact_cell(player, gx, gy):
+    if not can_interact_cell(player, gx, gy, include_occupied=True):
         return False
     if not can_walk_chapter_area(scene.scene_id, tx, ty, scene.area_layout):
         return False
