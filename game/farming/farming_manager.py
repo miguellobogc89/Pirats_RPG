@@ -49,7 +49,7 @@ def till_cell(state, world_x, world_y):
 def water_cell(state, world_x, world_y):
     ensure_farming_state(state)
 
-    cell = world_to_grid(world_x, world_y)
+    cell = list(world_to_grid(world_x, world_y))
 
     if cell not in state["farming"]["tilled_cells"]:
         return "not_tilled"
