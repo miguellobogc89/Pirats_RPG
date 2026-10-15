@@ -169,6 +169,9 @@ class PygameApp:
             if all(receive(self.state, item_id, amount) for item_id, amount in grants.items()):
                 self.state["crafting_demo_materials_granted"] = True
 
+        from game.inventory.debug_full_inventory import fill_inventory_for_crafting_test
+        fill_inventory_for_crafting_test(self.state)
+
         self.cartography_manager = CartographyManager()
         self.cartography_manager.load_from_data(
             self.state["cartography"]
