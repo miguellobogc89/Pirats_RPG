@@ -50,6 +50,16 @@ class BrumazulScene(FarmScene):
         from game.story.chapter_01_quest_manager import ensure_chapter_quests
         ensure_chapter_quests(self.app.state)
         migrate_chapter_items(self.app.state)
+        if self.scene_id == "brumazul_granja":
+            from game.inventory.item_transactions import quantity
+            grant_flag = self.app.state.setdefault("farm_tools", {})
+            if not grant_flag.get("scythe_granted"):
+                if quantity(self.app.state, "scythe") > 0:
+                    grant_flag["scythe_granted"] = True
+                elif receive(self.app.state, "scythe", 1):
+                    grant_flag["scythe_granted"] = True
+                else:
+                    self.app.add_log("Deja un hueco en el inventario para recibir la segadora.")
         self.app.state.setdefault("brumazul", {})
         self.progress = self.app.state["brumazul"]
         self.boss = pygame.Vector2(490, 560)
@@ -262,7 +272,7 @@ class BrumazulScene(FarmScene):
             from game.farming.chapter_farming import interact as interact_farming
             from game.inventory.hotbar_manager import get_active_item_data, get_active_tool
             active_item = get_active_item_data(self.app.state)
-            farming_selected = get_active_tool(self.app.state) in ("hoe", "watering_can") or (
+            farming_selected = get_active_tool(self.app.state) in ("hoe", "watering_can", "scythe") or (
                 active_item is not None and active_item.get("type") == "seed"
             )
             if farming_selected:
