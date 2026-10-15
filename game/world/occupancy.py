@@ -17,7 +17,7 @@ def _covers(obj, gx, gy):
     return x <= gx < x + width and y <= gy < y + height
 
 
-def cell_occupants(state, gx, gy):
+def cell_occupants(state, gx, gy, world_objects=None):
     scene = get_current_scene_state(state)
     occupants = []
     if [gx, gy] in scene["wild_bushes"]:
@@ -26,7 +26,7 @@ def cell_occupants(state, gx, gy):
     for obj in scene.get("placed_objects", []):
         if _covers(obj, gx, gy):
             occupants.append({"type": "placed", "blocks_movement": True, "blocks_farming": True})
-    for obj in state.get("world_objects", []):
+    for obj in (world_objects if world_objects is not None else state.get("world_objects", [])):
         if _covers(obj, gx, gy):
             occupants.append(obj)
     for item in state.get("collectables", []):
@@ -36,9 +36,9 @@ def cell_occupants(state, gx, gy):
     return occupants
 
 
-def blocks_movement(state, gx, gy):
+def blocks_movement(state, gx, gy, world_objects=None):
     return any(obj.get("blocks_movement", obj.get("type") in BLOCKING_TYPES)
-               for obj in cell_occupants(state, gx, gy))
+               for obj in cell_occupants(state, gx, gy, world_objects))
 
 
 def blocks_farming(state, gx, gy):
