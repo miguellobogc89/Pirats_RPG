@@ -5,6 +5,7 @@ This module never grants items or claims an encounter was completed.
 """
 
 QUESTS = {
+    "un_nuevo_comienzo": {"initial": "active", "transitions": {}},
     "un_techo_propio": {
         "initial": "find_elder",
         "transitions": {
