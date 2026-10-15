@@ -63,10 +63,13 @@ def draw_crops(screen, state, camera_x, camera_y):
         x, y = int(x - camera_x), int(y - camera_y)
         stage = crop.get("stage", 0)
         if crop.get("dead", False):
-            pygame.draw.line(screen, (115, 95, 75), (x + 16, y + 28), (x + 19, y + 18), 3)
-            pygame.draw.line(screen, (115, 95, 75), (x + 19, y + 18), (x + 24, y + 24), 2)
-            pygame.draw.line(screen, (150, 125, 90), (x + 18, y + 22), (x + 10, y + 25), 2)
-            pygame.draw.ellipse(screen, (135, 110, 78), (x + 21, y + 22, 8, 4))
+            faded = crop.get("dead_days", 0) >= 1
+            stem = (194, 181, 164) if faded else (115, 95, 75)
+            leaf = (207, 196, 177) if faded else (150, 125, 90)
+            pygame.draw.line(screen, stem, (x + 16, y + 28), (x + 19, y + 18), 3)
+            pygame.draw.line(screen, stem, (x + 19, y + 18), (x + 24, y + 24), 2)
+            pygame.draw.line(screen, leaf, (x + 18, y + 22), (x + 10, y + 25), 2)
+            pygame.draw.ellipse(screen, leaf, (x + 21, y + 22, 8, 4))
             continue
         if stage == 0:
             for dx, dy in ((10, 19), (16, 17), (22, 20)):
