@@ -1,57 +1,76 @@
-MAX_VISIBLE_NOTIFICATIONS = 5
-
-NOTIFICATION_DURATIONS = {
-    "corner": 3.0,
-    "center": 3.2,
-    "loot": 2.2,
-}
-
-
-def notify(app, message, notification_type="corner"):
-    notifications = get_notifications(app)
-    clean_type = normalize_notification_type(notification_type)
-    duration = NOTIFICATION_DURATIONS[clean_type]
-    notification = {
-        "message": str(message),
-        "type": clean_type,
-        "duration": duration,
-        "time_left": duration,
-    }
-
-    notifications.append(notification)
-    trim_notifications(notifications)
-    return notification
-
-
-def update_notifications(app, dt):
-    notifications = get_notifications(app)
-
-    for notification in notifications:
-        notification["time_left"] -= dt
-
-    app._notifications = [
-        notification
-        for notification in notifications
-        if notification["time_left"] > 0
-    ]
+"""Independent notification API: loot stacks, quest updates and acknowledged alerts."""
+MAX_VISIBLE_NOTIFICATIONS = 6
+NOTIFICATION_DURATIONS = {"corner": 4.0, "center": 0, "loot": 2.6}
 
 
 def get_notifications(app):
     if not hasattr(app, "_notifications"):
         app._notifications = []
-
     return app._notifications
 
 
-def normalize_notification_type(notification_type):
-    if notification_type in NOTIFICATION_DURATIONS:
-        return notification_type
+def notify(app, message, notification_type="corner", *, item_id=None, amount=1, title=None):
+    kind = notification_type if notification_type in NOTIFICATION_DURATIONS else "corner"
+    entry = {"type": kind, "message": str(message), "title": title or "",
+             "item_id": item_id, "amount": amount,
+             "duration": NOTIFICATION_DURATIONS[kind],
+             "time_left": NOTIFICATION_DURATIONS[kind]}
+    notifications = get_notifications(app)
+    notifications.append(entry)
+    # Never discard an important alert awaiting acknowledgement.
+    for old in list(notifications):
+        if len(notifications) <= MAX_VISIBLE_NOTIFICATIONS:
+            break
+        if old["type"] != "center":
+            notifications.remove(old)
+    return entry
 
-    return "corner"
+
+def notify_loot(app, item_id, amount=1):
+    from game.data.item_database import get_item_data
+    data = get_item_data(item_id) or {}
+    return notify(app, data.get("name", item_id), "loot", item_id=item_id, amount=amount)
 
 
-def trim_notifications(notifications):
-    if len(notifications) <= MAX_VISIBLE_NOTIFICATIONS:
-        return
+def notify_quest(app, message):
+    return notify(app, message, "corner")
 
-    del notifications[:len(notifications) - MAX_VISIBLE_NOTIFICATIONS]
+
+def notify_important(app, message, title="Aviso importante"):
+    return notify(app, message, "center", title=title)
+
+
+def active_important(app):
+    return next((n for n in get_notifications(app) if n["type"] == "center"), None)
+
+
+def acknowledge_important(app):
+    active = active_important(app)
+    if active is None:
+        return False
+    get_notifications(app).remove(active)
+    return True
+
+
+def handle_notification_event(app, event):
+    import pygame
+    if active_important(app) is None:
+        return False
+    if event.type == pygame.KEYDOWN and event.key in (pygame.K_RETURN, pygame.K_SPACE, pygame.K_ESCAPE):
+        acknowledge_important(app)
+        return True
+    if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+        from game.notifications.notification_renderer import important_button_rect
+        if important_button_rect(app.screen).collidepoint(event.pos):
+            acknowledge_important(app)
+        return True
+    # Important notifications are modal until acknowledged.
+    return True
+
+
+def update_notifications(app, dt):
+    for notification in get_notifications(app):
+        if notification["type"] != "center":
+            notification["time_left"] -= dt
+    app._notifications = [n for n in get_notifications(app)
+                          if n["type"] == "center" or n["time_left"] > 0]
