@@ -354,7 +354,7 @@ ITEM_DATABASE = {
     'triangle_shield': {
     'name': 'Triangular escudo', 'type': 'shield', 'icon': 'T', 'sprite': 'assets/items/shields/triangle_shield.png', 'stackable': False},
     'watering_can': {
-    'name': 'Regadera', 'type': 'ring', 'icon': 'W', 'sprite': 'assets/items/rings/watering_can.png', 'stackable': False},
+    'name': 'Regadera', 'type': 'tool', 'icon': 'W', 'sprite': 'assets/items/rings/watering_can.png', 'stackable': False, 'tool_type': 'watering_can'},
     'wizard_hat': {
     'name': 'Wizard sombrero', 'type': 'armor', 'icon': 'W', 'sprite': 'assets/items/armor/wizard_hat.png', 'stackable': False},
     'metal_bolt': {'name': 'Cerrojo metalico', 'type': 'quest', 'icon': 'C', 'stackable': False},
