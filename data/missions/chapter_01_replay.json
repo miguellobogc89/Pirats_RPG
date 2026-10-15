@@ -6,6 +6,20 @@
   ],
   "missions": [
     {
+      "id": "un_nuevo_comienzo",
+      "title": "Un nuevo comienzo",
+      "category": "main",
+      "initial": "active",
+      "spawn_scene": "brumazul_casa_almarin",
+      "spawn_position": [
+        260,
+        380
+      ],
+      "reset_quests": [
+        "un_nuevo_comienzo"
+      ]
+    },
+    {
       "id": "un_techo_propio",
       "title": "Un techo propio",
       "category": "main",
