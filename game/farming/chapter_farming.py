@@ -10,6 +10,8 @@ from game.inventory.item_transactions import receive
 from game.inventory.inventory_manager import can_add_item
 from game.world.grid_manager import world_to_grid
 from game.world.action_range import can_interact_cell
+from game.player_controller import position_for_tile_action
+from game.world.grid_manager import TILE_SIZE
 from game.scenes.chapter_area_navigation import can_walk_chapter_area
 
 
@@ -24,10 +26,22 @@ def interact(scene, screen_pos):
                                  scene.area_layout.get("height", 760))
     wx, wy = screen_pos[0] + cx, screen_pos[1] + cy
     gx, gy = world_to_grid(wx, wy)
-    tx, ty = gx * 32 + 16, gy * 32 + 16
-    if not can_interact_cell(player, gx, gy, include_occupied=True):
-        return False
+    tx, ty = gx * TILE_SIZE + TILE_SIZE // 2, gy * TILE_SIZE + TILE_SIZE // 2
     if not can_walk_chapter_area(scene.scene_id, tx, ty, scene.area_layout):
+        return False
+    # The movement controller decides where the player stands before acting.
+    # Never move to a tile that intersects buildings or leaves the walkable area.
+    def valid_standing(x, y):
+        if not can_walk_chapter_area(scene.scene_id, x, y, scene.area_layout):
+            return False
+        from game.construction.construction_manager import is_cell_occupied
+        return not is_cell_occupied(app.state, *world_to_grid(x, y + 9))
+    placement = position_for_tile_action(player, (gx, gy), valid_standing)
+    if placement is None:
+        return False
+    next_x, next_y, facing = placement
+    player["x"], player["y"], player["direction"] = next_x, next_y, facing
+    if not can_interact_cell(player, gx, gy):
         return False
 
     state = app.state
