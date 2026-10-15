@@ -496,8 +496,8 @@
         "dialogue": "village_botica"
       },
       {
-        "id": "mercader",
-        "name": "MERCADER",
+        "id": "herbolario",
+        "name": "HERBOLARIO",
         "race": "human",
         "position": [
           910,
