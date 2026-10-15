@@ -1,4 +1,4 @@
-"""Shared physical-contact grid reach for all world interactions."""
+"""Shared tile interaction reach: occupied tiles and edge-sharing neighbors."""
 from game.world.grid_manager import TILE_SIZE
 
 def occupied_cells(player, width=26, height=26):
@@ -12,8 +12,10 @@ def occupied_cells(player, width=26, height=26):
             for gy in range(int(top // TILE_SIZE), int((bottom - epsilon) // TILE_SIZE) + 1)}
 
 def reachable_cells(player):
-    """Physical contact only; never add an outer ring of neighboring tiles."""
-    return occupied_cells(player)
+    """Tiles beneath the player plus cardinal neighbors; never diagonals."""
+    occupied = occupied_cells(player)
+    cardinal = ((-1, 0), (1, 0), (0, -1), (0, 1))
+    return occupied | {(x + dx, y + dy) for x, y in occupied for dx, dy in cardinal}
 
 def can_interact_cell(player, gx, gy, include_occupied=False):
     # Retain the optional argument for existing farming callers.
