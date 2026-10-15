@@ -65,7 +65,6 @@ def interact(scene, screen_pos):
             if remove_item(state, get_active_item_id(state), 1):
                 app.add_log("Has sembrado maíz.")
             else:
-                from game.farming.farming_manager import get_crop_at_cell
                 state["farming"]["crops"].remove(get_crop_at_cell(state, gx, gy))
         elif result == "not_tilled":
             app.add_log("Primero debes arar la tierra.")
