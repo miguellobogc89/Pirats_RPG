@@ -90,11 +90,16 @@ def interact(scene, screen_pos):
         elif status == "not_tilled":
             app.add_log("Primero debes arar la tierra.")
         return True
-    if item and item.get("type") == "seed" and item.get("crop_id") == "corn":
-        result = plant_crop(state, tx, ty, "corn")
+    if item and item.get("type") == "seed":
+        from game.data.crop_database import get_crop_data
+        crop_id = item.get("crop_id")
+        crop_data = get_crop_data(crop_id) if crop_id else None
+        if crop_data is None or crop_data.get("seed_item") != get_active_item_id(state):
+            return True
+        result = plant_crop(state, tx, ty, crop_id)
         if result == "planted":
             if remove_item(state, get_active_item_id(state), 1):
-                app.add_log("Has sembrado maíz.")
+                app.add_log(f"Has sembrado {crop_data['name']}.")
             else:
                 state["farming"]["crops"].remove(get_crop_at_cell(state, gx, gy))
         elif result == "not_tilled":
