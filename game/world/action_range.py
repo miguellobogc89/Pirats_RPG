@@ -1,11 +1,11 @@
 """Shared physical-contact grid reach for all world interactions."""
 from game.world.grid_manager import TILE_SIZE
 
-def occupied_cells(player, width=10, height=6):
-    """Cells intersected by the player's foot collision rectangle (up to four)."""
+def occupied_cells(player, width=26, height=26):
+    """All tiles touched by the visible player marker (normally up to four)."""
     x, y = player["x"], player["y"]
     left, right = x - width / 2, x + width / 2
-    top, bottom = y + 6, y + 6 + height
+    top, bottom = y - height / 2, y + height / 2
     epsilon = 0.0001
     return {(gx, gy)
             for gx in range(int(left // TILE_SIZE), int((right - epsilon) // TILE_SIZE) + 1)
