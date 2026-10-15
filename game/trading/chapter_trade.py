@@ -13,6 +13,7 @@ SHOPS = {
     "sylvarin": {"name": "SYLVARIN", "greeting": "Bienvenido al taller. ¿Buscas artesanía o una conversación?", "items": [("rope", 11), ("leather", 17), ("wood", 4)]},
 }
 SELL_FACTOR = 0.5
+SELL_PRICE_OVERRIDES = {"corn": 25}
 RECT = pygame.Rect(75, 50, 810, 540)
 
 
@@ -21,6 +22,8 @@ def available_items(shop_id):
 
 
 def sell_price(item_id):
+    if item_id in SELL_PRICE_OVERRIDES:
+        return SELL_PRICE_OVERRIDES[item_id]
     prices = [price for shop in SHOPS.values() for item, price in shop["items"] if item == item_id]
     return max(1, int((prices[0] if prices else 10) * SELL_FACTOR))
 
