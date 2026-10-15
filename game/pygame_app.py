@@ -438,11 +438,12 @@ class PygameApp:
         self.state["cartography"] = self.cartography_manager.get_save_data()
         self.add_log(f"El barco ha regresado de {region_name}. Revisa el muelle.")
 
-    def add_log(self, message):
+    def add_log(self, message, show_notification=True):
         self.log.append(message)
         self.log = self.log[-7:]
         self.state["log"] = self.log
-        notify(self, message, notification_type="corner")
+        if show_notification:
+            notify(self, message, notification_type="corner")
 
     def run_cartography_validation_debug(self):
         config = self.game_data.get("config", {})
