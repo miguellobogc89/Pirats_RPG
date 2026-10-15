@@ -636,6 +636,13 @@ class BrumazulScene(FarmScene):
             pygame.draw.circle(s, LIGHT, (int(p["x"] - cx), int(p["y"] - cy - 15)), 8, 1)
         else:
             pygame.draw.circle(s, LINE, (int(p["x"] - cx), int(p["y"] - cy)), 13, 1)
+        direction = p.get("direction", "down")
+        vectors = {"up": (0, -1), "down": (0, 1), "left": (-1, 0), "right": (1, 0)}
+        vx, vy = vectors.get(direction, (0, 1))
+        center = (int(p["x"] - cx), int(p["y"] - cy - 7))
+        tip = (center[0] + vx * 17, center[1] + vy * 17)
+        pygame.draw.line(s, (65, 65, 65), center, tip, 3)
+        pygame.draw.circle(s, (65, 65, 65), tip, 3)
         from game.hud.hud_renderer import draw_hud
         draw_hud(self.app)
         if self.app.menu_open:
@@ -708,7 +715,8 @@ class BrumazulScene(FarmScene):
         for x, y, w, h in layout.get("walkable", []):
             pygame.draw.rect(screen, PALE, (x - cx, y - cy, w, h))
         if self.scene_id == "brumazul_granja":
-            from game.world.grid_renderer import draw_tilled_cells, draw_watered_cells, draw_crops
+            from game.world.grid_renderer import draw_tilled_cells, draw_watered_cells, draw_crops, draw_farm_reach_grid
+            draw_farm_reach_grid(screen, self.app.state["player"], cx, cy, (45, 45, 810, 670))
             draw_tilled_cells(screen, self.app.state, cx, cy)
             draw_watered_cells(screen, self.app.state, cx, cy)
             draw_crops(screen, self.app.state, cx, cy)
