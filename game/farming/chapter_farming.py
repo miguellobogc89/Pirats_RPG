@@ -31,14 +31,14 @@ def interact(scene, screen_pos):
     tool = get_active_tool(app.state)
     item = get_active_item_data(app.state)
     mode = "eight" if tool == "watering_can" or (item and item.get("type") == "seed") else "cardinal"
-    if not can_interact_cell(player, gx, gy, mode=mode):
+    if not can_interact_cell(player, gx, gy, mode=mode, include_occupied=(mode == "eight")):
         return False
     face_target(player, gx, gy)
 
     state = app.state
     ensure_farming_state(state)
     crop = get_crop_at_cell(state, gx, gy)
-    if crop is not None and is_crop_ready(crop):
+    if crop is not None and is_crop_ready(crop) and (gx, gy) != world_to_grid(player["x"], player["y"]):
         from game.data.crop_database import get_crop_data
         data = get_crop_data(crop["crop_id"])
         if data and can_add_item(state, data["harvest_item"], data.get("harvest_amount", 1)):
