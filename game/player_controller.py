@@ -69,3 +69,40 @@ def update_player_movement(state, speed, dt, world_width=WORLD_WIDTH, world_heig
 
     player["x"] = max(20, min(world_width - 20, player["x"]))
     player["y"] = max(20, min(world_height - 20, player["y"]))
+
+
+def position_for_tile_action(player, target, walkable=None):
+    """Choose a standing tile and facing for a nearby clicked tile.
+
+    Directly reachable tiles: stand at the target center.
+    One tile farther: stand at the closest reachable cardinal neighbor,
+    facing the clicked tile. Return None for unreachable destinations.
+    """
+    from game.world.action_range import reachable_cells
+    from game.world.grid_manager import TILE_SIZE
+    tx, ty = target
+    reach = reachable_cells(player)
+    if target in reach:
+        candidates = [target]
+    else:
+        candidates = [(tx + dx, ty + dy) for dx, dy in
+                      ((-1, 0), (1, 0), (0, -1), (0, 1))
+                      if (tx + dx, ty + dy) in reach]
+    candidates.sort(key=lambda c: (c[0] * TILE_SIZE + TILE_SIZE / 2 - player["x"]) ** 2
+                    + (c[1] * TILE_SIZE + TILE_SIZE / 2 - player["y"]) ** 2)
+    for sx, sy in candidates:
+        x, y = sx * TILE_SIZE + TILE_SIZE / 2, sy * TILE_SIZE + TILE_SIZE / 2
+        if walkable is not None and not walkable(x, y):
+            continue
+        if (sx, sy) == target:
+            direction = player.get("direction", "down")
+        elif tx > sx:
+            direction = "right"
+        elif tx < sx:
+            direction = "left"
+        elif ty > sy:
+            direction = "down"
+        else:
+            direction = "up"
+        return x, y, direction
+    return None
