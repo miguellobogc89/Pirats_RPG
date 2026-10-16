@@ -93,6 +93,10 @@ class BrumazulScene(FarmScene):
         initialize(self)
         self.save_elapsed = 0.0
         if self.beach:
+            from game.story.beach_monster_combat import BeachMonsterCombat
+            p = self.app.state["player"]
+            self.beach_combat = BeachMonsterCombat(p["x"], p["y"],
+                                                   self.boss.x, self.boss.y)
             self.progress["chapter_started"] = True
             self.seed_collectables()
 
@@ -387,19 +391,18 @@ class BrumazulScene(FarmScene):
             if self.app.menu_open or self.app.stash_open:
                 return
             self.attack_timer = max(0, self.attack_timer - dt)
-            self.boss_timer = max(0, self.boss_timer - dt)
-            p = pygame.Vector2(self.app.state["player"]["x"], self.app.state["player"]["y"])
-            if not self.boss_awake and p.distance_to(self.boss) <= 160:
-                self.boss_awake = True
-            if self.boss_awake:
-                delta = p - self.boss
-                if delta.length_squared():
-                    self.boss += delta.normalize() * min(delta.length(), 42 * dt)
-                if delta.length() <= 77 and self.boss_timer <= 0:
-                    self.app.state["health"]["current"] = 0
-                    self.wake_at_inn()
-                    return
-                self.boss_timer = max(0, self.boss_timer - dt)
+            p = self.app.state["player"]
+            events, defeated = self.beach_combat.update(dt, p["x"], p["y"])
+            self.boss.update(self.beach_combat.monster.x, self.beach_combat.monster.y)
+            self.boss_awake = self.beach_combat.monster.awake
+            self.boss_hp = self.beach_combat.monster.hp
+            for event in events:
+                if event.kind == "telegraph" and event.actor == "beach_monster":
+                    self.boss_timer = event.duration
+            if defeated:
+                self.app.state["health"]["current"] = 0
+                self.wake_at_inn()
+                return
             if not self.door_cooldown and self.phase == "free" and self.npc_dialogue is None:
                 from game.scenes.chapter_area_navigation import transition_chapter_scene
                 if transition_chapter_scene(self.app, self.scene_id, self.app.state["player"]):
@@ -465,7 +468,8 @@ class BrumazulScene(FarmScene):
         target = self.boss - pygame.Vector2(p["x"], p["y"])
         if direction.length_squared() and target.length_squared() and target.length() < 105:
             if direction.normalize().dot(target.normalize()) > 0.35:
-                self.boss_hp = max(0, self.boss_hp - 25)
+                self.beach_combat.hit_monster(25)
+                self.boss_hp = self.beach_combat.monster.hp
 
     def talk_to_nearby(self, click_position=None):
         from game.story_events.story_event_manager import dispatch_story_event
