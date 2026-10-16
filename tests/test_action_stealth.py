@@ -2,6 +2,7 @@
 import unittest
 from game.combat.action.engine import CombatWorld, Fighter
 from game.combat.action.stealth import Obstacle, can_see, line_of_sight
+from game.combat.action.components import StealthConfig
 
 
 class StealthTests(unittest.TestCase):
@@ -12,6 +13,22 @@ class StealthTests(unittest.TestCase):
                                             vision_range=250, vision_angle=90,
                                             patrol_points=((350, 200),)))
         self.hero = self.world.add(Fighter("hero", "player", 170, 200))
+
+    def test_stealth_component_is_configured_per_enemy(self):
+        world = CombatWorld(width=700, height=500)
+        player = world.add(Fighter("player", "player", 170, 200))
+        guard = world.add(Fighter("guard", "enemy", 350, 200, facing_x=-1,
+                                  facing_y=0, stealth=StealthConfig(
+                                      vision_range=250, chase_speed=90,
+                                      search_duration=7)))
+        passive = world.add(Fighter("passive", "enemy", 350, 280,
+                                    brain_enabled=False))
+        world.update(0.3)
+        self.assertTrue(guard.awake)
+        self.assertFalse(passive.awake)
+        self.assertEqual(guard.chase_speed, 90)
+        self.assertEqual(guard.search_duration, 7)
+        self.assertIsNone(passive.stealth)
 
     def test_forward_visible_and_behind_hidden(self):
         self.assertTrue(can_see(self.guard, self.hero, []))
