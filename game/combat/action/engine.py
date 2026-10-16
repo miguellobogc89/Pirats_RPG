@@ -347,7 +347,7 @@ class CombatWorld:
                     actor.windup = 0
                     if actor.last_seen is None:
                         continue
-                    if not actor.search_started:
+                    if actor.alert_state == "alert" and not actor.search_started:
                         actor.search_direction = (actor.last_seen[0] - actor.x,
                                                   actor.last_seen[1] - actor.y)
                     # Corre hasta el ultimo avistamiento, incluso sin vision.
