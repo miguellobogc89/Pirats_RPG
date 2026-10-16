@@ -25,14 +25,14 @@ class StealthTests(unittest.TestCase):
                          can_see(self.guard, Fighter("target", "player", 170, 200), [wall]))
 
     def test_detection_requires_time_and_cover_breaks_progress(self):
-        self.world.update(0.3)
+        self.world.update(0.15)
         self.assertFalse(self.guard.awake)
         self.world.obstacles.append(Obstacle(245, 160, 45, 85))
         self.world.update(0.4)
         self.assertFalse(self.guard.awake)
         self.assertEqual(self.guard.detection, 0)
         self.world.obstacles.clear()
-        self.world.update(0.7)
+        self.world.update(0.3)
         self.assertTrue(self.guard.awake)
         self.assertEqual(self.guard.alert_state, "alert")
 
@@ -51,6 +51,22 @@ class StealthTests(unittest.TestCase):
         self.world.update(1)
         self.assertGreater(self.guard.y, 200)
         self.assertFalse(self.guard.awake)
+
+    def test_guard_routes_around_obstacle(self):
+        self.guard.awake = True
+        self.guard.last_seen = (self.hero.x, self.hero.y)
+        self.world.obstacles.append(Obstacle(245, 160, 45, 85))
+        self.world.update(1.5)
+        self.assertNotAlmostEqual(self.guard.y, 200)
+        self.assertEqual(self.guard.alert_state, "search")
+
+    def test_hidden_player_does_not_update_last_seen(self):
+        self.guard.awake = True
+        self.guard.last_seen = (170, 200)
+        self.world.obstacles.append(Obstacle(245, 160, 45, 85))
+        self.hero.x, self.hero.y = 120, 250
+        self.world.update(0.2)
+        self.assertEqual(self.guard.last_seen, (170, 200))
 
 
 if __name__ == "__main__":

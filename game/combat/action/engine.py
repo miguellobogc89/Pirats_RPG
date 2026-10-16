@@ -43,12 +43,14 @@ class Fighter:
     vision_range: float = 210
     vision_angle: float = 80
     detection: float = 0
-    detection_time: float = 0.65
+    detection_time: float = 0.25
     patrol_points: tuple = ()
     patrol_index: int = 0
     patrol_pause: float = 0
     patrol_wait: float = 0.6
     alert_state: str = "patrol"
+    last_seen: tuple = None
+    search_time: float = 0
 
     @property
     def alive(self):
@@ -316,7 +318,30 @@ class CombatWorld:
             if not actor.awake:
                 continue
             if self.perception_enabled:
-                actor.alert_state = "alert"
+                from .stealth import can_see, line_of_sight
+                # Una vez alertado no conoce la posicion del jugador tras las cajas.
+                # En combate se permite una vision periferica mayor que en patrulla.
+                seen = (distance <= actor.vision_range and
+                        line_of_sight(actor.x, actor.y, target.x, target.y, self.obstacles) and
+                        (can_see(actor, target, self.obstacles) or
+                         (dx * actor.facing_x + dy * actor.facing_y) / max(distance, 1e-6) > -0.25))
+                if seen:
+                    actor.last_seen = (target.x, target.y)
+                    actor.alert_state = "alert"
+                    actor.search_time = 0
+                elif actor.last_seen is not None:
+                    actor.alert_state = "search"
+                else:
+                    actor.alert_state = "search"
+                    continue
+                if not seen:
+                    actor.windup = 0
+                    if math.dist((actor.x, actor.y), actor.last_seen) <= actor.radius + 7:
+                        actor.search_time += dt
+                        # La busqueda completa se incorporara en 3.3.
+                        continue
+                    self._navigate(actor, actor.last_seen, dt)
+                    continue
             if actor.windup > 0:
                 actor.windup = max(0, actor.windup - dt)
                 if actor.windup == 0 and target.alive:
@@ -342,7 +367,23 @@ class CombatWorld:
                     self.events.append(CombatEvent("telegraph", actor.id, target.id,
                                                    x=actor.x, y=actor.y, duration=0.22))
             elif distance > 0:
-                self.move(actor.id, dx, dy, dt)
+                if self.perception_enabled:
+                    self._navigate(actor, (target.x, target.y), dt)
+                else:
+                    self.move(actor.id, dx, dy, dt)
+
+    def _navigate(self, actor, destination, dt):
+        from .stealth import find_path
+        path = find_path((actor.x, actor.y), destination, self.obstacles,
+                         actor.radius, self.width, self.height)
+        if not path:
+            return
+        x, y = path[0]
+        dx, dy = x - actor.x, y - actor.y
+        distance = math.hypot(dx, dy)
+        if distance > 0:
+            # Evita sobrepasar el waypoint y atascarse en esquinas.
+            self.move(actor.id, dx, dy, min(dt, distance / max(actor.speed, 1e-6)))
 
     def _patrol(self, actor, dt):
         if not actor.patrol_points or actor.stun > 0:

@@ -83,11 +83,16 @@ def run():
         pygame.draw.rect(screen, (22, 32, 32), (0, 0, W, 84))
         screen.blit(font.render("WASD: moverse | F1: vision | R: reiniciar | ESC: salir", True, WHITE), (16, 11))
         visible = can_see(guard, player, world.obstacles) if guard.alive and player.alive else False
-        status = "ALERTA" if guard.awake else "PATRULLA"
+        status = ("BUSCANDO" if guard.alert_state == "search" else "ALERTA") if guard.awake else "PATRULLA"
         info = f"GUARDIA: {status} | VISIBLE: {'SI' if visible else 'NO'} | DETECCION: {guard.detection / guard.detection_time:.0%} | VIDA: {player.hp}"
         screen.blit(small.render(info, True, (245, 205, 125)), (16, 47))
+        if debug and guard.last_seen is not None:
+            lx, ly = guard.last_seen
+            pygame.draw.circle(screen, (255, 198, 90), (round(lx), round(ly)), 9, 2)
+            pygame.draw.line(screen, (255, 198, 90), (lx - 13, ly), (lx + 13, ly), 1)
+            pygame.draw.line(screen, (255, 198, 90), (lx, ly - 13), (lx, ly + 13), 1)
         if guard.awake:
-            screen.blit(font.render("! DETECTADO !  Pulsa R para repetir el sigilo", True, (255, 148, 119)), (235, H - 40))
+            screen.blit(font.render("! ALERTA !  Guardia persigue ultima posicion vista", True, (255, 148, 119)), (205, H - 40))
         pygame.display.flip()
     pygame.quit()
 

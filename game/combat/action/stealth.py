@@ -52,3 +52,48 @@ def circle_hits_rect(x, y, radius, rect):
     cx = min(max(x, rect.x), rect.x + rect.width)
     cy = min(max(y, rect.y), rect.y + rect.height)
     return (x - cx) ** 2 + (y - cy) ** 2 < radius ** 2
+
+def find_path(start, goal, obstacles, radius, width, height):
+    """Camino corto por grafo de visibilidad de esquinas, con margen del actor."""
+    import heapq
+    margin = radius + 3
+    nodes = [tuple(start), tuple(goal)]
+    for box in obstacles:
+        for x in (box.x - margin, box.x + box.width + margin):
+            for y in (box.y - margin, box.y + box.height + margin):
+                if margin <= x <= width - margin and margin <= y <= height - margin:
+                    if not any(circle_hits_rect(x, y, radius, other) for other in obstacles):
+                        nodes.append((x, y))
+    def clear(a, b):
+        return not any(segment_hits_rect(*a, *b, box, padding=radius + 0.5) for box in obstacles)
+    # Los vertices se situan a radius+3, evitando contactos tangentes.
+    if clear(nodes[0], nodes[1]):
+        return [nodes[1]]
+    graph = [[] for _ in nodes]
+    for i in range(len(nodes)):
+        for j in range(i + 1, len(nodes)):
+            if clear(nodes[i], nodes[j]):
+                cost = math.dist(nodes[i], nodes[j])
+                graph[i].append((j, cost))
+                graph[j].append((i, cost))
+    distances = [float("inf")] * len(nodes)
+    parents = {}
+    distances[0] = 0
+    queue = [(0, 0)]
+    while queue:
+        cost, index = heapq.heappop(queue)
+        if cost > distances[index]:
+            continue
+        if index == 1:
+            route = []
+            while index != 0:
+                route.append(nodes[index])
+                index = parents[index]
+            return list(reversed(route))
+        for neighbor, edge in graph[index]:
+            candidate = cost + edge
+            if candidate < distances[neighbor]:
+                distances[neighbor] = candidate
+                parents[neighbor] = index
+                heapq.heappush(queue, (candidate, neighbor))
+    return []

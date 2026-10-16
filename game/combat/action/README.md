@@ -50,3 +50,8 @@ En Unity, portar las reglas a C# y consumir estos eventos con VFX, UI y camara n
 ## Microfase 3.1 — sigilo y percepcion
 
 Ejecuta `py -3.12 -m game.combat.action.stealth_demo` para probar una arena independiente con un guardia patrullando, tres cajas, vision frontal, tiempo de deteccion y cobertura. WASD mueve, F1 muestra/oculta el cono de vision, R reinicia. Los obstaculos bloquean la vision y el movimiento. Cuando te detecta, el guardia pasa al combate existente; la investigacion, alarmas y ataques por sorpresa se reservan para 3.2/3.3. `py -3.12 -m unittest tests.test_action_stealth -v` prueba el sistema sin Pygame.
+
+
+### Ajustes de percepcion y persecucion
+
+Deteccion base reducida a 0,25 segundos. Tras la alerta, el guardia memoriza la ultima posicion vista y usa un grafo de visibilidad de esquinas para rodear obstaculos. Si pierde la linea de vision, se dirige solo a esa posicion y no sigue el movimiento oculto del jugador. En F1 aparece una marca amarilla de ultima posicion conocida. La investigacion y retorno a patrulla completos se implementaran en 3.3.
