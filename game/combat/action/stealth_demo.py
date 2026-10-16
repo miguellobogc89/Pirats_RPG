@@ -88,12 +88,25 @@ def run():
             else:
                 px, py = round(actor.x), round(actor.y)
             pygame.draw.circle(screen, color, (px, py), round(actor.radius))
+            if actor.team == "enemy" and actor.alert_state in ("confused", "search_ended"):
+                symbol = "?" if actor.alert_state == "confused" else "..."
+                bubble = font.render(symbol, True, (37, 43, 47))
+                bw, bh = bubble.get_width() + 18, bubble.get_height() + 10
+                rect = pygame.Rect(round(actor.x - bw / 2), round(actor.y - 61), bw, bh)
+                pygame.draw.rect(screen, (247, 240, 215), rect, border_radius=9)
+                pygame.draw.polygon(screen, (247, 240, 215),
+                                    [(round(actor.x - 5), rect.bottom - 1),
+                                     (round(actor.x + 5), rect.bottom - 1),
+                                     (round(actor.x), rect.bottom + 7)])
+                screen.blit(bubble, (rect.x + 9, rect.y + 5))
             pygame.draw.line(screen, WHITE, (actor.x, actor.y),
                              (actor.x + actor.facing_x * 24, actor.y + actor.facing_y * 24), 3)
         pygame.draw.rect(screen, (22, 32, 32), (0, 0, W, 84))
         screen.blit(font.render("WASD: moverse | F1: vision | R: reiniciar | ESC: salir", True, WHITE), (16, 11))
         visible = can_see(guard, player, world.obstacles) if guard.alive and player.alive else False
         status = ("SORPRENDIDO" if guard.surprise_remaining > 0 else
+                  "CONFUNDIDO" if guard.alert_state == "confused" else
+                  "SIN PISTAS" if guard.alert_state == "search_ended" else
                   "BUSCANDO" if guard.alert_state == "search" else "PERSIGUIENDO") if guard.awake else "CAMINANDO"
         info = f"GUARDIA: {status} | VISIBLE: {'SI' if visible else 'NO'} | DETECCION: {guard.detection / guard.detection_time:.0%} | VIDA: {player.hp}"
         screen.blit(small.render(info, True, (245, 205, 125)), (16, 47))
