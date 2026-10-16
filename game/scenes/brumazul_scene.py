@@ -360,6 +360,8 @@ class BrumazulScene(FarmScene):
         self.autosave()
 
     def autosave(self):
+        if getattr(self.app, "disable_autosave", False):
+            return
         try:
             save_state(self.app.state)
         except (OSError, RuntimeError, TypeError, ValueError) as error:
