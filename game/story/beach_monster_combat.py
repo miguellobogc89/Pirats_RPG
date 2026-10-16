@@ -1,7 +1,7 @@
 """Beach prologue adapter: sleeping monster, stones, and shared combat AI."""
 import math
 
-from game.combat.action.engine import CombatWorld, Fighter
+from game.combat.action.engine import CombatWorld, Fighter, CombatEvent
 from game.combat.action.components import StealthConfig
 from game.combat.action.ground_throw import GroundThrow
 from game.combat.action.stealth import Obstacle, segment_hits_rect
@@ -10,7 +10,7 @@ from game.combat.action.stealth import Obstacle, segment_hits_rect
 class BeachMonsterCombat:
     REQUIRED_HITS = 3
 
-    def __init__(self, player_x, player_y, monster_x=490, monster_y=560,
+    def __init__(self, player_x, player_y, monster_x=400, monster_y=255,
                  obstacles=()):
         self.world = CombatWorld(width=704, height=704)
         self.world.obstacles = [
@@ -19,12 +19,12 @@ class BeachMonsterCombat:
         ]
         self.player = self.world.add(Fighter(
             "beach_player", "player", player_x, player_y,
-            hp=1, max_hp=1, radius=14, brain_enabled=False,
+            hp=6, max_hp=6, radius=14, brain_enabled=False,
         ))
         self.monster = self.world.add(Fighter(
             "beach_monster", "monster", monster_x, monster_y,
-            hp=999, max_hp=999, radius=40, speed=42,
-            damage=1, reach=62, aggro_radius=160,
+            hp=120, max_hp=120, radius=40, speed=42,
+            damage=2, reach=62, aggro_radius=160,
             attack_cooldown=1.2, brain_enabled=False,
             stealth=StealthConfig(),
         ))
@@ -34,12 +34,16 @@ class BeachMonsterCombat:
         self.sleep_reaction = 0.0
         self.last_stone_event = ""
         self.impact_effects = []
+        self.last_damage = 0
+        self.last_damage_target = ""
 
     def update(self, dt, player_x, player_y):
         self.player.x, self.player.y = player_x, player_y
         old_positions = [(stone, stone.x, stone.y) for stone in self.throwing.projectiles]
         self.throwing.tick(dt)
         self.last_stone_event = ""
+        self.last_damage = 0
+        self.last_damage_target = ""
         for stone, old_x, old_y in old_positions:
             if stone not in self.throwing.projectiles:
                 continue
@@ -55,7 +59,7 @@ class BeachMonsterCombat:
             closest = (old_x + t * dx, old_y + t * dy)
             if math.dist(closest, (self.monster.x, self.monster.y)) <= self.monster.radius + 6:
                 self.throwing.projectiles.remove(stone)
-                if self.stone_hits < self.REQUIRED_HITS:
+                if not self.monster.brain_enabled and self.stone_hits < self.REQUIRED_HITS:
                     self.stone_hits += 1
                     self.sleep_reaction = 0.9
                     self.last_stone_event = "woken" if self.stone_hits == self.REQUIRED_HITS else "hit"
@@ -65,18 +69,32 @@ class BeachMonsterCombat:
                         self.monster.alert_state = "surprised"
                         self.monster.surprise_remaining = 0.8
                         self.monster.last_seen = (player_x, player_y)
-                        self.world.events.append(
-                            __import__("game.combat.action.engine", fromlist=["CombatEvent"]).CombatEvent(
-                                "aggro", self.monster.id, self.player.id,
-                                x=self.monster.x, y=self.monster.y, duration=0.8))
+                        self.world.events.append(CombatEvent(
+                            "aggro", self.monster.id, self.player.id,
+                            x=self.monster.x, y=self.monster.y, duration=0.8))
                 else:
-                    self.last_stone_event = "hit"
+                    self.world.damage(self.player.id, self.monster.id, 4)
+                    self.last_stone_event = "combat_hit"
         self.sleep_reaction = max(0, self.sleep_reaction - dt)
         self.world.update(dt)
         events = self.world.consume_events()
+        for event in events:
+            if event.kind == "hit":
+                self.last_damage = event.amount
+                self.last_damage_target = event.target
+                self.impact_effects.append([event.x, event.y, event.amount, 0.55, event.target])
+        self.impact_effects = [effect for effect in self.impact_effects if effect[3] > 0]
+        for effect in self.impact_effects:
+            effect[3] -= dt
         return events, not self.player.alive
 
     def hit_monster(self, damage=25):
         # Story boss cannot be killed before the scripted defeat.
-        self.monster.hp = max(1, self.monster.hp - damage)
-        return True
+        if not self.monster.brain_enabled:
+            return False
+        if self.monster.invulnerability > 0:
+            return False
+        # Reuse combat hit, flash, knockback and damage events.
+        if self.monster.hp <= damage:
+            damage = max(0, self.monster.hp - 1)
+        return self.world.damage(self.player.id, self.monster.id, damage)
