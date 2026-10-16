@@ -4,6 +4,7 @@ import math
 from game.combat.action.engine import CombatWorld, Fighter, CombatEvent
 from game.combat.action.components import StealthConfig
 from game.combat.action.ground_throw import GroundThrow
+from game.combat.action.feedback import CombatFeedback
 from game.combat.action.stealth import Obstacle, segment_hits_rect
 
 
@@ -33,9 +34,7 @@ class BeachMonsterCombat:
         self.stone_hits = 0
         self.sleep_reaction = 0.0
         self.last_stone_event = ""
-        self.impact_effects = []
-        self.last_damage = 0
-        self.last_damage_target = ""
+        self.feedback = CombatFeedback()
 
     def player_attack(self, direction):
         if not self.monster.brain_enabled:
@@ -51,8 +50,6 @@ class BeachMonsterCombat:
         old_positions = [(stone, stone.x, stone.y) for stone in self.throwing.projectiles]
         self.throwing.tick(dt)
         self.last_stone_event = ""
-        self.last_damage = 0
-        self.last_damage_target = ""
         for stone, old_x, old_y in old_positions:
             if stone not in self.throwing.projectiles:
                 continue
@@ -88,13 +85,8 @@ class BeachMonsterCombat:
         self.world.update(dt)
         events = self.world.consume_events()
         for event in events:
-            if event.kind == "hit":
-                self.last_damage = event.amount
-                self.last_damage_target = event.target
-                self.impact_effects.append([event.x, event.y, event.amount, 0.55, event.target])
-        self.impact_effects = [effect for effect in self.impact_effects if effect[3] > 0]
-        for effect in self.impact_effects:
-            effect[3] -= dt
+            self.feedback.handle(event, self.world)
+        self.feedback.update(dt)
         return events, not self.player.alive
 
     def hit_monster(self, damage=25):
