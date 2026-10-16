@@ -102,6 +102,8 @@ class BrumazulScene(FarmScene):
             )
             self.beach_notice = ""
             self.beach_notice_timer = 0.0
+            self.beach_defeat_timer = None
+            self.beach_player_flash = 0.0
             self.progress["chapter_started"] = True
             self.seed_collectables()
 
@@ -249,6 +251,12 @@ class BrumazulScene(FarmScene):
                 if throwing.charging:
                     cx, cy = get_camera_position(p["x"], p["y"], WIDTH, HEIGHT, 704, 704)
                     throwing.throw(p["x"], p["y"], event.pos[0] + cx, event.pos[1] + cy)
+                return True
+            if event.type == pygame.KEYDOWN and event.key in (pygame.K_SPACE, pygame.K_LSHIFT, pygame.K_RSHIFT):
+                if event.key == pygame.K_SPACE:
+                    self.beach_combat.player_dash()
+                else:
+                    self.beach_combat.player_dash()
                 return True
             if event.type == pygame.KEYDOWN and event.key == pygame.K_e:
                 if math.dist((p["x"], p["y"]), (694, 350)) <= 100:
@@ -430,8 +438,16 @@ class BrumazulScene(FarmScene):
                 return
             self.attack_timer = max(0, self.attack_timer - dt)
             self.beach_notice_timer = max(0, self.beach_notice_timer - dt)
+            self.beach_player_flash = max(0, self.beach_player_flash - dt)
+            if self.beach_defeat_timer is not None:
+                self.beach_defeat_timer -= dt
+                if self.beach_defeat_timer <= 0:
+                    self.wake_at_inn()
+                return
             p = self.app.state["player"]
             events, defeated = self.beach_combat.update(dt, p["x"], p["y"])
+            # Feed back engine displacement: knockback and dash must move the real player.
+            p["x"], p["y"] = self.beach_combat.player.x, self.beach_combat.player.y
             self.boss.update(self.beach_combat.monster.x, self.beach_combat.monster.y)
             self.boss_awake = self.beach_combat.monster.awake
             self.boss_hp = self.beach_combat.monster.hp
@@ -445,10 +461,11 @@ class BrumazulScene(FarmScene):
                 if event.kind == "telegraph" and event.actor == "beach_monster":
                     self.boss_timer = event.duration
                 elif event.kind == "hit" and event.target == "beach_player":
+                    self.beach_player_flash = 0.45
                     self.beach_message("El monstruo te ha quitado " + str(event.amount) + " PV.")
             if defeated:
                 self.app.state["health"]["current"] = 0
-                self.wake_at_inn()
+                self.beach_defeat_timer = 1.0
                 return
             if not self.door_cooldown and self.phase == "free" and self.npc_dialogue is None:
                 from game.scenes.chapter_area_navigation import transition_chapter_scene
@@ -506,17 +523,13 @@ class BrumazulScene(FarmScene):
             self.autosave()
 
     def attack(self, mouse):
-        if self.attack_timer > 0:
+        if not self.beach:
             return
-        self.attack_timer = 0.42
         p = self.app.state["player"]
-        cx, cy = get_camera_position(p["x"], p["y"], WIDTH, HEIGHT, 704 if self.beach else 800, 704 if self.beach else 800)
-        direction = pygame.Vector2(mouse[0] + cx - p["x"], mouse[1] + cy - p["y"])
-        target = self.boss - pygame.Vector2(p["x"], p["y"])
-        if direction.length_squared() and target.length_squared() and target.length() < 105:
-            if direction.normalize().dot(target.normalize()) > 0.35:
-                self.beach_combat.hit_monster(25)
-                self.boss_hp = self.beach_combat.monster.hp
+        cx, cy = get_camera_position(p["x"], p["y"], WIDTH, HEIGHT, 704, 704)
+        direction = (mouse[0] + cx - p["x"], mouse[1] + cy - p["y"])
+        # Shared engine handles combo, reach, cooldown, hit, knockback and stun.
+        self.beach_combat.player_attack(direction)
 
     def talk_to_nearby(self, click_position=None):
         from game.story_events.story_event_manager import dispatch_story_event
@@ -766,7 +779,7 @@ class BrumazulScene(FarmScene):
             for effect in self.beach_combat.impact_effects:
                 ex, ey, amount, remaining, target_id = effect
                 label_color = (195, 58, 53) if target_id == "beach_player" else (90, 40, 35)
-                damage_label = self.app.small_font.render("-" + str(amount), True, label_color)
+                damage_label = pygame.font.Font(None, 28).render("-" + str(amount), True, label_color)
                 s.blit(damage_label, (int(ex - cx), int(ey - cy - 25 - (0.55 - remaining) * 28)))
             if self.beach_combat.stone_hits < 3 and self.beach_combat.sleep_reaction > 0:
                 self.label("?", bx - 4, by - 70)
@@ -842,6 +855,10 @@ class BrumazulScene(FarmScene):
         tip = (center[0] + vx * 17, center[1] + vy * 17)
         pygame.draw.line(s, (65, 65, 65), center, tip, 3)
         pygame.draw.circle(s, (65, 65, 65), tip, 3)
+        if self.beach and self.beach_player_flash > 0 and int(self.beach_player_flash * 20) % 2 == 0:
+            flash = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
+            flash.fill((220, 48, 38, 38))
+            s.blit(flash, (0, 0))
         from game.hud.hud_renderer import draw_hud
         draw_hud(self.app)
         from game.notifications import draw_notifications
