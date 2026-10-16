@@ -259,8 +259,8 @@ class BrumazulScene(FarmScene):
                     self.beach_combat.player_dash()
                 return True
             if event.type == pygame.KEYDOWN and event.key == pygame.K_e:
-                if math.dist((p["x"], p["y"]), (694, 350)) <= 100:
-                    self.beach_message("El acceso al puerto está cerrado.")
+                if math.dist((p["x"], p["y"]), (694, 440)) <= 100 or math.dist((p["x"], p["y"]), (400, 8)) <= 100:
+                    self.beach_message("La puerta está cerrada. No puedes abandonar la playa.")
                     return True
         if self.shop_id is not None:
             from game.trading.chapter_trade import handle_event as handle_trade_event
@@ -738,10 +738,13 @@ class BrumazulScene(FarmScene):
                     pygame.draw.ellipse(s, (123, 118, 109),
                                         (rx - cx, ry - cy, 8, 5))
             # Interactable closed port gate (E).
-            pygame.draw.line(s, (117, 88, 61), (696 - cx, 322 - cy),
-                             (696 - cx, 380 - cy), 4)
-            pygame.draw.circle(s, (117, 88, 61), (690 - cx, 350 - cy), 3)
-            self.label("PUERTO [E]", 595 - cx, 305 - cy)
+            pygame.draw.line(s, (117, 88, 61), (696 - cx, 390 - cy),
+                             (696 - cx, 490 - cy), 4)
+            pygame.draw.circle(s, (117, 88, 61), (690 - cx, 440 - cy), 3)
+            self.label("PUERTO [E]", 595 - cx, 380 - cy)
+            pygame.draw.line(s, (117, 88, 61), (350 - cx, 5 - cy),
+                             (450 - cx, 5 - cy), 4)
+            self.label("PUEBLO [E] - CERRADO", 310 - cx, 23 - cy)
             # Sin cuadricula: solo limites del mapa y del sendero.
             for x in (350, 450):
                 pygame.draw.line(s, LIGHT, (x - cx, -cy), (x - cx, 360 - cy), 1)
