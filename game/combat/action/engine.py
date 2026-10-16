@@ -528,8 +528,11 @@ class CombatWorld:
         x, y = actor.patrol_points[actor.patrol_index]
         dx, dy = x - actor.x, y - actor.y
         distance = math.hypot(dx, dy)
-        if distance <= max(3, actor.speed * dt):
+        if distance <= max(3, actor.walk_speed * dt):
             actor.patrol_index = (actor.patrol_index + 1) % len(actor.patrol_points)
             actor.patrol_pause = actor.patrol_wait
         elif distance > 0:
-            self.move(actor.id, dx, dy, dt, speed=actor.walk_speed)
+            # Las rutas de patrulla tambien deben rodear obstaculos.
+            # El desplazamiento directo hacia un waypoint puede dejar al
+            # guardia bloqueado al volver de una busqueda.
+            self._navigate(actor, (x, y), dt, actor.walk_speed)
