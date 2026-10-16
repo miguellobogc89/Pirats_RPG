@@ -38,7 +38,7 @@ class GroundThrow:
         if kind == "none":
             return "empty"
         cell = (int(x // 70), int(y // 70))
-        if cell in self.depleted:
+        if kind != "rocky" and cell in self.depleted:
             return "empty"
         if self.first_pickup:
             found = True
@@ -46,7 +46,7 @@ class GroundThrow:
             found = True
         else:
             failed = self.failures.get(cell, 0)
-            found = failed >= 3 or self.rng.random() < 0.2
+            found = failed >= 3 or self.rng.random() < 0.4
         if not found:
             self.failures[cell] = self.failures.get(cell, 0) + 1
             return "empty"
@@ -54,7 +54,8 @@ class GroundThrow:
         self.held = True
         self.failures[cell] = 0
         # A patch yields one pickup; walking to another patch is necessary.
-        self.depleted.add(cell)
+        if kind != "rocky":
+            self.depleted.add(cell)
         return "picked"
 
     def start_charge(self):
