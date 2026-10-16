@@ -91,7 +91,7 @@ class CombatWorld:
 
     def move(self, actor_id, dx, dy, dt):
         actor = self.fighters[actor_id]
-        if not actor.alive or actor.stun > 0:
+        if not actor.alive or actor.stun > 0 or actor.dash_remaining > 0:
             return
         length = math.hypot(dx, dy)
         if length:

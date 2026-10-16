@@ -55,6 +55,10 @@ class CombatFeedback:
             self.shake = max(self.shake, 6.5 * event.intensity)
             self.shake_time = max(self.shake_time, 0.16)
             self._burst(event.x, event.y, 13 + event.amount * 2, color)
+        elif event.kind == "dash":
+            self._burst(event.x, event.y, 12, (110, 225, 226), speed=95)
+        elif event.kind == "shoot":
+            self._burst(event.x, event.y, 8, (125, 202, 255), speed=85)
         elif event.kind == "death":
             self._burst(event.x, event.y, 23, (242, 143, 103))
             self.shake = max(self.shake, 9)
