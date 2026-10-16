@@ -258,9 +258,19 @@ class BrumazulScene(FarmScene):
                 else:
                     self.beach_combat.player_dash()
                 return True
-            if event.type == pygame.KEYDOWN and event.key == pygame.K_e:
-                if math.dist((p["x"], p["y"]), (694, 440)) <= 100 or math.dist((p["x"], p["y"]), (400, 8)) <= 100:
-                    self.beach_message("La puerta está cerrada. No puedes abandonar la playa.")
+            # Doors respond only to a deliberate click on the door itself.
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                cx, cy = get_camera_position(p["x"], p["y"], WIDTH, HEIGHT, 704, 704)
+                wx, wy = event.pos[0] + cx, event.pos[1] + cy
+                port_door = 686 <= wx <= 704 and 390 <= wy <= 490
+                village_door = 350 <= wx <= 450 and 0 <= wy <= 18
+                if port_door or village_door:
+                    door_x, door_y = (694, 440) if port_door else (400, 8)
+                    if math.dist((p["x"], p["y"]), (door_x, door_y)) <= 110:
+                        from game.notifications import notify_character_dialogue
+                        notify_character_dialogue(
+                            self, "Parece que la puerta está bien cerrada."
+                        )
                     return True
         if self.shop_id is not None:
             from game.trading.chapter_trade import handle_event as handle_trade_event
