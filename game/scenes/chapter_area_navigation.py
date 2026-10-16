@@ -28,8 +28,8 @@ def transition_chapter_scene(app, scene_id, player, layout=None):
     if destination is None:
         return False
     target, spawn = destination
-    if scene_id == "brumazul_playa":
-        # Closed exits are handled by explicit scene interaction, not proximity.
+    if not chapter_exit_active(app.state, scene_id, target):
+        # Inactive exits are handled by explicit scene interaction, not proximity.
         return False
     if target in ("brumazul_casa_almarin", "brumazul_taller_almarin"):
         from game.story.chapter_01_quest_manager import ensure_chapter_quests
@@ -117,3 +117,17 @@ def recover_chapter_position(state, scene_id, scene_data):
             sx, sy = rx + rw / 2, ry + rh / 2
     player["x"], player["y"] = sx, sy
     return True
+
+
+def chapter_exit_active(state, scene_id, target):
+    """Shared exit-state rule. The prologue beach starts closed; saves can unlock exits."""
+    key = f"{scene_id}:{target}"
+    overrides = state.get("chapter_exit_states", {})
+    if key in overrides:
+        return bool(overrides[key])
+    return scene_id != "brumazul_playa"
+
+
+def set_chapter_exit_active(state, scene_id, target, active):
+    """Persist a chapter exit unlock without changing the transition table."""
+    state.setdefault("chapter_exit_states", {})[f"{scene_id}:{target}"] = bool(active)
