@@ -54,6 +54,7 @@ class Fighter:
     survey_timer: float = 0
     search_started: bool = False
     search_direction: tuple = (0, 0)
+    surprise_remaining: float = 0
     patrol_points: tuple = ()
     patrol_index: int = 0
     patrol_pause: float = 0
@@ -317,8 +318,11 @@ class CombatWorld:
                 actor.detection = min(actor.detection_time, actor.detection + dt) if visible else max(0, actor.detection - dt * 1.5)
                 if actor.detection >= actor.detection_time:
                     actor.awake = True
-                    actor.alert_state = "alert"
-                    self.events.append(CombatEvent("aggro", actor.id, target.id, x=actor.x, y=actor.y))
+                    actor.alert_state = "surprised"
+                    actor.surprise_remaining = 0.32
+                    actor.last_seen = (target.x, target.y)
+                    actor.search_direction = (target.x - actor.x, target.y - actor.y)
+                    self.events.append(CombatEvent("aggro", actor.id, target.id, x=actor.x, y=actor.y, duration=0.32))
                 else:
                     self._patrol(actor, dt)
                 continue
@@ -327,6 +331,18 @@ class CombatWorld:
                 self.events.append(CombatEvent("aggro", actor.id, target.id,
                                                x=actor.x, y=actor.y))
             if not actor.awake:
+                continue
+            if self.perception_enabled and actor.surprise_remaining > 0:
+                actor.surprise_remaining = max(0, actor.surprise_remaining - dt)
+                # Durante el sobresalto no se mueve, pero recuerda al jugador
+                # mientras siga a la vista. No lee posiciones ocultas.
+                from .stealth import line_of_sight
+                if (distance <= actor.vision_range and
+                        line_of_sight(actor.x, actor.y, target.x, target.y, self.obstacles)):
+                    actor.last_seen = (target.x, target.y)
+                    actor.search_direction = (dx, dy)
+                if actor.surprise_remaining == 0:
+                    actor.alert_state = "alert"
                 continue
             if self.perception_enabled:
                 from .stealth import can_see, line_of_sight
@@ -347,7 +363,7 @@ class CombatWorld:
                     actor.windup = 0
                     if actor.last_seen is None:
                         continue
-                    if actor.alert_state == "alert" and not actor.search_started:
+                    if not actor.search_started and actor.search_direction == (0, 0):
                         actor.search_direction = (actor.last_seen[0] - actor.x,
                                                   actor.last_seen[1] - actor.y)
                     # Corre hasta el ultimo avistamiento, incluso sin vision.

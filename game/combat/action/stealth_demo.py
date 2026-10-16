@@ -77,13 +77,24 @@ def run():
             if not actor.alive:
                 continue
             color = (87, 196, 179) if actor.team == "player" else (222, 100, 85)
-            pygame.draw.circle(screen, color, (round(actor.x), round(actor.y)), round(actor.radius))
+            if actor.team == "enemy" and actor.surprise_remaining > 0:
+                # Vibracion visual local, sin alterar coordenadas de fisica/IA.
+                elapsed = 0.32 - actor.surprise_remaining
+                jitter = round(math.sin(elapsed * 95) * 4 * min(1, actor.surprise_remaining / 0.08))
+                px, py = round(actor.x) + jitter, round(actor.y)
+                pygame.draw.circle(screen, (255, 221, 116), (px, py), round(actor.radius + 5), 2)
+                exclamation = font.render("!", True, (255, 225, 120))
+                screen.blit(exclamation, (px - exclamation.get_width() // 2, py - 49))
+            else:
+                px, py = round(actor.x), round(actor.y)
+            pygame.draw.circle(screen, color, (px, py), round(actor.radius))
             pygame.draw.line(screen, WHITE, (actor.x, actor.y),
                              (actor.x + actor.facing_x * 24, actor.y + actor.facing_y * 24), 3)
         pygame.draw.rect(screen, (22, 32, 32), (0, 0, W, 84))
         screen.blit(font.render("WASD: moverse | F1: vision | R: reiniciar | ESC: salir", True, WHITE), (16, 11))
         visible = can_see(guard, player, world.obstacles) if guard.alive and player.alive else False
-        status = ("BUSCANDO" if guard.alert_state == "search" else "PERSIGUIENDO") if guard.awake else "CAMINANDO"
+        status = ("SORPRENDIDO" if guard.surprise_remaining > 0 else
+                  "BUSCANDO" if guard.alert_state == "search" else "PERSIGUIENDO") if guard.awake else "CAMINANDO"
         info = f"GUARDIA: {status} | VISIBLE: {'SI' if visible else 'NO'} | DETECCION: {guard.detection / guard.detection_time:.0%} | VIDA: {player.hp}"
         screen.blit(small.render(info, True, (245, 205, 125)), (16, 47))
         if debug and guard.last_seen is not None:
