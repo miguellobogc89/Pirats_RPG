@@ -30,6 +30,31 @@ class StealthTests(unittest.TestCase):
         self.assertEqual(guard.search_duration, 7)
         self.assertIsNone(passive.stealth)
 
+    def test_two_guards_have_independent_profiles(self):
+        world = CombatWorld(width=700, height=500)
+        world.add(Fighter("player", "player", 170, 200))
+        near = world.add(Fighter("near", "enemy", 350, 200,
+                                 facing_x=-1, facing_y=0,
+                                 stealth=StealthConfig(vision_range=250, chase_speed=80)))
+        far = world.add(Fighter("far", "enemy", 350, 260,
+                                facing_x=-1, facing_y=0,
+                                stealth=StealthConfig(vision_range=80, chase_speed=130)))
+        world.update(0.3)
+        self.assertTrue(near.awake)
+        self.assertFalse(far.awake)
+        self.assertEqual(near.chase_speed, 80)
+        self.assertEqual(far.chase_speed, 130)
+
+    def test_enemy_without_stealth_does_not_patrol_or_detect(self):
+        world = CombatWorld(width=700, height=500)
+        world.add(Fighter("player", "player", 170, 200))
+        enemy = world.add(Fighter("stationary", "enemy", 350, 200,
+                                  facing_x=-1, facing_y=0, aggro_radius=0,
+                                  patrol_points=((350, 200), (350, 300))))
+        world.update(1)
+        self.assertFalse(enemy.awake)
+        self.assertEqual((enemy.x, enemy.y), (350, 200))
+
     def test_forward_visible_and_behind_hidden(self):
         self.assertTrue(can_see(self.guard, self.hero, []))
         self.hero.x = 530
@@ -51,7 +76,7 @@ class StealthTests(unittest.TestCase):
         self.world.obstacles.clear()
         self.world.update(0.3)
         self.assertTrue(self.guard.awake)
-        self.assertEqual(self.guard.alert_state, "alert")
+        self.assertEqual(self.guard.alert_state, "surprised")
 
     def test_collision_blocks_movement_and_dash(self):
         self.world.obstacles.append(Obstacle(195, 150, 50, 100))
@@ -75,7 +100,7 @@ class StealthTests(unittest.TestCase):
         self.world.obstacles.append(Obstacle(245, 160, 45, 85))
         self.world.update(1.5)
         self.assertNotAlmostEqual(self.guard.y, 200)
-        self.assertIn(self.guard.alert_state, ("pursuit", "search", "alert"))
+        self.assertIn(self.guard.alert_state, ("pursuit", "confused", "search", "alert"))
 
     def test_hidden_player_does_not_update_last_seen(self):
         self.guard.awake = True
@@ -91,7 +116,7 @@ class StealthTests(unittest.TestCase):
         self.world.obstacles.append(Obstacle(245, 160, 45, 85))
         self.world.update(4)
         # Si el guardia recupera vision durante el barrido, vuelve a alerta.
-        self.assertIn(self.guard.alert_state, ("pursuit", "search", "alert"))
+        self.assertIn(self.guard.alert_state, ("pursuit", "confused", "search", "alert"))
         if self.guard.alert_state == "search":
             self.assertTrue(self.guard.search_points or self.guard.searched_points or self.guard.search_goal)
 
@@ -113,6 +138,8 @@ class StealthTests(unittest.TestCase):
         cells = search_cells((170, 200), [], self.guard.radius, 700, 500)
         self.guard.surveyed_cells = {(round(x / 35), round(y / 35)) for x, y in cells if x < 170}
         self.world.update(0.1)
+        self.assertEqual(self.guard.alert_state, "confused")
+        self.world.update(1.1)
         self.assertEqual(self.guard.alert_state, "search")
         self.assertTrue(self.guard.search_points)
         self.assertTrue(all(x >= 170 for x, y in self.guard.search_points))
