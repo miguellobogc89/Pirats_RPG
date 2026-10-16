@@ -3,6 +3,7 @@ import math
 
 
 class MovementComponent:
+    @staticmethod
     def navigate(world, actor, destination, dt, speed=None):
         from .stealth import find_path
         path = find_path((actor.x, actor.y), destination, world.obstacles,
