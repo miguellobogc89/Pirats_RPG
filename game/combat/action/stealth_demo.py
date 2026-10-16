@@ -19,7 +19,7 @@ def make_world():
     world.add(Fighter("player", "player", 120, 310, hp=12, max_hp=12,
                       radius=15, speed=205, damage=2, reach=62))
     world.add(Fighter("guard", "enemy", 565, 220, hp=8, max_hp=8,
-                      speed=78, walk_speed=48, chase_speed=165, radius=15, reach=36, damage=1,
+                      speed=78, walk_speed=48, chase_speed=110, radius=15, reach=36, damage=1,
                       facing_x=0, facing_y=1,
                       vision_range=245, vision_angle=75,
                       patrol_points=((565, 220), (565, 490), (760, 490), (760, 120), (565, 120))))
