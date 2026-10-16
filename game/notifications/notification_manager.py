@@ -74,3 +74,16 @@ def update_notifications(app, dt):
             notification["time_left"] -= dt
     app._notifications = [n for n in get_notifications(app)
                           if n["type"] == "center" or n["time_left"] > 0]
+
+
+def notify_character_dialogue(scene, message, speaker="Yo"):
+    """Character speech uses the existing dialogue panel, never corner alerts.
+
+    Unlike status notifications this is opened by an explicit interaction and
+    dismissed using the scene's normal dialogue controls.
+    """
+    if scene.npc_dialogue is not None:
+        return False
+    scene.npc_dialogue = (speaker, [str(message)])
+    scene.npc_dialogue_index = 0
+    return True
