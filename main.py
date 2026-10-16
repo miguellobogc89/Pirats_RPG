@@ -46,7 +46,7 @@ def main():
         state["player"]["y"] = 160
 
     app = PygameApp(state, game_data)
-    if saved_state is not None and not args.new_game:
+    if (saved_state is not None and not args.new_game) or args.test_beach:
         app.mode = "game"
         app.dispatch_scene_entered_event()
 
