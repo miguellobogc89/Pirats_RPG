@@ -40,6 +40,15 @@ class Fighter:
     dash_y: float = 0
     combo_step: int = 0
     combo_timer: float = 0
+    vision_range: float = 210
+    vision_angle: float = 80
+    detection: float = 0
+    detection_time: float = 0.65
+    patrol_points: tuple = ()
+    patrol_index: int = 0
+    patrol_pause: float = 0
+    patrol_wait: float = 0.6
+    alert_state: str = "patrol"
 
     @property
     def alive(self):
@@ -76,6 +85,8 @@ class CombatWorld:
     fighters: dict = field(default_factory=dict)
     events: list = field(default_factory=list)
     projectiles: list = field(default_factory=list)
+    obstacles: list = field(default_factory=list)
+    perception_enabled: bool = False
     width: float = 800
     height: float = 600
 
@@ -89,6 +100,20 @@ class CombatWorld:
         events, self.events = self.events, []
         return events
 
+    def _place(self, actor, x, y):
+        from .stealth import circle_hits_rect
+        x = min(self.width - actor.radius, max(actor.radius, x))
+        y = min(self.height - actor.radius, max(actor.radius, y))
+        if not any(circle_hits_rect(x, y, actor.radius, box) for box in self.obstacles):
+            actor.x, actor.y = x, y
+            return True
+        return False
+
+    def _displace(self, actor, dx, dy):
+        # Ejes separados: el jugador puede deslizarse junto a las cajas.
+        self._place(actor, actor.x + dx, actor.y)
+        self._place(actor, actor.x, actor.y + dy)
+
     def move(self, actor_id, dx, dy, dt):
         actor = self.fighters[actor_id]
         if not actor.alive or actor.stun > 0 or actor.dash_remaining > 0:
@@ -97,8 +122,7 @@ class CombatWorld:
         if length:
             dx, dy = dx / length, dy / length
             actor.facing_x, actor.facing_y = dx, dy
-            actor.x = min(self.width - actor.radius, max(actor.radius, actor.x + dx * actor.speed * dt))
-            actor.y = min(self.height - actor.radius, max(actor.radius, actor.y + dy * actor.speed * dt))
+            self._displace(actor, dx * actor.speed * dt, dy * actor.speed * dt)
 
     def dash(self, actor_id, direction=None):
         actor = self.fighters[actor_id]
@@ -232,14 +256,12 @@ class CombatWorld:
             actor.stamina = min(actor.max_stamina, actor.stamina + 19 * dt)
             if actor.dash_remaining > 0 and actor.alive:
                 duration = min(dt, actor.dash_remaining)
-                actor.x = min(self.width - actor.radius, max(actor.radius, actor.x + actor.dash_x * 650 * duration))
-                actor.y = min(self.height - actor.radius, max(actor.radius, actor.y + actor.dash_y * 650 * duration))
+                self._displace(actor, actor.dash_x * 650 * duration, actor.dash_y * 650 * duration)
                 actor.dash_remaining = max(0, actor.dash_remaining - dt)
             actor.invulnerability = max(0, actor.invulnerability - dt)
             actor.stun = max(0, actor.stun - dt)
             if actor.alive:
-                actor.x = min(self.width - actor.radius, max(actor.radius, actor.x + actor.knockback_x * dt))
-                actor.y = min(self.height - actor.radius, max(actor.radius, actor.y + actor.knockback_y * dt))
+                self._displace(actor, actor.knockback_x * dt, actor.knockback_y * dt)
             actor.knockback_x *= max(0, 1 - 8 * dt)
             actor.knockback_y *= max(0, 1 - 8 * dt)
         for projectile in self.projectiles[:]:
@@ -260,7 +282,10 @@ class CombatWorld:
                         self.events.append(CombatEvent("blocked", projectile.owner, target.id, x=target.x, y=target.y))
                     struck = True
                     break
-            if struck or projectile.lifetime <= 0 or not (0 <= projectile.x <= self.width and 0 <= projectile.y <= self.height):
+            from .stealth import segment_hits_rect
+            obstructed = any(segment_hits_rect(old_x, old_y, projectile.x, projectile.y, box)
+                             for box in self.obstacles)
+            if struck or obstructed or projectile.lifetime <= 0 or not (0 <= projectile.x <= self.width and 0 <= projectile.y <= self.height):
                 self.projectiles.remove(projectile)
                 if not struck:
                     self.events.append(CombatEvent("projectile_end", projectile.owner, x=projectile.x, y=projectile.y))
@@ -273,12 +298,25 @@ class CombatWorld:
             target = min(targets, key=lambda f: math.hypot(f.x - actor.x, f.y - actor.y))
             dx, dy = target.x - actor.x, target.y - actor.y
             distance = math.hypot(dx, dy)
-            if distance <= actor.aggro_radius and not actor.awake:
+            if self.perception_enabled and not actor.awake:
+                from .stealth import can_see
+                visible = can_see(actor, target, self.obstacles)
+                actor.detection = min(actor.detection_time, actor.detection + dt) if visible else max(0, actor.detection - dt * 1.5)
+                if actor.detection >= actor.detection_time:
+                    actor.awake = True
+                    actor.alert_state = "alert"
+                    self.events.append(CombatEvent("aggro", actor.id, target.id, x=actor.x, y=actor.y))
+                else:
+                    self._patrol(actor, dt)
+                continue
+            if not self.perception_enabled and distance <= actor.aggro_radius and not actor.awake:
                 actor.awake = True
                 self.events.append(CombatEvent("aggro", actor.id, target.id,
                                                x=actor.x, y=actor.y))
             if not actor.awake:
                 continue
+            if self.perception_enabled:
+                actor.alert_state = "alert"
             if actor.windup > 0:
                 actor.windup = max(0, actor.windup - dt)
                 if actor.windup == 0 and target.alive:
@@ -305,3 +343,18 @@ class CombatWorld:
                                                    x=actor.x, y=actor.y, duration=0.22))
             elif distance > 0:
                 self.move(actor.id, dx, dy, dt)
+
+    def _patrol(self, actor, dt):
+        if not actor.patrol_points or actor.stun > 0:
+            return
+        if actor.patrol_pause > 0:
+            actor.patrol_pause = max(0, actor.patrol_pause - dt)
+            return
+        x, y = actor.patrol_points[actor.patrol_index]
+        dx, dy = x - actor.x, y - actor.y
+        distance = math.hypot(dx, dy)
+        if distance <= max(3, actor.speed * dt):
+            actor.patrol_index = (actor.patrol_index + 1) % len(actor.patrol_points)
+            actor.patrol_pause = actor.patrol_wait
+        elif distance > 0:
+            self.move(actor.id, dx, dy, dt)

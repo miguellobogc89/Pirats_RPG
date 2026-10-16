@@ -45,3 +45,8 @@ En Unity, portar las reglas a C# y consumir estos eventos con VFX, UI y camara n
 - Espacio: dash hacia WASD o la orientación actual (24 de energía, recarga 0,72 s, invulnerabilidad breve).
 - Energía regenerable (19/s), proyectiles con colisiones y caducidad, eventos shoot/dash independientes de Pygame.
 - El golpe normal se ejecuta al soltar el botón izquierdo para distinguirlo del golpe cargado.
+
+
+## Microfase 3.1 — sigilo y percepcion
+
+Ejecuta `py -3.12 -m game.combat.action.stealth_demo` para probar una arena independiente con un guardia patrullando, tres cajas, vision frontal, tiempo de deteccion y cobertura. WASD mueve, F1 muestra/oculta el cono de vision, R reinicia. Los obstaculos bloquean la vision y el movimiento. Cuando te detecta, el guardia pasa al combate existente; la investigacion, alarmas y ataques por sorpresa se reservan para 3.2/3.3. `py -3.12 -m unittest tests.test_action_stealth -v` prueba el sistema sin Pygame.

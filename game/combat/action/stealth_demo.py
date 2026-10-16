@@ -1,0 +1,96 @@
+"""Prueba aislada 3.1: guardia, vision y cajas. Sin modificar la arena de combate."""
+import math
+import pygame
+from .engine import CombatWorld, Fighter
+from .stealth import Obstacle, can_see
+
+W, H = 900, 620
+BG = (31, 45, 45)
+WHITE = (232, 231, 214)
+
+
+def make_world():
+    world = CombatWorld(width=W, height=H, perception_enabled=True)
+    world.obstacles = [
+        Obstacle(320, 170, 95, 110),
+        Obstacle(440, 350, 125, 85),
+        Obstacle(655, 190, 75, 105),
+    ]
+    world.add(Fighter("player", "player", 120, 310, hp=12, max_hp=12,
+                      radius=15, speed=205, damage=2, reach=62))
+    world.add(Fighter("guard", "enemy", 565, 220, hp=8, max_hp=8,
+                      speed=78, radius=15, reach=36, damage=1,
+                      facing_x=0, facing_y=1,
+                      vision_range=245, vision_angle=75,
+                      patrol_points=((565, 220), (565, 490), (760, 490), (760, 120), (565, 120))))
+    return world
+
+
+def run():
+    pygame.init()
+    screen = pygame.display.set_mode((W, H))
+    pygame.display.set_caption("Pirats RPG | Fase 3.1: sigilo y vision")
+    clock = pygame.time.Clock()
+    font = pygame.font.SysFont("consolas", 18)
+    small = pygame.font.SysFont("consolas", 15)
+    world = make_world()
+    debug = True
+    running = True
+    while running:
+        dt = min(clock.tick(60) / 1000, 0.05)
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT or event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+                running = False
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_r:
+                world = make_world()
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_F1:
+                debug = not debug
+        player, guard = world.fighters["player"], world.fighters["guard"]
+        keys = pygame.key.get_pressed()
+        dx = int(keys[pygame.K_d] or keys[pygame.K_RIGHT]) - int(keys[pygame.K_a] or keys[pygame.K_LEFT])
+        dy = int(keys[pygame.K_s] or keys[pygame.K_DOWN]) - int(keys[pygame.K_w] or keys[pygame.K_UP])
+        world.move("player", dx, dy, dt)
+        world.update(dt)
+        screen.fill(BG)
+        for x in range(0, W, 40):
+            pygame.draw.line(screen, (42, 58, 57), (x, 0), (x, H))
+        for y in range(0, H, 40):
+            pygame.draw.line(screen, (42, 58, 57), (0, y), (W, y))
+        if debug and guard.alive:
+            cone = pygame.Surface((W, H), pygame.SRCALPHA)
+            angle = math.atan2(guard.facing_y, guard.facing_x)
+            half = math.radians(guard.vision_angle) / 2
+            points = [(guard.x, guard.y)]
+            for i in range(45):
+                a = angle - half + 2 * half * i / 44
+                points.append((guard.x + math.cos(a) * guard.vision_range,
+                               guard.y + math.sin(a) * guard.vision_range))
+            pygame.draw.polygon(cone, (220, 83, 72, 72) if guard.awake else (237, 204, 90, 64), points)
+            # La vision efectiva se calcula en el motor, nunca a partir del dibujo.
+            screen.blit(cone, (0, 0))
+        for box in world.obstacles:
+            rect = pygame.Rect(box.x, box.y, box.width, box.height)
+            pygame.draw.rect(screen, (110, 88, 67), rect, border_radius=5)
+            pygame.draw.rect(screen, (176, 147, 104), rect, 3, border_radius=5)
+            pygame.draw.line(screen, (147, 119, 82), rect.topleft, rect.bottomright, 2)
+        for actor in (player, guard):
+            if not actor.alive:
+                continue
+            color = (87, 196, 179) if actor.team == "player" else (222, 100, 85)
+            pygame.draw.circle(screen, color, (round(actor.x), round(actor.y)), round(actor.radius))
+            pygame.draw.line(screen, WHITE, (actor.x, actor.y),
+                             (actor.x + actor.facing_x * 24, actor.y + actor.facing_y * 24), 3)
+        pygame.draw.rect(screen, (22, 32, 32), (0, 0, W, 84))
+        screen.blit(font.render("WASD: moverse | F1: vision | R: reiniciar | ESC: salir", True, WHITE), (16, 11))
+        visible = can_see(guard, player, world.obstacles) if guard.alive and player.alive else False
+        status = "ALERTA" if guard.awake else "PATRULLA"
+        info = f"GUARDIA: {status} | VISIBLE: {'SI' if visible else 'NO'} | DETECCION: {guard.detection / guard.detection_time:.0%} | VIDA: {player.hp}"
+        screen.blit(small.render(info, True, (245, 205, 125)), (16, 47))
+        if guard.awake:
+            screen.blit(font.render("! DETECTADO !  Pulsa R para repetir el sigilo", True, (255, 148, 119)), (235, H - 40))
+        pygame.display.flip()
+    pygame.quit()
+
+
+if __name__ == "__main__":
+    run()
