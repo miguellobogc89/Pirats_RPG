@@ -3,6 +3,7 @@ import math
 
 
 class SearchComponent:
+    @staticmethod
     def search(world, actor, dt):
         from .engine import CombatEvent
         from .stealth import search_cells
@@ -72,6 +73,7 @@ class SearchComponent:
 
 
 class PatrolComponent:
+    @staticmethod
     def patrol(world, actor, dt):
         if not actor.patrol_points or actor.stun > 0:
             return
