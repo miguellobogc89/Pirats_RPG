@@ -364,10 +364,10 @@ class CombatWorld:
                 from .stealth import can_see, line_of_sight
                 # Una vez alertado no conoce la posicion del jugador tras las cajas.
                 # En combate se permite una vision periferica mayor que en patrulla.
+                # Tras la deteccion, mantener contacto visual sin depender de
+                # la orientacion que adopta al esquivar una caja.
                 seen = (distance <= actor.vision_range and
-                        line_of_sight(actor.x, actor.y, target.x, target.y, self.obstacles) and
-                        (can_see(actor, target, self.obstacles) or
-                         (dx * actor.facing_x + dy * actor.facing_y) / max(distance, 1e-6) > -0.25))
+                        line_of_sight(actor.x, actor.y, target.x, target.y, self.obstacles))
                 if seen:
                     actor.last_seen = (target.x, target.y)
                     actor.alert_state = "alert"
