@@ -677,11 +677,36 @@ class BrumazulScene(FarmScene):
             for obj in self.app.state.get("collectables", []):
                 if obj.get("id", "").startswith("brumazul_"):
                     pygame.draw.circle(s, LINE, (int(obj["x"] - cx), int(obj["y"] - cy)), 7, 1)
+            # The prologue creature uses the shared combat engine, not the
+            # old scripted chase. Show its aggro and telegraph states clearly.
             bx, by = int(self.boss.x - cx), int(self.boss.y - cy)
-            pygame.draw.circle(s, INK, (bx, by), 40, 2)
-            pygame.draw.circle(s, INK, (bx - 13, by - 9), 6, 2)
-            pygame.draw.circle(s, INK, (bx + 13, by - 9), 6, 2)
-            pygame.draw.arc(s, LINE, (bx - 28, by - 14, 56, 48), 0.25, 2.85, 2)
+            creature = self.beach_combat.monster
+            active = creature.awake
+            preparing = creature.windup > 0
+            pygame.draw.ellipse(s, (186, 180, 172), (bx - 46, by + 25, 92, 20))
+            body = (132, 70, 67) if preparing else ((100, 93, 112) if active else (124, 126, 130))
+            pygame.draw.circle(s, body, (bx, by), 39)
+            pygame.draw.circle(s, (61, 55, 67), (bx, by), 39, 3)
+            for side in (-1, 1):
+                pygame.draw.polygon(s, (61, 55, 67), [
+                    (bx + side * 24, by - 23),
+                    (bx + side * 43, by - 57),
+                    (bx + side * 11, by - 35),
+                ])
+                pygame.draw.circle(s, (238, 212, 154) if active else (225, 225, 220),
+                                   (bx + side * 13, by - 7), 8)
+                pygame.draw.circle(s, (43, 37, 42), (bx + side * 13, by - 7), 3)
+            pygame.draw.arc(s, (43, 37, 42), (bx - 22, by - 1, 44, 35), 3.35, 6.08, 3)
+            if preparing:
+                # Wind-up warning is visible in the actual game scene.
+                pygame.draw.circle(s, (181, 58, 51), (bx, by), 50, 4)
+                px, py = self.app.state["player"]["x"], self.app.state["player"]["y"]
+                pygame.draw.line(s, (181, 58, 51), (bx, by),
+                                 (int(px - cx), int(py - cy)), 3)
+                self.label("!", bx - 4, by - 72)
+            elif active:
+                pygame.draw.circle(s, (165, 113, 78), (bx, by), 47, 2)
+                self.label("!", bx - 4, by - 70)
             self.label("PLAYA DE BRUMAZUL  /  NOCHE", 22, 18)
         elif self.tavern:
             self.draw_tavern(cx, cy)
