@@ -55,6 +55,7 @@ class Fighter:
     search_started: bool = False
     search_direction: tuple = (0, 0)
     surprise_remaining: float = 0
+    trail_index: int = 0
     patrol_points: tuple = ()
     patrol_index: int = 0
     patrol_pause: float = 0
@@ -100,6 +101,10 @@ class CombatWorld:
     projectiles: list = field(default_factory=list)
     obstacles: list = field(default_factory=list)
     perception_enabled: bool = False
+    assisted_tracking: bool = False
+    elapsed: float = 0
+    player_trail: list = field(default_factory=list)
+    trail_sample_timer: float = 0
     width: float = 800
     height: float = 600
 
@@ -262,6 +267,17 @@ class CombatWorld:
             remaining -= step
 
     def _step(self, dt):
+        self.elapsed += dt
+        if self.perception_enabled and self.assisted_tracking:
+            self.trail_sample_timer -= dt
+            if self.trail_sample_timer <= 0:
+                player = next((f for f in self.fighters.values() if f.team == "player" and f.alive), None)
+                if player:
+                    pos = (player.x, player.y)
+                    if not self.player_trail or math.dist(pos, self.player_trail[-1][1]) >= 28:
+                        self.player_trail.append((self.elapsed, pos))
+                        self.player_trail = self.player_trail[-100:]
+                self.trail_sample_timer = 0.45
         for actor in self.fighters.values():
             actor.cooldown = max(0, actor.cooldown - dt)
             actor.ranged_cooldown = max(0, actor.ranged_cooldown - dt)
@@ -359,6 +375,7 @@ class CombatWorld:
                     actor.search_started = False
                     actor.search_points.clear()
                     actor.searched_points.clear()
+                    actor.trail_index = len(self.player_trail)
                 else:
                     actor.windup = 0
                     if actor.last_seen is None:
@@ -443,22 +460,40 @@ class CombatWorld:
             actor.facing_x, actor.facing_y = math.cos(angle), math.sin(angle)
             return
         if actor.search_goal is None:
-            if not actor.search_points:
+            if self.assisted_tracking:
+                from .stealth import circle_hits_rect, find_path
+                while actor.trail_index < len(self.player_trail):
+                    i = actor.trail_index
+                    timestamp, (px, py) = self.player_trail[i]
+                    if timestamp > self.elapsed - 1.25:
+                        break
+                    actor.trail_index += 1
+                    if math.dist((px, py), actor.last_seen) > 340:
+                        continue
+                    hx = max(actor.radius + 4, min(self.width - actor.radius - 4, px + math.sin(i * 2.37) * 32))
+                    hy = max(actor.radius + 4, min(self.height - actor.radius - 4, py + math.cos(i * 1.91) * 32))
+                    if any(circle_hits_rect(hx, hy, actor.radius + 2, box) for box in self.obstacles):
+                        continue
+                    if find_path((actor.x, actor.y), (hx, hy), self.obstacles, actor.radius, self.width, self.height):
+                        actor.search_goal = (hx, hy)
+                        break
+            if actor.search_goal is None and not actor.search_points:
                 # Una vez agotadas las zonas desconocidas, revisa las ya
                 # inspeccionadas. Nunca necesita saber donde esta el jugador.
                 actor.search_points = search_cells(actor.last_seen, self.obstacles,
                                                    actor.radius, self.width, self.height)
                 actor.searched_points.clear()
-            if not actor.search_points:
+            if actor.search_goal is None and not actor.search_points:
                 return
-            vx, vy = actor.search_direction
-            norm = max(1, math.hypot(vx, vy))
-            actor.search_points.sort(key=lambda point: (
-                math.dist((actor.x, actor.y), point)
-                - 90 * ((point[0] - actor.last_seen[0]) * vx +
-                        (point[1] - actor.last_seen[1]) * vy) /
-                       (norm * max(1, math.dist(point, actor.last_seen)))))
-            actor.search_goal = actor.search_points.pop(0)
+            if actor.search_goal is None:
+                vx, vy = actor.search_direction
+                norm = max(1, math.hypot(vx, vy))
+                actor.search_points.sort(key=lambda point: (
+                    math.dist((actor.x, actor.y), point)
+                    - 90 * ((point[0] - actor.last_seen[0]) * vx +
+                            (point[1] - actor.last_seen[1]) * vy) /
+                           (norm * max(1, math.dist(point, actor.last_seen)))))
+                actor.search_goal = actor.search_points.pop(0)
         if math.dist((actor.x, actor.y), actor.search_goal) <= actor.radius + 5:
             actor.searched_points.append(actor.search_goal)
             actor.search_goal = None
