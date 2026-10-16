@@ -95,8 +95,13 @@ class BrumazulScene(FarmScene):
         if self.beach:
             from game.story.beach_monster_combat import BeachMonsterCombat
             p = self.app.state["player"]
-            self.beach_combat = BeachMonsterCombat(p["x"], p["y"],
-                                                   self.boss.x, self.boss.y)
+            from game.world.collision_manager import get_scene_collision_rects
+            self.beach_combat = BeachMonsterCombat(
+                p["x"], p["y"], self.boss.x, self.boss.y,
+                obstacles=get_scene_collision_rects(),
+            )
+            self.beach_notice = ""
+            self.beach_notice_timer = 0.0
             self.progress["chapter_started"] = True
             self.seed_collectables()
 
@@ -223,6 +228,32 @@ class BrumazulScene(FarmScene):
                 self.index += 1
                 self.process_script()
             return True
+        if self.beach and not self.app.menu_open and not self.app.stash_open:
+            throwing = self.beach_combat.throwing
+            p = self.app.state["player"]
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE and throwing.charging:
+                throwing.cancel()
+                return True
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 3:
+                if throwing.held:
+                    throwing.start_charge()
+                else:
+                    result = throwing.pickup(p["x"], p["y"])
+                    if result == "picked":
+                        self.beach_message("Has recogido una piedra del suelo.")
+                        self.app.add_log("Mantén pulsado botón derecho para lanzarla.")
+                    else:
+                        self.beach_message("No hay nada que recoger.")
+                return True
+            if event.type == pygame.MOUSEBUTTONUP and event.button == 3:
+                if throwing.charging:
+                    cx, cy = get_camera_position(p["x"], p["y"], WIDTH, HEIGHT, 704, 704)
+                    throwing.throw(p["x"], p["y"], event.pos[0] + cx, event.pos[1] + cy)
+                return True
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_e:
+                if math.dist((p["x"], p["y"]), (672, 350)) <= 90:
+                    self.beach_message("El acceso al puerto está cerrado.")
+                    return True
         if self.shop_id is not None:
             from game.trading.chapter_trade import handle_event as handle_trade_event
             return handle_trade_event(self, event)
@@ -359,6 +390,11 @@ class BrumazulScene(FarmScene):
         self.app.add_log(get_chapter_ui_text("mission_started"))
         self.autosave()
 
+    def beach_message(self, message):
+        self.beach_notice = message
+        self.beach_notice_timer = 3.0
+        self.app.add_log(message)
+
     def autosave(self):
         if getattr(self.app, "disable_autosave", False):
             return
@@ -393,11 +429,17 @@ class BrumazulScene(FarmScene):
             if self.app.menu_open or self.app.stash_open:
                 return
             self.attack_timer = max(0, self.attack_timer - dt)
+            self.beach_notice_timer = max(0, self.beach_notice_timer - dt)
             p = self.app.state["player"]
             events, defeated = self.beach_combat.update(dt, p["x"], p["y"])
             self.boss.update(self.beach_combat.monster.x, self.beach_combat.monster.y)
             self.boss_awake = self.beach_combat.monster.awake
             self.boss_hp = self.beach_combat.monster.hp
+            if self.beach_combat.last_stone_event == "hit":
+                self.beach_message("¡La criatura se ha movido! Impactos: " +
+                                   str(self.beach_combat.stone_hits) + "/3")
+            elif self.beach_combat.last_stone_event == "woken":
+                self.beach_message("¡Has despertado al monstruo!")
             for event in events:
                 if event.kind == "telegraph" and event.actor == "beach_monster":
                     self.boss_timer = event.duration
@@ -673,6 +715,17 @@ class BrumazulScene(FarmScene):
                 pygame.draw.rect(s, (194, 194, 194), pygame.Rect(collision.x - cx, collision.y - cy, collision.width, collision.height), 1)
             pygame.draw.rect(s, PALE, pygame.Rect(-cx, -cy, 704, 165))
             pygame.draw.line(s, LINE, (-cx, 165 - cy), (704 - cx, 165 - cy), 1)
+            # Visible pebbled ground, source of guaranteed stones.
+            pygame.draw.rect(s, (199, 192, 178), (70 - cx, 350 - cy, 160, 115))
+            for rx in range(84, 220, 22):
+                for ry in range(363, 458, 24):
+                    pygame.draw.ellipse(s, (123, 118, 109),
+                                        (rx - cx, ry - cy, 8, 5))
+            # Interactable closed port gate (E).
+            pygame.draw.rect(s, (117, 88, 61), (652 - cx, 325 - cy, 48, 58), 3)
+            pygame.draw.line(s, (117, 88, 61), (676 - cx, 325 - cy),
+                             (676 - cx, 383 - cy), 3)
+            self.label("PUERTO [E]", 615 - cx, 303 - cy)
             # Sin cuadricula: solo limites del mapa y del sendero.
             for x in (350, 450):
                 pygame.draw.line(s, LIGHT, (x - cx, -cy), (x - cx, 360 - cy), 1)
@@ -699,6 +752,21 @@ class BrumazulScene(FarmScene):
                                    (bx + side * 13, by - 7), 8)
                 pygame.draw.circle(s, (43, 37, 42), (bx + side * 13, by - 7), 3)
             pygame.draw.arc(s, (43, 37, 42), (bx - 22, by - 1, 44, 35), 3.35, 6.08, 3)
+            if self.beach_combat.stone_hits < 3 and self.beach_combat.sleep_reaction > 0:
+                self.label("?", bx - 4, by - 70)
+            if active:
+                import math as _math
+                angle = _math.atan2(creature.facing_y, creature.facing_x)
+                arc = [_math.radians(v) + angle for v in range(-38, 39, 4)]
+                points = [(bx, by)] + [(int(bx + _math.cos(a) * creature.vision_range),
+                                        int(by + _math.sin(a) * creature.vision_range)) for a in arc]
+                vision = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
+                pygame.draw.polygon(vision, (214, 170, 73, 40), points)
+                s.blit(vision, (0, 0))
+                if creature.last_seen:
+                    lx, ly = creature.last_seen
+                    pygame.draw.circle(s, (193, 112, 65),
+                                       (int(lx - cx), int(ly - cy)), 9, 2)
             if preparing:
                 # Wind-up warning is visible in the actual game scene.
                 pygame.draw.circle(s, (181, 58, 51), (bx, by), 50, 4)
@@ -709,6 +777,21 @@ class BrumazulScene(FarmScene):
             elif active:
                 pygame.draw.circle(s, (165, 113, 78), (bx, by), 47, 2)
                 self.label("!", bx - 4, by - 70)
+            for stone in self.beach_combat.throwing.projectiles:
+                pygame.draw.circle(s, (86, 78, 70),
+                                   (int(stone.x - cx), int(stone.y - cy)), 6)
+            throwing = self.beach_combat.throwing
+            if throwing.held:
+                pygame.draw.circle(s, (78, 74, 69),
+                                   (int(p["x"] - cx + 16), int(p["y"] - cy - 8)), 6)
+                self.label("PIEDRA EN MANO · Mantén clic derecho para cargar", 22, 49)
+            if throwing.charging:
+                pygame.draw.rect(s, (70, 70, 70), (22, 78, 204, 18), 2)
+                pygame.draw.rect(s, (115, 159, 103),
+                                 (24, 80, int(200 * throwing.charge), 14))
+                self.label("FUERZA", 235, 78)
+            if self.beach_notice_timer > 0:
+                self.label(self.beach_notice, 22, 109)
             self.label("PLAYA DE BRUMAZUL  /  NOCHE", 22, 18)
         elif self.tavern:
             self.draw_tavern(cx, cy)
