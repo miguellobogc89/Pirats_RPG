@@ -58,7 +58,7 @@ class StealthTests(unittest.TestCase):
         self.world.obstacles.append(Obstacle(245, 160, 45, 85))
         self.world.update(1.5)
         self.assertNotAlmostEqual(self.guard.y, 200)
-        self.assertEqual(self.guard.alert_state, "search")
+        self.assertIn(self.guard.alert_state, ("pursuit", "search"))
 
     def test_hidden_player_does_not_update_last_seen(self):
         self.guard.awake = True
@@ -75,6 +75,28 @@ class StealthTests(unittest.TestCase):
         self.world.update(4)
         self.assertEqual(self.guard.alert_state, "search")
         self.assertTrue(self.guard.search_points or self.guard.searched_points or self.guard.search_goal)
+
+    def test_runs_to_last_seen_before_search(self):
+        self.guard.awake = True
+        self.guard.last_seen = (170, 200)
+        self.world.obstacles.append(Obstacle(245, 160, 45, 85))
+        self.world.update(0.1)
+        self.assertEqual(self.guard.alert_state, "pursuit")
+        self.assertFalse(self.guard.search_started)
+        self.assertGreater(self.guard.search_direction[0] ** 2, 0)
+
+    def test_observed_cells_not_revisited_first(self):
+        from game.combat.action.stealth import search_cells
+        self.guard.awake = True
+        self.guard.last_seen = (170, 200)
+        self.guard.x, self.guard.y = 170, 200
+        self.hero.x, self.hero.y = 600, 400
+        cells = search_cells((170, 200), [], self.guard.radius, 700, 500)
+        self.guard.surveyed_cells = {(round(x / 35), round(y / 35)) for x, y in cells if x < 170}
+        self.world.update(0.1)
+        self.assertEqual(self.guard.alert_state, "search")
+        self.assertTrue(self.guard.search_points)
+        self.assertTrue(all(x >= 170 for x, y in self.guard.search_points))
 
     def test_chase_speed_exceeds_walk(self):
         self.assertGreaterEqual(self.guard.chase_speed, 2 * self.guard.walk_speed)

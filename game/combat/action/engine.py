@@ -50,6 +50,10 @@ class Fighter:
     search_points: list = field(default_factory=list)
     searched_points: list = field(default_factory=list)
     scan_pause: float = 0
+    surveyed_cells: set = field(default_factory=set)
+    survey_timer: float = 0
+    search_started: bool = False
+    search_direction: tuple = (0, 0)
     patrol_points: tuple = ()
     patrol_index: int = 0
     patrol_pause: float = 0
@@ -336,14 +340,32 @@ class CombatWorld:
                     actor.last_seen = (target.x, target.y)
                     actor.alert_state = "alert"
                     actor.search_goal = None
+                    actor.search_started = False
                     actor.search_points.clear()
                     actor.searched_points.clear()
                 else:
-                    actor.alert_state = "search"
                     actor.windup = 0
-                    if actor.last_seen is not None:
+                    if actor.last_seen is None:
+                        continue
+                    if not actor.search_started:
+                        actor.search_direction = (actor.last_seen[0] - actor.x,
+                                                  actor.last_seen[1] - actor.y)
+                    # Corre hasta el ultimo avistamiento, incluso sin vision.
+                    if not actor.search_started and math.dist((actor.x, actor.y), actor.last_seen) > actor.radius + 5:
+                        actor.alert_state = "pursuit"
+                        self._navigate(actor, actor.last_seen, dt, actor.chase_speed)
+                    else:
+                        actor.alert_state = "search"
                         self._search(actor, dt)
                     continue
+                # Recuerda las zonas realmente observadas, no las que simplemente
+                # ha atravesado; se actualiza con cadencia para ahorrar CPU.
+                actor.survey_timer -= dt
+                if actor.survey_timer <= 0:
+                    from .stealth import visible_cells
+                    actor.surveyed_cells.update(visible_cells(actor, self.obstacles,
+                                                              self.width, self.height))
+                    actor.survey_timer = 0.15
             if actor.windup > 0:
                 actor.windup = max(0, actor.windup - dt)
                 if actor.windup == 0 and target.alive:
@@ -390,10 +412,15 @@ class CombatWorld:
 
     def _search(self, actor, dt):
         from .stealth import search_cells
-        if actor.search_goal is None and not actor.searched_points and not actor.search_points:
-            actor.search_goal = actor.last_seen
+        if not actor.search_started:
+            actor.search_started = True
+            actor.search_goal = None
             actor.search_points = search_cells(actor.last_seen, self.obstacles,
                                                actor.radius, self.width, self.height)
+            actor.search_points = [p for p in actor.search_points
+                                   if (round(p[0] / 35), round(p[1] / 35)) not in actor.surveyed_cells]
+            actor.searched_points.clear()
+            actor.scan_pause = 0.3
         if actor.scan_pause > 0:
             actor.scan_pause = max(0, actor.scan_pause - dt)
             angle = math.atan2(actor.facing_y, actor.facing_x) + 2 * dt
@@ -401,12 +428,20 @@ class CombatWorld:
             return
         if actor.search_goal is None:
             if not actor.search_points:
+                # Una vez agotadas las zonas desconocidas, revisa las ya
+                # inspeccionadas. Nunca necesita saber donde esta el jugador.
                 actor.search_points = search_cells(actor.last_seen, self.obstacles,
                                                    actor.radius, self.width, self.height)
                 actor.searched_points.clear()
             if not actor.search_points:
                 return
-            actor.search_points.sort(key=lambda point: math.dist((actor.x, actor.y), point))
+            vx, vy = actor.search_direction
+            norm = max(1, math.hypot(vx, vy))
+            actor.search_points.sort(key=lambda point: (
+                math.dist((actor.x, actor.y), point)
+                - 90 * ((point[0] - actor.last_seen[0]) * vx +
+                        (point[1] - actor.last_seen[1]) * vy) /
+                       (norm * max(1, math.dist(point, actor.last_seen)))))
             actor.search_goal = actor.search_points.pop(0)
         if math.dist((actor.x, actor.y), actor.search_goal) <= actor.radius + 5:
             actor.searched_points.append(actor.search_goal)

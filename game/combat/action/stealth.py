@@ -113,3 +113,23 @@ def search_cells(origin, obstacles, radius, width, height, search_radius=230, sp
             y += spacing
         x += spacing
     return points
+
+def visible_cells(observer, obstacles, width, height, spacing=35):
+    """Celdas realmente visibles durante la persecucion, en una rejilla estable."""
+    cells = set()
+    ox, oy = observer.x, observer.y
+    radius = observer.vision_range
+    for ix in range(max(0, int((ox - radius) // spacing)),
+                    min(int(width // spacing), int((ox + radius) // spacing)) + 1):
+        for iy in range(max(0, int((oy - radius) // spacing)),
+                        min(int(height // spacing), int((oy + radius) // spacing)) + 1):
+            x, y = ix * spacing, iy * spacing
+            dx, dy = x - ox, y - oy
+            dist = math.hypot(dx, dy)
+            if dist > radius:
+                continue
+            if dist > 0 and (dx * observer.facing_x + dy * observer.facing_y) / dist < math.cos(math.radians(observer.vision_angle) / 2):
+                continue
+            if line_of_sight(ox, oy, x, y, obstacles):
+                cells.add((ix, iy))
+    return cells
