@@ -109,6 +109,15 @@ class StealthTests(unittest.TestCase):
         self.assertEqual(self.guard.surprise_remaining, 0)
         self.assertNotEqual(self.guard.alert_state, "surprised")
 
+    def test_guard_chases_after_surprise(self):
+        self.world.update(0.3)
+        self.assertTrue(self.guard.awake)
+        self.assertEqual(self.guard.alert_state, "surprised")
+        start = self.guard.x
+        self.world.update(0.6)
+        self.assertLess(self.guard.x, start)
+        self.assertEqual(self.guard.alert_state, "alert")
+
     def test_chase_speed_exceeds_walk(self):
         self.assertGreaterEqual(self.guard.chase_speed, 2 * self.guard.walk_speed)
 
