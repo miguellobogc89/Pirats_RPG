@@ -3,7 +3,7 @@ import sys
 import pygame
 
 from core.game_state import create_new_game_state
-from core.save_manager import get_available_save_slot_id
+from core.save_manager import get_available_save_slot_id, save_state
 from game.character_creation.character_creation_state import (
     FALLBACK_SCENE_ID,
     GENDER_OPTIONS,
@@ -120,4 +120,12 @@ def confirm_character_creation(app):
         },
         dispatch_scene_entered=True,
     )
+    # Persist the newly created slot immediately, before the first frame.
+    # Reopening the game now resumes this character without recreating it.
+    try:
+        save_state(app.state)
+    except (OSError, RuntimeError, TypeError, ValueError) as error:
+        app.character_creation_state["message"] = "Error al guardar partida: " + str(error)
+        app.mode = "character_creation"
+        return
     app.mode = "game"
