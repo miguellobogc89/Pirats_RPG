@@ -10,7 +10,7 @@ WHITE = (232, 231, 214)
 
 
 def make_world():
-    world = CombatWorld(width=W, height=H, perception_enabled=True)
+    world = CombatWorld(width=W, height=H, perception_enabled=True, assisted_tracking=True)
     world.obstacles = [
         Obstacle(320, 170, 95, 110),
         Obstacle(440, 350, 125, 85),
