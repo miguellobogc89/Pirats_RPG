@@ -76,6 +76,46 @@ class ActionCombatTests(unittest.TestCase):
         self.world.update(0.1)
         self.assertGreater(rat.x, 135)
 
+    def test_dash_consumes_stamina_and_has_cooldown(self):
+        hero = self.world.fighters["hero"]
+        self.assertTrue(self.world.dash("hero", (1, 0)))
+        self.assertEqual(hero.stamina, 76)
+        self.assertFalse(self.world.dash("hero", (1, 0)))
+        self.world.update(0.1)
+        self.assertGreater(hero.x, 100)
+        self.assertGreater(hero.invulnerability, 0)
+
+    def test_projectile_hits_target(self):
+        hero = self.world.fighters["hero"]
+        self.assertTrue(self.world.shoot("hero", (1, 0)))
+        self.assertEqual(hero.stamina, 88)
+        self.assertFalse(self.world.shoot("hero", (1, 0)))
+        self.world.update(0.15)
+        self.assertLess(self.world.fighters["rat"].hp, 3)
+        self.assertFalse(self.world.projectiles)
+
+    def test_three_hit_combo_and_charge(self):
+        hero = self.world.fighters["hero"]
+        rat = self.world.fighters["rat"]
+        for step in range(1, 4):
+            self.assertTrue(self.world.attack("hero", (1, 0)))
+            self.assertEqual(hero.combo_step, step)
+            self.world.update(0.48)
+        self.assertEqual(rat.hp, 0)
+        self.world.add(Fighter("dummy", "enemy", 135, 100, hp=10, max_hp=10, speed=0, aggro_radius=0))
+        self.world.update(0.5)
+        self.assertTrue(self.world.attack("hero", (1, 0), charged=True))
+        self.assertEqual(hero.combo_step, 0)
+        self.assertLess(hero.stamina, 100)
+        self.assertEqual(self.world.fighters["dummy"].hp, 4)
+
+    def test_stamina_recovery(self):
+        hero = self.world.fighters["hero"]
+        hero.stamina = 50
+        self.world.update(1)
+        self.assertGreater(hero.stamina, 50)
+        self.assertLessEqual(hero.stamina, 100)
+
 
 if __name__ == "__main__":
     unittest.main()

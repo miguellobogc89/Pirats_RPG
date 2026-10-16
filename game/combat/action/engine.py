@@ -31,6 +31,15 @@ class Fighter:
     attack_target: str = ""
     knockback_x: float = 0
     knockback_y: float = 0
+    stamina: float = 100
+    max_stamina: float = 100
+    ranged_cooldown: float = 0
+    dash_cooldown: float = 0
+    dash_remaining: float = 0
+    dash_x: float = 0
+    dash_y: float = 0
+    combo_step: int = 0
+    combo_timer: float = 0
 
     @property
     def alive(self):
@@ -50,9 +59,23 @@ class CombatEvent:
 
 
 @dataclass
+class Projectile:
+    owner: str
+    team: str
+    x: float
+    y: float
+    vx: float
+    vy: float
+    damage: int = 1
+    radius: float = 6
+    lifetime: float = 1.4
+
+
+@dataclass
 class CombatWorld:
     fighters: dict = field(default_factory=dict)
     events: list = field(default_factory=list)
+    projectiles: list = field(default_factory=list)
     width: float = 800
     height: float = 600
 
@@ -77,38 +100,87 @@ class CombatWorld:
             actor.x = min(self.width - actor.radius, max(actor.radius, actor.x + dx * actor.speed * dt))
             actor.y = min(self.height - actor.radius, max(actor.radius, actor.y + dy * actor.speed * dt))
 
-    def attack(self, actor_id, direction=None):
+    def dash(self, actor_id, direction=None):
         actor = self.fighters[actor_id]
-        if not actor.alive or actor.cooldown > 0 or actor.stun > 0:
+        if not actor.alive or actor.stun > 0 or actor.dash_cooldown > 0 or actor.dash_remaining > 0 or actor.stamina < 24:
+            return False
+        dx, dy = direction if direction is not None else (actor.facing_x, actor.facing_y)
+        length = math.hypot(dx, dy)
+        if length < 1e-8:
+            dx, dy, length = actor.facing_x, actor.facing_y, 1
+        actor.dash_x, actor.dash_y = dx / length, dy / length
+        actor.facing_x, actor.facing_y = actor.dash_x, actor.dash_y
+        actor.dash_remaining = 0.17
+        actor.dash_cooldown = 0.72
+        actor.invulnerability = max(actor.invulnerability, 0.19)
+        actor.stamina -= 24
+        self.events.append(CombatEvent("dash", actor.id, x=actor.x, y=actor.y, duration=0.17))
+        return True
+
+    def shoot(self, actor_id, direction=None):
+        actor = self.fighters[actor_id]
+        if not actor.alive or actor.stun > 0 or actor.dash_remaining > 0 or actor.ranged_cooldown > 0 or actor.stamina < 12:
+            return False
+        dx, dy = direction if direction is not None else (actor.facing_x, actor.facing_y)
+        length = math.hypot(dx, dy)
+        if length < 1e-8:
+            return False
+        dx, dy = dx / length, dy / length
+        actor.facing_x, actor.facing_y = dx, dy
+        actor.ranged_cooldown = 0.75
+        actor.stamina -= 12
+        px, py = actor.x + dx * (actor.radius + 9), actor.y + dy * (actor.radius + 9)
+        self.projectiles.append(Projectile(actor.id, actor.team, px, py, dx * 390, dy * 390))
+        self.events.append(CombatEvent("shoot", actor.id, x=px, y=py))
+        return True
+
+    def attack(self, actor_id, direction=None, charged=False):
+        actor = self.fighters[actor_id]
+        if not actor.alive or actor.cooldown > 0 or actor.stun > 0 or actor.dash_remaining > 0:
             return False
         if direction is not None:
             dx, dy = direction
             magnitude = math.hypot(dx, dy)
             if magnitude:
                 actor.facing_x, actor.facing_y = dx / magnitude, dy / magnitude
-        actor.cooldown = actor.attack_cooldown
-        self.events.append(CombatEvent("attack", actor.id, x=actor.x, y=actor.y,
-                                       duration=0.12))
+        if charged and actor.stamina < 28:
+            return False
+        if charged:
+            actor.stamina -= 28
+            actor.combo_step = 0
+            actor.combo_timer = 0
+            damage = actor.damage * 3
+            reach = actor.reach * 1.3
+            actor.cooldown = 0.85
+        else:
+            actor.combo_step = actor.combo_step % 3 + 1 if actor.combo_timer > 0 else 1
+            actor.combo_timer = 1.0
+            damage = actor.damage + (1 if actor.combo_step == 3 else 0)
+            reach = actor.reach * (1.15 if actor.combo_step == 3 else 1)
+            actor.cooldown = max(0.48, actor.attack_cooldown)
+        self.events.append(CombatEvent("attack", actor.id, amount=actor.combo_step,
+                                       x=actor.x, y=actor.y, duration=0.18 if charged else 0.12,
+                                       intensity=2 if charged else 1))
         targets = []
         for target in self.fighters.values():
             if target.team == actor.team or not target.alive or target.id == actor.id:
                 continue
             dx, dy = target.x - actor.x, target.y - actor.y
             distance = math.hypot(dx, dy)
-            if distance > actor.reach + target.radius:
+            if distance > reach + target.radius:
                 continue
             if distance and (dx * actor.facing_x + dy * actor.facing_y) / distance < 0.35:
                 continue
             targets.append((distance, target))
         if targets:
             target = min(targets, key=lambda item: item[0])[1]
-            if not self.damage(actor.id, target.id, actor.damage):
+            if not self.damage(actor.id, target.id, damage):
                 self.events.append(CombatEvent("blocked", actor.id, target.id,
                                                x=target.x, y=target.y,
                                                duration=0.22))
         else:
-            self.events.append(CombatEvent("miss", actor.id, x=actor.x + actor.facing_x * actor.reach,
-                                           y=actor.y + actor.facing_y * actor.reach,
+            self.events.append(CombatEvent("miss", actor.id, x=actor.x + actor.facing_x * reach,
+                                           y=actor.y + actor.facing_y * reach,
                                            duration=0.18))
         return True
 
@@ -154,6 +226,15 @@ class CombatWorld:
     def _step(self, dt):
         for actor in self.fighters.values():
             actor.cooldown = max(0, actor.cooldown - dt)
+            actor.ranged_cooldown = max(0, actor.ranged_cooldown - dt)
+            actor.dash_cooldown = max(0, actor.dash_cooldown - dt)
+            actor.combo_timer = max(0, actor.combo_timer - dt)
+            actor.stamina = min(actor.max_stamina, actor.stamina + 19 * dt)
+            if actor.dash_remaining > 0 and actor.alive:
+                duration = min(dt, actor.dash_remaining)
+                actor.x = min(self.width - actor.radius, max(actor.radius, actor.x + actor.dash_x * 650 * duration))
+                actor.y = min(self.height - actor.radius, max(actor.radius, actor.y + actor.dash_y * 650 * duration))
+                actor.dash_remaining = max(0, actor.dash_remaining - dt)
             actor.invulnerability = max(0, actor.invulnerability - dt)
             actor.stun = max(0, actor.stun - dt)
             if actor.alive:
@@ -161,6 +242,28 @@ class CombatWorld:
                 actor.y = min(self.height - actor.radius, max(actor.radius, actor.y + actor.knockback_y * dt))
             actor.knockback_x *= max(0, 1 - 8 * dt)
             actor.knockback_y *= max(0, 1 - 8 * dt)
+        for projectile in self.projectiles[:]:
+            old_x, old_y = projectile.x, projectile.y
+            projectile.x += projectile.vx * dt
+            projectile.y += projectile.vy * dt
+            projectile.lifetime -= dt
+            struck = False
+            for target in self.fighters.values():
+                if not target.alive or target.team == projectile.team:
+                    continue
+                vx, vy = projectile.x - old_x, projectile.y - old_y
+                denominator = vx * vx + vy * vy
+                fraction = max(0, min(1, ((target.x - old_x) * vx + (target.y - old_y) * vy) / denominator)) if denominator else 0
+                cx, cy = old_x + vx * fraction, old_y + vy * fraction
+                if math.hypot(target.x - cx, target.y - cy) <= target.radius + projectile.radius:
+                    if not self.damage(projectile.owner, target.id, projectile.damage):
+                        self.events.append(CombatEvent("blocked", projectile.owner, target.id, x=target.x, y=target.y))
+                    struck = True
+                    break
+            if struck or projectile.lifetime <= 0 or not (0 <= projectile.x <= self.width and 0 <= projectile.y <= self.height):
+                self.projectiles.remove(projectile)
+                if not struck:
+                    self.events.append(CombatEvent("projectile_end", projectile.owner, x=projectile.x, y=projectile.y))
         for actor in list(self.fighters.values()):
             if not actor.alive or actor.team == "player":
                 continue
@@ -190,7 +293,7 @@ class CombatWorld:
                                                        y=actor.y + actor.facing_y * actor.reach,
                                                        duration=0.18))
                 continue
-            if actor.stun > 0:
+            if actor.stun > 0 or actor.dash_remaining > 0:
                 continue
             if distance > 0:
                 actor.facing_x, actor.facing_y = dx / distance, dy / distance

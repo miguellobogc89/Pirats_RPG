@@ -22,7 +22,7 @@ def make_world():
 def run():
     pygame.init()
     screen = pygame.display.set_mode((W, H))
-    pygame.display.set_caption("Pirats RPG - Laboratorio de combate | Fase 1")
+    pygame.display.set_caption("Pirats RPG - Laboratorio de combate | Fase 2")
     font = pygame.font.SysFont("consolas", 19)
     small = pygame.font.SysFont("consolas", 15)
     large = pygame.font.SysFont("consolas", 26, bold=True)
@@ -31,6 +31,7 @@ def run():
     feedback = CombatFeedback()
     log = []
     running = True
+    melee_down_at = None
     while running:
         dt = min(clock.tick(60) / 1000, 0.05)
         player = world.fighters["player"]
@@ -42,11 +43,22 @@ def run():
                 feedback = CombatFeedback()
                 log = []
                 player = world.fighters["player"]
-            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1 and player.alive and feedback.hitstop == 0:
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                melee_down_at = pygame.time.get_ticks()
+            if event.type == pygame.MOUSEBUTTONUP and event.button == 1:
+                if melee_down_at is not None and player.alive and feedback.hitstop == 0:
+                    mx, my = event.pos
+                    charged = pygame.time.get_ticks() - melee_down_at >= 550
+                    world.attack("player", (mx - player.x, my - player.y), charged=charged)
+                melee_down_at = None
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 3 and player.alive and feedback.hitstop == 0:
                 mx, my = event.pos
-                world.attack("player", (mx - player.x, my - player.y))
+                world.shoot("player", (mx - player.x, my - player.y))
             if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE and player.alive and feedback.hitstop == 0:
-                world.attack("player")
+                pressed = pygame.key.get_pressed()
+                dx = int(pressed[pygame.K_d] or pressed[pygame.K_RIGHT]) - int(pressed[pygame.K_a] or pressed[pygame.K_LEFT])
+                dy = int(pressed[pygame.K_s] or pressed[pygame.K_DOWN]) - int(pressed[pygame.K_w] or pressed[pygame.K_UP])
+                world.dash("player", (dx, dy) if dx or dy else None)
         keys = pygame.key.get_pressed()
         if player.alive and feedback.hitstop <= 0:
             world.move("player", int(keys[pygame.K_d] or keys[pygame.K_RIGHT]) - int(keys[pygame.K_a] or keys[pygame.K_LEFT]),
@@ -66,6 +78,9 @@ def run():
             pygame.draw.line(scene, (43, 59, 57), (x, 0), (x, H))
         for y in range(0, H, 40):
             pygame.draw.line(scene, (43, 59, 57), (0, y), (W, y))
+        for projectile in world.projectiles:
+            pygame.draw.circle(scene, (125, 202, 255), (round(projectile.x), round(projectile.y)), round(projectile.radius))
+            pygame.draw.circle(scene, (217, 243, 255), (round(projectile.x), round(projectile.y)), 2)
         for fighter in world.fighters.values():
             if not fighter.alive:
                 continue
@@ -97,8 +112,8 @@ def run():
         screen.fill(BG)
         screen.blit(scene, feedback.offset())
         pygame.draw.rect(screen, (24, 36, 35), (0, 0, W, 80))
-        screen.blit(font.render("WASD mover | Clic atacar | ESPACIO atacar | R reiniciar | ESC salir", True, WHITE), (16, 12))
-        screen.blit(font.render(f"VIDA: {player.hp}/{player.max_hp} | ENEMIGOS: {sum(f.alive for f in world.fighters.values() if f.team != 'player')}", True, WHITE), (16, 43))
+        screen.blit(font.render("WASD | Izq sable (mantener=cargar) | Dcho proyectil | ESPACIO dash | R reiniciar", True, WHITE), (16, 12))
+        screen.blit(font.render(f"VIDA: {player.hp}/{player.max_hp} | ENERGIA: {round(player.stamina)}/{round(player.max_stamina)} | COMBO: {player.combo_step if player.combo_timer else 0} | ENEMIGOS: {sum(f.alive for f in world.fighters.values() if f.team != 'player')}", True, WHITE), (16, 43))
         for i, msg in enumerate(log):
             screen.blit(small.render(msg, True, WHITE), (16, H - 100 + i * 17))
         if not player.alive or not any(f.alive for f in world.fighters.values() if f.team != "player"):

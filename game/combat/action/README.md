@@ -35,3 +35,13 @@ La demo requiere `pygame`; el motor y sus pruebas solo usan la biblioteca estand
 En Unity, portar las reglas a C# y consumir estos eventos con VFX, UI y camara nativos. Los sprites, las particulas Pygame y la camara no se trasladan literalmente. El hitstop de esta demo pausa la simulacion de forma visual y no modifica el tiempo de las reglas.
 
 **Limitaciones:** no hay obstaculos, animaciones definitivas, inventario, misiones ni persistencia. Las escenas existentes no se han migrado.
+
+
+## Fase 2 — jugador
+
+- WASD: movimiento.
+- Clic izquierdo (soltar): ataque cuerpo a cuerpo; combo de tres golpes. Mantener 0,55 s y soltar: golpe cargado (28 de energía).
+- Clic derecho: proyectil hacia el cursor (12 de energía, recarga 0,75 s).
+- Espacio: dash hacia WASD o la orientación actual (24 de energía, recarga 0,72 s, invulnerabilidad breve).
+- Energía regenerable (19/s), proyectiles con colisiones y caducidad, eventos shoot/dash independientes de Pygame.
+- El golpe normal se ejecuta al soltar el botón izquierdo para distinguirlo del golpe cargado.
