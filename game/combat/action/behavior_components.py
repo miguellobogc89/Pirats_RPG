@@ -4,6 +4,7 @@ import math
 
 class SearchComponent:
     def search(world, actor, dt):
+        from .engine import CombatEvent
         from .stealth import search_cells
         if not actor.search_started:
             actor.search_started = True
