@@ -29,7 +29,7 @@ def transition_chapter_scene(app, scene_id, player, layout=None):
         return False
     target, spawn = destination
     if scene_id == "brumazul_playa":
-        app.add_log("El acceso está cerrado. No puedes abandonar la playa.")
+        # Closed exits are handled by explicit scene interaction, not proximity.
         return False
     if target in ("brumazul_casa_almarin", "brumazul_taller_almarin"):
         from game.story.chapter_01_quest_manager import ensure_chapter_quests
