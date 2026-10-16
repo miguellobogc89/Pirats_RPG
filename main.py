@@ -46,6 +46,8 @@ def main():
         state["player"]["y"] = 160
 
     app = PygameApp(state, game_data)
+    # Explicit test mode must not overwrite a real character slot.
+    app.disable_autosave = args.test_beach
     if (saved_state is not None and not args.new_game) or args.test_beach:
         app.mode = "game"
         app.dispatch_scene_entered_event()
