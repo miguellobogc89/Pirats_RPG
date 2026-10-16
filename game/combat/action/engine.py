@@ -64,6 +64,7 @@ class Fighter:
     last_seen: tuple = None
     search_time: float = 0
     search_duration: float = 15.0
+    reaction_remaining: float = 0.0
 
     @property
     def alive(self):
@@ -329,6 +330,31 @@ class CombatWorld:
             target = min(targets, key=lambda f: math.hypot(f.x - actor.x, f.y - actor.y))
             dx, dy = target.x - actor.x, target.y - actor.y
             distance = math.hypot(dx, dy)
+            if self.perception_enabled and actor.alert_state == "search_ended":
+                from .stealth import line_of_sight
+                if (distance <= actor.vision_range and
+                        line_of_sight(actor.x, actor.y, target.x, target.y, self.obstacles)):
+                    actor.alert_state = "alert"
+                    actor.reaction_remaining = 0
+                    actor.last_seen = (target.x, target.y)
+                    actor.search_started = False
+                    actor.search_time = 0
+                else:
+                    actor.reaction_remaining = max(0, actor.reaction_remaining - dt)
+                    if actor.reaction_remaining == 0:
+                        actor.awake = False
+                        actor.alert_state = "patrol"
+                        actor.detection = 0
+                        actor.last_seen = None
+                        actor.search_goal = None
+                        actor.search_points.clear()
+                        actor.searched_points.clear()
+                        actor.search_started = False
+                        actor.search_direction = (0, 0)
+                        actor.trail_index = len(self.player_trail)
+                        actor.scan_pause = 0
+                        actor.patrol_pause = 0
+                    continue
             if self.perception_enabled and not actor.awake:
                 from .stealth import can_see
                 visible = can_see(actor, target, self.obstacles)
@@ -380,6 +406,12 @@ class CombatWorld:
                     actor.trail_index = len(self.player_trail)
                 else:
                     actor.windup = 0
+                    if actor.alert_state == "confused":
+                        actor.reaction_remaining = max(0, actor.reaction_remaining - dt)
+                        if actor.reaction_remaining == 0:
+                            actor.alert_state = "search"
+                            self._search(actor, dt)
+                        continue
                     if actor.last_seen is None:
                         continue
                     if not actor.search_started and actor.search_direction == (0, 0):
@@ -390,8 +422,13 @@ class CombatWorld:
                         actor.alert_state = "pursuit"
                         self._navigate(actor, actor.last_seen, dt, actor.chase_speed)
                     else:
-                        actor.alert_state = "search"
-                        self._search(actor, dt)
+                        if not actor.search_started and actor.alert_state != "confused":
+                            actor.alert_state = "confused"
+                            actor.reaction_remaining = 1.0
+                            self.events.append(CombatEvent("confused", actor.id, x=actor.x, y=actor.y, duration=1.0))
+                        else:
+                            actor.alert_state = "search"
+                            self._search(actor, dt)
                     continue
                 # Recuerda las zonas realmente observadas, no las que simplemente
                 # ha atravesado; se actualiza con cadencia para ahorrar CPU.
@@ -459,18 +496,10 @@ class CombatWorld:
             actor.scan_pause = 0.3
         actor.search_time += dt
         if actor.search_time >= actor.search_duration:
-            actor.awake = False
-            actor.alert_state = "patrol"
-            actor.detection = 0
-            actor.last_seen = None
+            actor.alert_state = "search_ended"
+            actor.reaction_remaining = 1.0
             actor.search_goal = None
-            actor.search_points.clear()
-            actor.searched_points.clear()
-            actor.search_started = False
-            actor.search_direction = (0, 0)
-            actor.trail_index = len(self.player_trail)
-            actor.scan_pause = 0
-            actor.patrol_pause = 0
+            self.events.append(CombatEvent("search_ended", actor.id, x=actor.x, y=actor.y, duration=1.0))
             return
         if actor.scan_pause > 0:
             actor.scan_pause = max(0, actor.scan_pause - dt)
