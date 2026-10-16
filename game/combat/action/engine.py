@@ -63,6 +63,7 @@ class Fighter:
     alert_state: str = "patrol"
     last_seen: tuple = None
     search_time: float = 0
+    search_duration: float = 15.0
 
     @property
     def alive(self):
@@ -373,6 +374,7 @@ class CombatWorld:
                     actor.alert_state = "alert"
                     actor.search_goal = None
                     actor.search_started = False
+                    actor.search_time = 0
                     actor.search_points.clear()
                     actor.searched_points.clear()
                     actor.trail_index = len(self.player_trail)
@@ -453,7 +455,23 @@ class CombatWorld:
             actor.search_points = [p for p in actor.search_points
                                    if (round(p[0] / 35), round(p[1] / 35)) not in actor.surveyed_cells]
             actor.searched_points.clear()
+            actor.search_time = 0
             actor.scan_pause = 0.3
+        actor.search_time += dt
+        if actor.search_time >= actor.search_duration:
+            actor.awake = False
+            actor.alert_state = "patrol"
+            actor.detection = 0
+            actor.last_seen = None
+            actor.search_goal = None
+            actor.search_points.clear()
+            actor.searched_points.clear()
+            actor.search_started = False
+            actor.search_direction = (0, 0)
+            actor.trail_index = len(self.player_trail)
+            actor.scan_pause = 0
+            actor.patrol_pause = 0
+            return
         if actor.scan_pause > 0:
             actor.scan_pause = max(0, actor.scan_pause - dt)
             angle = math.atan2(actor.facing_y, actor.facing_x) + 2 * dt
