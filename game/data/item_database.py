@@ -338,7 +338,7 @@ ITEM_DATABASE = {
     'steel_sword': {
     'name': 'Acero espada', 'type': 'weapon', 'icon': 'S', 'sprite': 'assets/items/weapons/steel_sword.png', 'stackable': False},
     'stick': {
-    'name': 'Palo', 'type': 'resource', 'icon': 'S', 'sprite': 'assets/items/resources/stick.png', 'stackable': True},
+    'name': 'Palo', 'type': 'weapon', 'icon': 'S', 'sprite': 'assets/items/resources/stick.png', 'stackable': True},
     'stone': {
     'name': 'Piedra', 'type': 'resource', 'icon': 'S', 'sprite': 'assets/items/resources/stone.png', 'stackable': True},
     'supplies': {
