@@ -64,7 +64,19 @@ class Fighter:
     last_seen: tuple = None
     search_time: float = 0
     search_duration: float = 15.0
+    stealth: object = None
+    brain_enabled: bool = True
     reaction_remaining: float = 0.0
+
+    def __post_init__(self):
+        if self.stealth is not None:
+            cfg = self.stealth
+            self.vision_range = cfg.vision_range
+            self.vision_angle = cfg.vision_angle
+            self.detection_time = cfg.detection_time
+            self.walk_speed = cfg.patrol_speed
+            self.chase_speed = cfg.chase_speed
+            self.search_duration = cfg.search_duration
 
     @property
     def alive(self):
@@ -270,7 +282,7 @@ class CombatWorld:
 
     def _step(self, dt):
         self.elapsed += dt
-        if self.perception_enabled and self.assisted_tracking:
+        if self.assisted_tracking or any(f.stealth is not None and f.stealth.assisted_tracking for f in self.fighters.values()):
             self.trail_sample_timer -= dt
             if self.trail_sample_timer <= 0:
                 player = next((f for f in self.fighters.values() if f.team == "player" and f.alive), None)
@@ -322,151 +334,14 @@ class CombatWorld:
                 if not struck:
                     self.events.append(CombatEvent("projectile_end", projectile.owner, x=projectile.x, y=projectile.y))
         for actor in list(self.fighters.values()):
-            if not actor.alive or actor.team == "player":
+            if not actor.alive or actor.team == "player" or not actor.brain_enabled:
                 continue
             targets = [f for f in self.fighters.values() if f.alive and f.team != actor.team]
             if not targets:
                 continue
             target = min(targets, key=lambda f: math.hypot(f.x - actor.x, f.y - actor.y))
-            dx, dy = target.x - actor.x, target.y - actor.y
-            distance = math.hypot(dx, dy)
-            if self.perception_enabled and actor.alert_state == "search_ended":
-                from .stealth import line_of_sight
-                if (distance <= actor.vision_range and
-                        line_of_sight(actor.x, actor.y, target.x, target.y, self.obstacles)):
-                    actor.alert_state = "alert"
-                    actor.reaction_remaining = 0
-                    actor.last_seen = (target.x, target.y)
-                    actor.search_started = False
-                    actor.search_time = 0
-                else:
-                    actor.reaction_remaining = max(0, actor.reaction_remaining - dt)
-                    if actor.reaction_remaining == 0:
-                        actor.awake = False
-                        actor.alert_state = "patrol"
-                        actor.detection = 0
-                        actor.last_seen = None
-                        actor.search_goal = None
-                        actor.search_points.clear()
-                        actor.searched_points.clear()
-                        actor.search_started = False
-                        actor.search_direction = (0, 0)
-                        actor.trail_index = len(self.player_trail)
-                        actor.scan_pause = 0
-                        actor.patrol_pause = 0
-                    continue
-            if self.perception_enabled and not actor.awake:
-                from .stealth import can_see
-                visible = can_see(actor, target, self.obstacles)
-                actor.detection = min(actor.detection_time, actor.detection + dt) if visible else max(0, actor.detection - dt * 1.5)
-                if actor.detection >= actor.detection_time:
-                    actor.awake = True
-                    actor.alert_state = "surprised"
-                    actor.surprise_remaining = 0.32
-                    actor.last_seen = (target.x, target.y)
-                    actor.search_direction = (target.x - actor.x, target.y - actor.y)
-                    self.events.append(CombatEvent("aggro", actor.id, target.id, x=actor.x, y=actor.y, duration=0.32))
-                else:
-                    self._patrol(actor, dt)
-                continue
-            if not self.perception_enabled and distance <= actor.aggro_radius and not actor.awake:
-                actor.awake = True
-                self.events.append(CombatEvent("aggro", actor.id, target.id,
-                                               x=actor.x, y=actor.y))
-            if not actor.awake:
-                continue
-            if self.perception_enabled and actor.surprise_remaining > 0:
-                actor.surprise_remaining = max(0, actor.surprise_remaining - dt)
-                # Durante el sobresalto no se mueve, pero recuerda al jugador
-                # mientras siga a la vista. No lee posiciones ocultas.
-                from .stealth import line_of_sight
-                if (distance <= actor.vision_range and
-                        line_of_sight(actor.x, actor.y, target.x, target.y, self.obstacles)):
-                    actor.last_seen = (target.x, target.y)
-                    actor.search_direction = (dx, dy)
-                if actor.surprise_remaining == 0:
-                    actor.alert_state = "alert"
-                continue
-            if self.perception_enabled:
-                from .stealth import can_see, line_of_sight
-                # Una vez alertado no conoce la posicion del jugador tras las cajas.
-                # En combate se permite una vision periferica mayor que en patrulla.
-                # Tras la deteccion, mantener contacto visual sin depender de
-                # la orientacion que adopta al esquivar una caja.
-                seen = (distance <= actor.vision_range and
-                        line_of_sight(actor.x, actor.y, target.x, target.y, self.obstacles))
-                if seen:
-                    actor.last_seen = (target.x, target.y)
-                    actor.alert_state = "alert"
-                    actor.search_goal = None
-                    actor.search_started = False
-                    actor.search_time = 0
-                    actor.search_points.clear()
-                    actor.searched_points.clear()
-                    actor.trail_index = len(self.player_trail)
-                else:
-                    actor.windup = 0
-                    if actor.alert_state == "confused":
-                        actor.reaction_remaining = max(0, actor.reaction_remaining - dt)
-                        if actor.reaction_remaining == 0:
-                            actor.alert_state = "search"
-                            self._search(actor, dt)
-                        continue
-                    if actor.last_seen is None:
-                        continue
-                    if not actor.search_started and actor.search_direction == (0, 0):
-                        actor.search_direction = (actor.last_seen[0] - actor.x,
-                                                  actor.last_seen[1] - actor.y)
-                    # Corre hasta el ultimo avistamiento, incluso sin vision.
-                    if not actor.search_started and math.dist((actor.x, actor.y), actor.last_seen) > actor.radius + 5:
-                        actor.alert_state = "pursuit"
-                        self._navigate(actor, actor.last_seen, dt, actor.chase_speed)
-                    else:
-                        if not actor.search_started and actor.alert_state != "confused":
-                            actor.alert_state = "confused"
-                            actor.reaction_remaining = 1.0
-                            self.events.append(CombatEvent("confused", actor.id, x=actor.x, y=actor.y, duration=1.0))
-                        else:
-                            actor.alert_state = "search"
-                            self._search(actor, dt)
-                    continue
-                # Recuerda las zonas realmente observadas, no las que simplemente
-                # ha atravesado; se actualiza con cadencia para ahorrar CPU.
-                actor.survey_timer -= dt
-                if actor.survey_timer <= 0:
-                    from .stealth import visible_cells
-                    actor.surveyed_cells.update(visible_cells(actor, self.obstacles,
-                                                              self.width, self.height))
-                    actor.survey_timer = 0.15
-            if actor.windup > 0:
-                actor.windup = max(0, actor.windup - dt)
-                if actor.windup == 0 and target.alive:
-                    if math.hypot(target.x - actor.x, target.y - actor.y) <= actor.reach + target.radius:
-                        if not self.damage(actor.id, target.id, actor.damage):
-                            self.events.append(CombatEvent("blocked", actor.id, target.id,
-                                                           x=target.x, y=target.y,
-                                                           duration=0.22))
-                    else:
-                        self.events.append(CombatEvent("miss", actor.id,
-                                                       x=actor.x + actor.facing_x * actor.reach,
-                                                       y=actor.y + actor.facing_y * actor.reach,
-                                                       duration=0.18))
-                continue
-            if actor.stun > 0 or actor.dash_remaining > 0:
-                continue
-            if distance > 0:
-                actor.facing_x, actor.facing_y = dx / distance, dy / distance
-            if distance <= actor.reach + target.radius:
-                if actor.cooldown == 0:
-                    actor.cooldown = actor.attack_cooldown
-                    actor.windup = 0.22
-                    self.events.append(CombatEvent("telegraph", actor.id, target.id,
-                                                   x=actor.x, y=actor.y, duration=0.22))
-            elif distance > 0:
-                if self.perception_enabled:
-                    self._navigate(actor, (target.x, target.y), dt, actor.chase_speed)
-                else:
-                    self.move(actor.id, dx, dy, dt)
+            from .enemy_brain import EnemyBrain
+            EnemyBrain.tick(self, actor, target, dt)
 
     def _navigate(self, actor, destination, dt, speed=None):
         from .stealth import find_path
@@ -497,9 +372,9 @@ class CombatWorld:
         actor.search_time += dt
         if actor.search_time >= actor.search_duration:
             actor.alert_state = "search_ended"
-            actor.reaction_remaining = 1.0
+            actor.reaction_remaining = actor.stealth.search_end_duration if actor.stealth else 1.0
             actor.search_goal = None
-            self.events.append(CombatEvent("search_ended", actor.id, x=actor.x, y=actor.y, duration=1.0))
+            self.events.append(CombatEvent("search_ended", actor.id, x=actor.x, y=actor.y, duration=actor.reaction_remaining))
             return
         if actor.scan_pause > 0:
             actor.scan_pause = max(0, actor.scan_pause - dt)
@@ -507,7 +382,7 @@ class CombatWorld:
             actor.facing_x, actor.facing_y = math.cos(angle), math.sin(angle)
             return
         if actor.search_goal is None:
-            if self.assisted_tracking:
+            if (actor.stealth.assisted_tracking if actor.stealth else self.assisted_tracking):
                 from .stealth import circle_hits_rect, find_path
                 while actor.trail_index < len(self.player_trail):
                     i = actor.trail_index

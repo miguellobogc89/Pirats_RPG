@@ -2,6 +2,7 @@
 import math
 import pygame
 from .engine import CombatWorld, Fighter
+from .components import StealthConfig
 from .stealth import Obstacle, can_see
 
 W, H = 900, 620
@@ -10,7 +11,7 @@ WHITE = (232, 231, 214)
 
 
 def make_world():
-    world = CombatWorld(width=W, height=H, perception_enabled=True, assisted_tracking=True)
+    world = CombatWorld(width=W, height=H)
     world.obstacles = [
         Obstacle(320, 170, 95, 110),
         Obstacle(440, 350, 125, 85),
@@ -21,7 +22,7 @@ def make_world():
     world.add(Fighter("guard", "enemy", 565, 220, hp=8, max_hp=8,
                       speed=78, walk_speed=48, chase_speed=110, radius=15, reach=36, damage=1,
                       facing_x=0, facing_y=1,
-                      vision_range=245, vision_angle=75,
+                      stealth=StealthConfig(),
                       patrol_points=((565, 220), (565, 490), (760, 490), (760, 120), (565, 120))))
     return world
 
