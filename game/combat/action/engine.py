@@ -1,4 +1,8 @@
-"""Motor de combate de accion sin dependencias de Pygame ni de escenas."""
+"""Motor de combate de accion independiente de Pygame y de las escenas.
+
+Las reglas emiten eventos con posiciones y duraciones. Los adaptadores visuales
+(Pygame, Unity) deciden como representarlos.
+"""
 from dataclasses import dataclass, field
 import math
 
@@ -39,6 +43,10 @@ class CombatEvent:
     actor: str
     target: str = ""
     amount: int = 0
+    x: float = 0
+    y: float = 0
+    duration: float = 0
+    intensity: float = 0
 
 
 @dataclass
@@ -79,7 +87,8 @@ class CombatWorld:
             if magnitude:
                 actor.facing_x, actor.facing_y = dx / magnitude, dy / magnitude
         actor.cooldown = actor.attack_cooldown
-        self.events.append(CombatEvent("attack", actor.id))
+        self.events.append(CombatEvent("attack", actor.id, x=actor.x, y=actor.y,
+                                       duration=0.12))
         targets = []
         for target in self.fighters.values():
             if target.team == actor.team or not target.alive or target.id == actor.id:
@@ -93,7 +102,14 @@ class CombatWorld:
             targets.append((distance, target))
         if targets:
             target = min(targets, key=lambda item: item[0])[1]
-            self.damage(actor.id, target.id, actor.damage)
+            if not self.damage(actor.id, target.id, actor.damage):
+                self.events.append(CombatEvent("blocked", actor.id, target.id,
+                                               x=target.x, y=target.y,
+                                               duration=0.22))
+        else:
+            self.events.append(CombatEvent("miss", actor.id, x=actor.x + actor.facing_x * actor.reach,
+                                           y=actor.y + actor.facing_y * actor.reach,
+                                           duration=0.18))
         return True
 
     def damage(self, source_id, target_id, amount):
@@ -105,21 +121,30 @@ class CombatWorld:
             return False
         target.hp = max(0, target.hp - amount)
         target.invulnerability = 0.45
-        target.stun = 0.16
+        target.stun = 0.16 if target.alive else 0
         dx, dy = target.x - source.x, target.y - source.y
         distance = math.hypot(dx, dy)
         if distance:
             target.knockback_x, target.knockback_y = dx / distance * 115, dy / distance * 115
-        self.events.append(CombatEvent("hit", source_id, target_id, amount))
-        if not target.alive:
+        else:
+            target.knockback_x, target.knockback_y = source.facing_x * 115, source.facing_y * 115
+        # Los eventos describen el impacto sin depender de Pygame ni del framerate.
+        self.events.append(CombatEvent("hit", source_id, target_id, amount,
+                                       target.x, target.y, 0.11, min(1.8, 0.65 + amount * 0.14)))
+        self.events.append(CombatEvent("invulnerability", target.id, duration=0.45,
+                                       x=target.x, y=target.y))
+        if target.alive:
+            self.events.append(CombatEvent("stun", target.id, duration=target.stun,
+                                           x=target.x, y=target.y))
+        else:
             target.windup = 0
-            self.events.append(CombatEvent("death", source_id, target_id))
+            self.events.append(CombatEvent("death", source_id, target_id,
+                                           x=target.x, y=target.y, intensity=1.4))
         return True
 
     def update(self, dt):
         if dt < 0:
             raise ValueError("dt no puede ser negativo")
-        # Limitar el salto de simulacion evita atravesar objetivos por un frame lento.
         remaining = dt
         while remaining > 0:
             step = min(remaining, 0.05)
@@ -147,14 +172,23 @@ class CombatWorld:
             distance = math.hypot(dx, dy)
             if distance <= actor.aggro_radius and not actor.awake:
                 actor.awake = True
-                self.events.append(CombatEvent("aggro", actor.id, target.id))
+                self.events.append(CombatEvent("aggro", actor.id, target.id,
+                                               x=actor.x, y=actor.y))
             if not actor.awake:
                 continue
             if actor.windup > 0:
                 actor.windup = max(0, actor.windup - dt)
                 if actor.windup == 0 and target.alive:
                     if math.hypot(target.x - actor.x, target.y - actor.y) <= actor.reach + target.radius:
-                        self.damage(actor.id, target.id, actor.damage)
+                        if not self.damage(actor.id, target.id, actor.damage):
+                            self.events.append(CombatEvent("blocked", actor.id, target.id,
+                                                           x=target.x, y=target.y,
+                                                           duration=0.22))
+                    else:
+                        self.events.append(CombatEvent("miss", actor.id,
+                                                       x=actor.x + actor.facing_x * actor.reach,
+                                                       y=actor.y + actor.facing_y * actor.reach,
+                                                       duration=0.18))
                 continue
             if actor.stun > 0:
                 continue
@@ -164,6 +198,7 @@ class CombatWorld:
                 if actor.cooldown == 0:
                     actor.cooldown = actor.attack_cooldown
                     actor.windup = 0.22
-                    self.events.append(CombatEvent("telegraph", actor.id, target.id))
+                    self.events.append(CombatEvent("telegraph", actor.id, target.id,
+                                                   x=actor.x, y=actor.y, duration=0.22))
             elif distance > 0:
                 self.move(actor.id, dx, dy, dt)

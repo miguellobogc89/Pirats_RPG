@@ -1,7 +1,7 @@
-"""Prueba visual independiente. Ejecutar desde la raiz: python -m game.combat.action.demo"""
-import math
+"""Laboratorio visual de combate. Ejecutar: py -3.12 -m game.combat.action.demo"""
 import pygame
 from .engine import CombatWorld, Fighter
+from .feedback import CombatFeedback
 
 W, H = 900, 620
 BG = (34, 49, 48)
@@ -22,11 +22,13 @@ def make_world():
 def run():
     pygame.init()
     screen = pygame.display.set_mode((W, H))
-    pygame.display.set_caption("Pirats RPG - Nuevo combate de accion (prueba aislada)")
-    font = pygame.font.SysFont("consolas", 20)
+    pygame.display.set_caption("Pirats RPG - Laboratorio de combate | Fase 1")
+    font = pygame.font.SysFont("consolas", 19)
     small = pygame.font.SysFont("consolas", 15)
+    large = pygame.font.SysFont("consolas", 26, bold=True)
     clock = pygame.time.Clock()
     world = make_world()
+    feedback = CombatFeedback()
     log = []
     running = True
     while running:
@@ -37,47 +39,66 @@ def run():
                 running = False
             if event.type == pygame.KEYDOWN and event.key == pygame.K_r:
                 world = make_world()
+                feedback = CombatFeedback()
                 log = []
-            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1 and player.alive:
+                player = world.fighters["player"]
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1 and player.alive and feedback.hitstop == 0:
                 mx, my = event.pos
                 world.attack("player", (mx - player.x, my - player.y))
-            if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE and player.alive:
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE and player.alive and feedback.hitstop == 0:
                 world.attack("player")
         keys = pygame.key.get_pressed()
-        if player.alive:
+        if player.alive and feedback.hitstop <= 0:
             world.move("player", int(keys[pygame.K_d] or keys[pygame.K_RIGHT]) - int(keys[pygame.K_a] or keys[pygame.K_LEFT]),
                        int(keys[pygame.K_s] or keys[pygame.K_DOWN]) - int(keys[pygame.K_w] or keys[pygame.K_UP]), dt)
             world.update(dt)
         for event in world.consume_events():
-            if event.kind in ("hit", "death", "aggro"):
+            feedback.handle(event, world)
+            if event.kind in ("hit", "death", "aggro", "blocked"):
                 log.append(f"{event.kind.upper()}: {event.actor} -> {event.target} {event.amount}")
                 log = log[-5:]
-        screen.fill(BG)
+        feedback.update(dt)
+        # La escena se renderiza en coordenadas del mundo y se desplaza como
+        # conjunto: la interfaz y el texto de HUD permanecen fijos.
+        scene = pygame.Surface((W, H))
+        scene.fill(BG)
         for x in range(0, W, 40):
-            pygame.draw.line(screen, (43, 59, 57), (x, 0), (x, H))
+            pygame.draw.line(scene, (43, 59, 57), (x, 0), (x, H))
         for y in range(0, H, 40):
-            pygame.draw.line(screen, (43, 59, 57), (0, y), (W, y))
+            pygame.draw.line(scene, (43, 59, 57), (0, y), (W, y))
         for fighter in world.fighters.values():
             if not fighter.alive:
                 continue
             color = (79, 176, 166) if fighter.team == "player" else (176, 97, 78)
             if fighter.id == "farm_boss":
                 color = (178, 116, 153)
-            if fighter.invulnerability > 0:
-                color = (235, 216, 151)
-            pygame.draw.circle(screen, color, (round(fighter.x), round(fighter.y)), round(fighter.radius))
-            pygame.draw.line(screen, WHITE, (fighter.x, fighter.y),
+            color = feedback.fighter_color(fighter, color)
+            pygame.draw.circle(scene, color, (round(fighter.x), round(fighter.y)), round(fighter.radius))
+            pygame.draw.line(scene, WHITE, (fighter.x, fighter.y),
                              (fighter.x + fighter.facing_x * 23, fighter.y + fighter.facing_y * 23), 3)
             if fighter.windup > 0:
-                pygame.draw.circle(screen, (240, 150, 105), (round(fighter.x), round(fighter.y)),
+                pygame.draw.circle(scene, (240, 150, 105), (round(fighter.x), round(fighter.y)),
                                    round(fighter.reach + fighter.radius), 2)
+            if fighter.stun > 0:
+                pygame.draw.circle(scene, (255, 216, 125), (round(fighter.x), round(fighter.y)),
+                                   round(fighter.radius + 6), 2)
+            if fighter.invulnerability > 0:
+                pygame.draw.arc(scene, (158, 214, 231),
+                                (fighter.x - fighter.radius - 7, fighter.y - fighter.radius - 7,
+                                 2 * (fighter.radius + 7), 2 * (fighter.radius + 7)),
+                                0.2, 4.6, 2)
             bar = pygame.Rect(fighter.x - 26, fighter.y - fighter.radius - 17, 52, 6)
-            pygame.draw.rect(screen, (75, 55, 55), bar)
-            pygame.draw.rect(screen, (107, 201, 116),
+            pygame.draw.rect(scene, (75, 55, 55), bar)
+            pygame.draw.rect(scene, (107, 201, 116),
                              (bar.x, bar.y, round(bar.w * fighter.hp / fighter.max_hp), bar.h))
-            screen.blit(small.render(fighter.id, True, WHITE), (fighter.x - 25, fighter.y + fighter.radius + 6))
-        screen.blit(font.render("WASD mover | Clic izquierdo atacar hacia cursor | ESPACIO atacar | R reiniciar | ESC salir", True, WHITE), (16, 16))
-        screen.blit(font.render(f"VIDA: {player.hp}/{player.max_hp}  |  ENEMIGOS: {sum(f.alive for f in world.fighters.values() if f.team != 'player')}", True, WHITE), (16, 46))
+            scene.blit(small.render(fighter.id, True, WHITE),
+                       (fighter.x - 25, fighter.y + fighter.radius + 6))
+        feedback.draw(scene, world, small, large)
+        screen.fill(BG)
+        screen.blit(scene, feedback.offset())
+        pygame.draw.rect(screen, (24, 36, 35), (0, 0, W, 80))
+        screen.blit(font.render("WASD mover | Clic atacar | ESPACIO atacar | R reiniciar | ESC salir", True, WHITE), (16, 12))
+        screen.blit(font.render(f"VIDA: {player.hp}/{player.max_hp} | ENEMIGOS: {sum(f.alive for f in world.fighters.values() if f.team != 'player')}", True, WHITE), (16, 43))
         for i, msg in enumerate(log):
             screen.blit(small.render(msg, True, WHITE), (16, H - 100 + i * 17))
         if not player.alive or not any(f.alive for f in world.fighters.values() if f.team != "player"):

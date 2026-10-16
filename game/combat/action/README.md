@@ -1,20 +1,37 @@
-# Combate de accion (nuevo, independiente)
+# Laboratorio de combate de accion — fase 1
 
-Este motor se ha creado desde cero usando como referencia el encuentro de la playa y las criaturas de la granja/madriguera. **No modifica ninguna escena existente.**
+Este modulo es independiente de las escenas del capitulo 1 y **no lee ni escribe save.json**.
 
-## Probar
+## Ejecutar
 
-Desde la raiz del repositorio:
+Desde la raiz del repositorio (Windows):
 
-```bash
-python -m unittest tests.test_action_combat -v
-python -m game.combat.action.demo
+```powershell
+py -3.12 -m unittest tests.test_action_combat -v
+py -3.12 -m game.combat.action.demo
 ```
 
-La demo requiere `pygame`. Las pruebas del motor no requieren dependencias externas.
+La demo requiere `pygame`; el motor y sus pruebas solo usan la biblioteca estandar.
 
-**Controles:** WASD o flechas para moverse; clic izquierdo para atacar hacia el cursor; espacio para atacar en la ultima direccion; R reinicia; ESC sale.
+**Controles:** WASD/flechas mover, clic izquierdo atacar hacia el cursor, espacio atacar hacia la ultima direccion, R reiniciar y ESC salir.
 
-Incluye movimiento normalizado, orientacion, alcance y cono de ataque, cooldown, daño, invulnerabilidad, retroceso, aturdimiento, persecucion, aviso de ataque enemigo, muerte y eventos desacoplados.
+## Fase 1
 
-**Limitaciones deliberadas:** sin colisiones con obstaculos, animaciones, inventario, misiones ni persistencia; son responsabilidades de adaptadores de escena. Las tres escenas actuales siguen usando su codigo anterior hasta una migracion posterior.
+- Numeros flotantes de daño, distintos para daño recibido e infligido.
+- Flash blanco o rojo por impacto e indicador intermitente de invulnerabilidad.
+- Chispas/particulas, estela de ataque y efectos distintos para fallos y golpes a invulnerables.
+- Hitstop visual, sacudida de camara y efecto ampliado al morir.
+- Retroceso, aturdimiento y bloqueo temporal de movimiento y ataques (reglas del motor).
+- Indicadores de aturdimiento y aro de invulnerabilidad.
+- Eventos con coordenadas, duracion e intensidad, reutilizables por un adaptador Unity.
+
+## Arquitectura para migracion a Unity
+
+- `engine.py`: reglas de combate sin Pygame; eventos `attack`, `miss`, `blocked`, `hit`, `stun`, `invulnerability`, `death`, `aggro` y `telegraph`.
+- `feedback.py`: adaptador de efectos exclusivamente Pygame; **no calcula daño**.
+- `demo.py`: orquestacion y dibujo de la arena.
+- `tests/test_action_combat.py`: pruebas de reglas y contrato de eventos.
+
+En Unity, portar las reglas a C# y consumir estos eventos con VFX, UI y camara nativos. Los sprites, las particulas Pygame y la camara no se trasladan literalmente. El hitstop de esta demo pausa la simulacion de forma visual y no modifica el tiempo de las reglas.
+
+**Limitaciones:** no hay obstaculos, animaciones definitivas, inventario, misiones ni persistencia. Las escenas existentes no se han migrado.
