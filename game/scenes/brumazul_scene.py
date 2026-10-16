@@ -62,11 +62,11 @@ class BrumazulScene(FarmScene):
                     self.app.add_log("Deja un hueco en el inventario para recibir la segadora.")
         self.app.state.setdefault("brumazul", {})
         self.progress = self.app.state["brumazul"]
-        self.boss = pygame.Vector2(490, 560)
+        self.boss = pygame.Vector2(400, 255)
         self.boss_awake = False
         self.boss_timer = 0.0
         self.attack_timer = 0.0
-        self.boss_hp = 999
+        self.boss_hp = 120
         self.index = 0
         self.choice = 0
         self.response = RESPONSES[0]
@@ -251,7 +251,7 @@ class BrumazulScene(FarmScene):
                     throwing.throw(p["x"], p["y"], event.pos[0] + cx, event.pos[1] + cy)
                 return True
             if event.type == pygame.KEYDOWN and event.key == pygame.K_e:
-                if math.dist((p["x"], p["y"]), (672, 350)) <= 90:
+                if math.dist((p["x"], p["y"]), (694, 350)) <= 100:
                     self.beach_message("El acceso al puerto está cerrado.")
                     return True
         if self.shop_id is not None:
@@ -435,6 +435,7 @@ class BrumazulScene(FarmScene):
             self.boss.update(self.beach_combat.monster.x, self.beach_combat.monster.y)
             self.boss_awake = self.beach_combat.monster.awake
             self.boss_hp = self.beach_combat.monster.hp
+            self.app.state["health"]["current"] = self.beach_combat.player.hp
             if self.beach_combat.last_stone_event == "hit":
                 self.beach_message("¡La criatura se ha movido! Impactos: " +
                                    str(self.beach_combat.stone_hits) + "/3")
@@ -443,6 +444,8 @@ class BrumazulScene(FarmScene):
             for event in events:
                 if event.kind == "telegraph" and event.actor == "beach_monster":
                     self.boss_timer = event.duration
+                elif event.kind == "hit" and event.target == "beach_player":
+                    self.beach_message("El monstruo te ha quitado " + str(event.amount) + " PV.")
             if defeated:
                 self.app.state["health"]["current"] = 0
                 self.wake_at_inn()
@@ -722,10 +725,10 @@ class BrumazulScene(FarmScene):
                     pygame.draw.ellipse(s, (123, 118, 109),
                                         (rx - cx, ry - cy, 8, 5))
             # Interactable closed port gate (E).
-            pygame.draw.rect(s, (117, 88, 61), (652 - cx, 325 - cy, 48, 58), 3)
-            pygame.draw.line(s, (117, 88, 61), (676 - cx, 325 - cy),
-                             (676 - cx, 383 - cy), 3)
-            self.label("PUERTO [E]", 615 - cx, 303 - cy)
+            pygame.draw.line(s, (117, 88, 61), (696 - cx, 322 - cy),
+                             (696 - cx, 380 - cy), 4)
+            pygame.draw.circle(s, (117, 88, 61), (690 - cx, 350 - cy), 3)
+            self.label("PUERTO [E]", 595 - cx, 305 - cy)
             # Sin cuadricula: solo limites del mapa y del sendero.
             for x in (350, 450):
                 pygame.draw.line(s, LIGHT, (x - cx, -cy), (x - cx, 360 - cy), 1)
@@ -739,7 +742,8 @@ class BrumazulScene(FarmScene):
             active = creature.awake
             preparing = creature.windup > 0
             pygame.draw.ellipse(s, (186, 180, 172), (bx - 46, by + 25, 92, 20))
-            body = (132, 70, 67) if preparing else ((100, 93, 112) if active else (124, 126, 130))
+            flashing = creature.invulnerability > 0 and int(creature.invulnerability * 18) % 2 == 0
+            body = (246, 246, 246) if flashing else ((132, 70, 67) if preparing else ((100, 93, 112) if active else (124, 126, 130)))
             pygame.draw.circle(s, body, (bx, by), 39)
             pygame.draw.circle(s, (61, 55, 67), (bx, by), 39, 3)
             for side in (-1, 1):
@@ -752,6 +756,18 @@ class BrumazulScene(FarmScene):
                                    (bx + side * 13, by - 7), 8)
                 pygame.draw.circle(s, (43, 37, 42), (bx + side * 13, by - 7), 3)
             pygame.draw.arc(s, (43, 37, 42), (bx - 22, by - 1, 44, 35), 3.35, 6.08, 3)
+            # Monster health bar and actual combat damage feedback.
+            bar_x, bar_y = bx - 48, by - 89
+            pygame.draw.rect(s, (57, 55, 54), (bar_x, bar_y, 96, 10))
+            pygame.draw.rect(s, (157, 66, 61), (bar_x + 1, bar_y + 1,
+                             int(94 * creature.hp / creature.max_hp), 8))
+            self.label(str(creature.hp) + "/" + str(creature.max_hp) + " PV",
+                       bar_x + 10, bar_y - 18)
+            for effect in self.beach_combat.impact_effects:
+                ex, ey, amount, remaining, target_id = effect
+                label_color = (195, 58, 53) if target_id == "beach_player" else (90, 40, 35)
+                damage_label = self.app.small_font.render("-" + str(amount), True, label_color)
+                s.blit(damage_label, (int(ex - cx), int(ey - cy - 25 - (0.55 - remaining) * 28)))
             if self.beach_combat.stone_hits < 3 and self.beach_combat.sleep_reaction > 0:
                 self.label("?", bx - 4, by - 70)
             if active:
@@ -792,6 +808,10 @@ class BrumazulScene(FarmScene):
                 self.label("FUERZA", 235, 78)
             if self.beach_notice_timer > 0:
                 self.label(self.beach_notice, 22, 109)
+            hero = self.beach_combat.player
+            self.label("VIDA " + str(hero.hp) + "/" + str(hero.max_hp), 22, 138)
+            pygame.draw.rect(s, (75, 75, 75), (22, 159, 124, 12), 2)
+            pygame.draw.rect(s, (174, 68, 61), (24, 161, int(120 * hero.hp / hero.max_hp), 8))
             self.label("PLAYA DE BRUMAZUL  /  NOCHE", 22, 18)
         elif self.tavern:
             self.draw_tavern(cx, cy)
