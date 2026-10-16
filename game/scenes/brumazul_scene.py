@@ -103,7 +103,6 @@ class BrumazulScene(FarmScene):
             self.beach_notice = ""
             self.beach_notice_timer = 0.0
             self.beach_defeat_timer = None
-            self.beach_player_flash = 0.0
             self.progress["chapter_started"] = True
             self.seed_collectables()
 
@@ -448,7 +447,6 @@ class BrumazulScene(FarmScene):
                 return
             self.attack_timer = max(0, self.attack_timer - dt)
             self.beach_notice_timer = max(0, self.beach_notice_timer - dt)
-            self.beach_player_flash = max(0, self.beach_player_flash - dt)
             if self.beach_defeat_timer is not None:
                 self.beach_defeat_timer -= dt
                 if self.beach_defeat_timer <= 0:
@@ -471,7 +469,6 @@ class BrumazulScene(FarmScene):
                 if event.kind == "telegraph" and event.actor == "beach_monster":
                     self.boss_timer = event.duration
                 elif event.kind == "hit" and event.target == "beach_player":
-                    self.beach_player_flash = 0.45
                     self.beach_message("El monstruo te ha quitado " + str(event.amount) + " PV.")
             if defeated:
                 self.app.state["health"]["current"] = 0
@@ -768,8 +765,8 @@ class BrumazulScene(FarmScene):
             active = creature.awake
             preparing = creature.windup > 0
             pygame.draw.ellipse(s, (186, 180, 172), (bx - 46, by + 25, 92, 20))
-            flashing = creature.invulnerability > 0 and int(creature.invulnerability * 18) % 2 == 0
-            body = (246, 246, 246) if flashing else ((132, 70, 67) if preparing else ((100, 93, 112) if active else (124, 126, 130)))
+            base_body = (132, 70, 67) if preparing else ((100, 93, 112) if active else (124, 126, 130))
+            body = self.beach_combat.feedback.fighter_color(creature, base_body)
             pygame.draw.circle(s, body, (bx, by), 39)
             pygame.draw.circle(s, (61, 55, 67), (bx, by), 39, 3)
             for side in (-1, 1):
@@ -789,11 +786,6 @@ class BrumazulScene(FarmScene):
                              int(94 * creature.hp / creature.max_hp), 8))
             self.label(str(creature.hp) + "/" + str(creature.max_hp) + " PV",
                        bar_x + 10, bar_y - 18)
-            for effect in self.beach_combat.impact_effects:
-                ex, ey, amount, remaining, target_id = effect
-                label_color = (195, 58, 53) if target_id == "beach_player" else (90, 40, 35)
-                damage_label = pygame.font.Font(None, 28).render("-" + str(amount), True, label_color)
-                s.blit(damage_label, (int(ex - cx), int(ey - cy - 25 - (0.55 - remaining) * 28)))
             if self.beach_combat.stone_hits < 3 and self.beach_combat.sleep_reaction > 0:
                 self.label("?", bx - 4, by - 70)
             if active:
@@ -868,10 +860,15 @@ class BrumazulScene(FarmScene):
         tip = (center[0] + vx * 17, center[1] + vy * 17)
         pygame.draw.line(s, (65, 65, 65), center, tip, 3)
         pygame.draw.circle(s, (65, 65, 65), tip, 3)
-        if self.beach and self.beach_player_flash > 0 and int(self.beach_player_flash * 20) % 2 == 0:
-            flash = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
-            flash.fill((220, 48, 38, 38))
-            s.blit(flash, (0, 0))
+        if self.beach:
+            # Existing combat feedback owns damage numbers, sparks, slashes,
+            # hit flashes and camera shake. No scene-specific combat VFX.
+            feedback = self.beach_combat.feedback
+            effects = pygame.Surface((704, 704), pygame.SRCALPHA)
+            feedback.draw(effects, self.beach_combat.world,
+                          self.app.small_font, self.app.font)
+            shake_x, shake_y = feedback.offset()
+            s.blit(effects, (-cx + shake_x, -cy + shake_y))
         from game.hud.hud_renderer import draw_hud
         draw_hud(self.app)
         from game.notifications import draw_notifications
