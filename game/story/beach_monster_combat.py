@@ -37,7 +37,16 @@ class BeachMonsterCombat:
         self.last_damage = 0
         self.last_damage_target = ""
 
+    def player_attack(self, direction):
+        if not self.monster.brain_enabled:
+            return False
+        return self.world.attack(self.player.id, direction)
+
+    def player_dash(self, direction=None):
+        return self.world.dash(self.player.id, direction)
+
     def update(self, dt, player_x, player_y):
+        # External movement controls the player; engine knockback is applied back to the scene.
         self.player.x, self.player.y = player_x, player_y
         old_positions = [(stone, stone.x, stone.y) for stone in self.throwing.projectiles]
         self.throwing.tick(dt)
