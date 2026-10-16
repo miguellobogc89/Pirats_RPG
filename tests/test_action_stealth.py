@@ -68,6 +68,17 @@ class StealthTests(unittest.TestCase):
         self.world.update(0.2)
         self.assertEqual(self.guard.last_seen, (170, 200))
 
+    def test_search_continues_after_reaching_last_seen(self):
+        self.guard.awake = True
+        self.guard.last_seen = (170, 200)
+        self.world.obstacles.append(Obstacle(245, 160, 45, 85))
+        self.world.update(4)
+        self.assertEqual(self.guard.alert_state, "search")
+        self.assertTrue(self.guard.search_points or self.guard.searched_points or self.guard.search_goal)
+
+    def test_chase_speed_exceeds_walk(self):
+        self.assertGreaterEqual(self.guard.chase_speed, 2 * self.guard.walk_speed)
+
 
 if __name__ == "__main__":
     unittest.main()

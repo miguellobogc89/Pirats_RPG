@@ -44,6 +44,12 @@ class Fighter:
     vision_angle: float = 80
     detection: float = 0
     detection_time: float = 0.25
+    walk_speed: float = 48
+    chase_speed: float = 165
+    search_goal: tuple = None
+    search_points: list = field(default_factory=list)
+    searched_points: list = field(default_factory=list)
+    scan_pause: float = 0
     patrol_points: tuple = ()
     patrol_index: int = 0
     patrol_pause: float = 0
@@ -116,7 +122,7 @@ class CombatWorld:
         self._place(actor, actor.x + dx, actor.y)
         self._place(actor, actor.x, actor.y + dy)
 
-    def move(self, actor_id, dx, dy, dt):
+    def move(self, actor_id, dx, dy, dt, speed=None):
         actor = self.fighters[actor_id]
         if not actor.alive or actor.stun > 0 or actor.dash_remaining > 0:
             return
@@ -124,7 +130,8 @@ class CombatWorld:
         if length:
             dx, dy = dx / length, dy / length
             actor.facing_x, actor.facing_y = dx, dy
-            self._displace(actor, dx * actor.speed * dt, dy * actor.speed * dt)
+            velocity = actor.speed if speed is None else speed
+            self._displace(actor, dx * velocity * dt, dy * velocity * dt)
 
     def dash(self, actor_id, direction=None):
         actor = self.fighters[actor_id]
@@ -328,19 +335,14 @@ class CombatWorld:
                 if seen:
                     actor.last_seen = (target.x, target.y)
                     actor.alert_state = "alert"
-                    actor.search_time = 0
-                elif actor.last_seen is not None:
-                    actor.alert_state = "search"
+                    actor.search_goal = None
+                    actor.search_points.clear()
+                    actor.searched_points.clear()
                 else:
                     actor.alert_state = "search"
-                    continue
-                if not seen:
                     actor.windup = 0
-                    if math.dist((actor.x, actor.y), actor.last_seen) <= actor.radius + 7:
-                        actor.search_time += dt
-                        # La busqueda completa se incorporara en 3.3.
-                        continue
-                    self._navigate(actor, actor.last_seen, dt)
+                    if actor.last_seen is not None:
+                        self._search(actor, dt)
                     continue
             if actor.windup > 0:
                 actor.windup = max(0, actor.windup - dt)
@@ -368,22 +370,50 @@ class CombatWorld:
                                                    x=actor.x, y=actor.y, duration=0.22))
             elif distance > 0:
                 if self.perception_enabled:
-                    self._navigate(actor, (target.x, target.y), dt)
+                    self._navigate(actor, (target.x, target.y), dt, actor.chase_speed)
                 else:
                     self.move(actor.id, dx, dy, dt)
 
-    def _navigate(self, actor, destination, dt):
+    def _navigate(self, actor, destination, dt, speed=None):
         from .stealth import find_path
         path = find_path((actor.x, actor.y), destination, self.obstacles,
                          actor.radius, self.width, self.height)
         if not path:
-            return
+            return False
         x, y = path[0]
         dx, dy = x - actor.x, y - actor.y
         distance = math.hypot(dx, dy)
-        if distance > 0:
-            # Evita sobrepasar el waypoint y atascarse en esquinas.
-            self.move(actor.id, dx, dy, min(dt, distance / max(actor.speed, 1e-6)))
+        velocity = actor.speed if speed is None else speed
+        if distance > 0 and velocity > 0:
+            self.move(actor.id, dx, dy, min(dt, distance / velocity), speed=velocity)
+        return True
+
+    def _search(self, actor, dt):
+        from .stealth import search_cells
+        if actor.search_goal is None and not actor.searched_points and not actor.search_points:
+            actor.search_goal = actor.last_seen
+            actor.search_points = search_cells(actor.last_seen, self.obstacles,
+                                               actor.radius, self.width, self.height)
+        if actor.scan_pause > 0:
+            actor.scan_pause = max(0, actor.scan_pause - dt)
+            angle = math.atan2(actor.facing_y, actor.facing_x) + 2 * dt
+            actor.facing_x, actor.facing_y = math.cos(angle), math.sin(angle)
+            return
+        if actor.search_goal is None:
+            if not actor.search_points:
+                actor.search_points = search_cells(actor.last_seen, self.obstacles,
+                                                   actor.radius, self.width, self.height)
+                actor.searched_points.clear()
+            if not actor.search_points:
+                return
+            actor.search_points.sort(key=lambda point: math.dist((actor.x, actor.y), point))
+            actor.search_goal = actor.search_points.pop(0)
+        if math.dist((actor.x, actor.y), actor.search_goal) <= actor.radius + 5:
+            actor.searched_points.append(actor.search_goal)
+            actor.search_goal = None
+            actor.scan_pause = 0.4
+        elif not self._navigate(actor, actor.search_goal, dt, actor.walk_speed):
+            actor.search_goal = None
 
     def _patrol(self, actor, dt):
         if not actor.patrol_points or actor.stun > 0:
@@ -398,4 +428,4 @@ class CombatWorld:
             actor.patrol_index = (actor.patrol_index + 1) % len(actor.patrol_points)
             actor.patrol_pause = actor.patrol_wait
         elif distance > 0:
-            self.move(actor.id, dx, dy, dt)
+            self.move(actor.id, dx, dy, dt, speed=actor.walk_speed)

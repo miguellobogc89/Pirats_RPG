@@ -97,3 +97,19 @@ def find_path(start, goal, obstacles, radius, width, height):
                 parents[neighbor] = index
                 heapq.heappush(queue, (candidate, neighbor))
     return []
+
+def search_cells(origin, obstacles, radius, width, height, search_radius=230, spacing=70):
+    """Puntos transitables alrededor del ultimo avistamiento; no consulta al jugador."""
+    ox, oy = origin
+    points = []
+    x = max(radius + 4, ox - search_radius)
+    while x <= min(width - radius - 4, ox + search_radius):
+        y = max(radius + 4, oy - search_radius)
+        while y <= min(height - radius - 4, oy + search_radius):
+            if math.hypot(x - ox, y - oy) <= search_radius:
+                if not any(circle_hits_rect(x, y, radius + 2, box) for box in obstacles):
+                    if find_path(origin, (x, y), obstacles, radius, width, height):
+                        points.append((x, y))
+            y += spacing
+        x += spacing
+    return points

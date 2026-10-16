@@ -19,7 +19,7 @@ def make_world():
     world.add(Fighter("player", "player", 120, 310, hp=12, max_hp=12,
                       radius=15, speed=205, damage=2, reach=62))
     world.add(Fighter("guard", "enemy", 565, 220, hp=8, max_hp=8,
-                      speed=78, radius=15, reach=36, damage=1,
+                      speed=78, walk_speed=48, chase_speed=165, radius=15, reach=36, damage=1,
                       facing_x=0, facing_y=1,
                       vision_range=245, vision_angle=75,
                       patrol_points=((565, 220), (565, 490), (760, 490), (760, 120), (565, 120))))
@@ -83,7 +83,7 @@ def run():
         pygame.draw.rect(screen, (22, 32, 32), (0, 0, W, 84))
         screen.blit(font.render("WASD: moverse | F1: vision | R: reiniciar | ESC: salir", True, WHITE), (16, 11))
         visible = can_see(guard, player, world.obstacles) if guard.alive and player.alive else False
-        status = ("BUSCANDO" if guard.alert_state == "search" else "ALERTA") if guard.awake else "PATRULLA"
+        status = ("BUSCANDO" if guard.alert_state == "search" else "PERSIGUIENDO") if guard.awake else "CAMINANDO"
         info = f"GUARDIA: {status} | VISIBLE: {'SI' if visible else 'NO'} | DETECCION: {guard.detection / guard.detection_time:.0%} | VIDA: {player.hp}"
         screen.blit(small.render(info, True, (245, 205, 125)), (16, 47))
         if debug and guard.last_seen is not None:
@@ -91,8 +91,16 @@ def run():
             pygame.draw.circle(screen, (255, 198, 90), (round(lx), round(ly)), 9, 2)
             pygame.draw.line(screen, (255, 198, 90), (lx - 13, ly), (lx + 13, ly), 1)
             pygame.draw.line(screen, (255, 198, 90), (lx, ly - 13), (lx, ly + 13), 1)
+        if debug and guard.alert_state == "search":
+            for px, py in guard.search_points:
+                pygame.draw.circle(screen, (112, 168, 224), (round(px), round(py)), 3)
+            for px, py in guard.searched_points:
+                pygame.draw.circle(screen, (90, 110, 112), (round(px), round(py)), 3)
+            if guard.search_goal:
+                pygame.draw.circle(screen, (245, 210, 111), tuple(map(round, guard.search_goal)), 8, 2)
         if guard.awake:
-            screen.blit(font.render("! ALERTA !  Guardia persigue ultima posicion vista", True, (255, 148, 119)), (205, H - 40))
+            screen.blit(font.render("BUSQUEDA: barriendo zonas" if guard.alert_state == "search"
+                                    else "ALERTA: persecucion rapida", True, (255, 148, 119)), (220, H - 40))
         pygame.display.flip()
     pygame.quit()
 
