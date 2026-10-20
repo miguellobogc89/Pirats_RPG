@@ -466,6 +466,8 @@ class PygameApp:
         else:
             self.scene_manager.draw()
 
+        # Aplicar el acabado monocromatico a toda la pantalla, incluidos menus y sprites.
+        pygame.transform.grayscale(self.screen, self.screen)
         pygame.display.flip()
 
     def draw_farm_scene(self):
