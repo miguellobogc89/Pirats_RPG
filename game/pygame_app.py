@@ -98,7 +98,7 @@ class PygameApp:
     def __init__(self, state, game_data):
         pygame.init()
         self.screen = pygame.display.set_mode((WIDTH, HEIGHT))
-        pygame.display.set_caption("Pirats RPG - RELOAD TEST")
+        pygame.display.set_caption("Pirats RPG - Brumazul")
         self.clock = pygame.time.Clock()
 
         self.state = state
