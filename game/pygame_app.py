@@ -559,7 +559,27 @@ class PygameApp:
             if sprite_path is not None:
                 sprite_rect = None
 
-                if world_object.get("sprite_size") is not None:
+                # Mantener los arboles coherentes con el pixel art del prologo.
+                is_tree = str(sprite_path).replace("\\", "/").split("/")[-1].lower() in (
+                    "tree.png", "object_tree.png"
+                )
+                if is_tree:
+                    if world_object.get("sprite_size") is not None:
+                        tree_rect = get_object_sprite_rect(
+                            world_object.get("scene_cell", [0, 0]),
+                            world_object.get("footprint", [1, 1]),
+                            world_object["sprite_size"],
+                            world_object.get("sprite_offset", [0, 0]),
+                            tile_size=world_object.get("scene_tile_size", TILE_SIZE),
+                            camera_offset=(camera_x, camera_y),
+                        )
+                        sprite_rect = draw_pixel_tree(
+                            self.screen, tree_rect.centerx, tree_rect.centery,
+                            tree_rect.width, tree_rect.height,
+                        )
+                    else:
+                        sprite_rect = draw_pixel_tree(self.screen, x, y)
+                elif world_object.get("sprite_size") is not None:
                     from game.ui.sprite_renderer import draw_sprite_in_rect
 
                     sprite_rect = get_object_sprite_rect(
