@@ -1,4 +1,5 @@
 import pygame
+from functools import lru_cache
 
 from game.scenes.scene_state import get_current_scene_state
 from game.world.grid_manager import TILE_SIZE, grid_to_world
@@ -8,13 +9,61 @@ from game.world.collision_manager import BLOCKED_CELLS, get_scene_collision_rect
 from game.ui.sprite_renderer import draw_item_sprite
 
 
-GRID_COLOR = (175, 175, 175)
-TILLED_COLOR = (207, 207, 207)
-WATERED_COLOR = (176, 176, 176)
-SEED_COLOR = (100, 100, 100)
-SPROUT_COLOR = (90, 90, 90)
-GROWN_COLOR = (65, 65, 65)
+GB_WHITE = (240, 240, 240)
+GB_LIGHT = (184, 184, 184)
+GB_MID = (104, 104, 104)
+GB_BLACK = (24, 24, 24)
+GRID_COLOR = GB_LIGHT
+TILLED_COLOR = GB_MID
+WATERED_COLOR = GB_BLACK
+SEED_COLOR = GB_BLACK
+SPROUT_COLOR = GB_BLACK
+GROWN_COLOR = GB_MID
 
+
+@lru_cache(maxsize=4)
+def _grass_tile(variant):
+    """Hierba de 32 px en cuatro tonos de gris puro."""
+    tile = pygame.Surface((TILE_SIZE, TILE_SIZE))
+    tile.fill(GB_WHITE)
+    for x, y in (((5, 9), (19, 21), (26, 4)),
+                 ((9, 24), (23, 8), (4, 4)),
+                 ((3, 17), (15, 4), (25, 25)),
+                 ((9, 5), (21, 15), (5, 26)))[variant]:
+        pygame.draw.rect(tile, GB_LIGHT, (x, y, 2, 4))
+        pygame.draw.rect(tile, GB_LIGHT, (x + 3, y + 1, 2, 3))
+        pygame.draw.rect(tile, GB_MID, (x + 2, y + 4, 1, 1))
+    return tile
+
+
+def _draw_grass(screen, camera_x, camera_y, bounds):
+    left, top, width, height = bounds
+    rect = pygame.Rect(int(left-camera_x), int(top-camera_y), int(width), int(height))
+    visible = rect.clip(screen.get_rect())
+    if not visible.width or not visible.height:
+        return
+    old_clip = screen.get_clip()
+    screen.set_clip(visible)
+    for gx in range(int(left // TILE_SIZE), int((left+width-1) // TILE_SIZE)+1):
+        x = int(gx*TILE_SIZE-camera_x)
+        if x >= visible.right or x+TILE_SIZE <= visible.left:
+            continue
+        for gy in range(int(top // TILE_SIZE), int((top+height-1) // TILE_SIZE)+1):
+            y = int(gy*TILE_SIZE-camera_y)
+            if y >= visible.bottom or y+TILE_SIZE <= visible.top:
+                continue
+            screen.blit(_grass_tile((gx*3+gy*7+gx*gy) % 4), (x, y))
+    screen.set_clip(old_clip)
+
+
+def _draw_soil(screen, rect, wet=False):
+    pygame.draw.rect(screen, GB_BLACK if wet else GB_MID, rect)
+    for offset in (5, 14, 23):
+        pygame.draw.rect(screen, GB_MID if wet else GB_LIGHT, (rect.x+3, rect.y+offset, TILE_SIZE-6, 2))
+        pygame.draw.rect(screen, GB_LIGHT, (rect.x+7, rect.y+offset+4, 3, 1))
+    if wet:
+        for dx, dy in ((5, 3), (24, 12), (13, 27)):
+            pygame.draw.rect(screen, GB_LIGHT, (rect.x+dx, rect.y+dy, 2, 2))
 
 def draw_world_grid(screen, camera_x, camera_y, world_width=WORLD_WIDTH, world_height=WORLD_HEIGHT):
     width = screen.get_width()
@@ -40,70 +89,44 @@ def draw_world_grid(screen, camera_x, camera_y, world_width=WORLD_WIDTH, world_h
 
 
 def draw_tilled_cells(screen, state, camera_x, camera_y):
-    farming = get_current_scene_state(state)
-    tilled_cells = farming.get("tilled_cells", [])
+    for gx, gy in get_current_scene_state(state).get("tilled_cells", []):
+        x, y = grid_to_world(gx, gy)
+        _draw_soil(screen, pygame.Rect(int(x-camera_x), int(y-camera_y), TILE_SIZE, TILE_SIZE))
 
-    for cell in tilled_cells:
-        grid_x = cell[0]
-        grid_y = cell[1]
-
-        world_x, world_y = grid_to_world(grid_x, grid_y)
-
-        screen_x = int(world_x - camera_x)
-        screen_y = int(world_y - camera_y)
-
-        rect = pygame.Rect(screen_x, screen_y, TILE_SIZE, TILE_SIZE)
-        pygame.draw.rect(screen, TILLED_COLOR, rect)
 
 def draw_crops(screen, state, camera_x, camera_y):
-    """Simple monochrome seed, sprout and mature maize silhouettes."""
-    crops = get_current_scene_state(state).get("crops", [])
-    for crop in crops:
-        x, y = grid_to_world(crop["grid_x"], crop["grid_y"])
-        x, y = int(x - camera_x), int(y - camera_y)
+    """Cultivos por etapas con siluetas pixeladas, sin suavizado."""
+    for crop in get_current_scene_state(state).get("crops", []):
+        wx, wy = grid_to_world(crop["grid_x"], crop["grid_y"])
+        x, y = int(wx-camera_x), int(wy-camera_y)
         stage = crop.get("stage", 0)
         if crop.get("dead", False):
-            faded = crop.get("dead_days", 0) >= 1
-            stem = (194, 181, 164) if faded else (115, 95, 75)
-            leaf = (207, 196, 177) if faded else (150, 125, 90)
-            pygame.draw.line(screen, stem, (x + 16, y + 28), (x + 19, y + 18), 3)
-            pygame.draw.line(screen, stem, (x + 19, y + 18), (x + 24, y + 24), 2)
-            pygame.draw.line(screen, leaf, (x + 18, y + 22), (x + 10, y + 25), 2)
-            pygame.draw.ellipse(screen, leaf, (x + 21, y + 22, 8, 4))
-            continue
-        if stage == 0:
+            shade = GB_LIGHT if crop.get("dead_days", 0) >= 1 else GB_MID
+            pygame.draw.rect(screen, shade, (x+15, y+15, 2, 13))
+            pygame.draw.rect(screen, shade, (x+8, y+23, 8, 2))
+            pygame.draw.rect(screen, shade, (x+17, y+21, 9, 2))
+        elif stage == 0:
             for dx, dy in ((10, 19), (16, 17), (22, 20)):
-                pygame.draw.circle(screen, SEED_COLOR, (x + dx, y + dy), 2)
-            continue
-        height = min(27, 7 + stage * 7)
-        bottom = y + 28
-        pygame.draw.line(screen, SPROUT_COLOR, (x + 16, bottom), (x + 16, bottom - height), 2)
-        pygame.draw.line(screen, SPROUT_COLOR, (x + 16, bottom - height // 2),
-                         (x + 9, bottom - height // 2 - 6), 2)
-        if stage >= 2:
-            pygame.draw.line(screen, SPROUT_COLOR, (x + 16, bottom - height // 2 - 3),
-                             (x + 24, bottom - height // 2 - 10), 2)
-        if stage >= 3:
-            for dx, dy in ((-5, -11), (5, -15), (-3, -22)):
-                pygame.draw.ellipse(screen, GROWN_COLOR, (x + 16 + dx, bottom + dy, 6, 10))
-
+                pygame.draw.rect(screen, GB_BLACK, (x+dx, y+dy, 3, 2))
+        else:
+            height = min(26, 6+stage*7)
+            pygame.draw.rect(screen, GB_BLACK, (x+15, y+29-height, 3, height))
+            pygame.draw.rect(screen, GB_LIGHT, (x+16, y+31-height, 1, max(1,height-4)))
+            pygame.draw.rect(screen, GB_BLACK, (x+8, y+18, 8, 3))
+            pygame.draw.rect(screen, GB_MID, (x+10, y+16, 6, 2))
+            if stage >= 2:
+                pygame.draw.rect(screen, GB_BLACK, (x+17, y+13, 8, 3))
+                pygame.draw.rect(screen, GB_MID, (x+17, y+11, 6, 2))
+            if stage >= 3:
+                pygame.draw.rect(screen, GB_BLACK, (x+12, y+5, 8, 12))
+                pygame.draw.rect(screen, GB_LIGHT, (x+14, y+7, 4, 7))
+                pygame.draw.rect(screen, GB_MID, (x+13, y+9, 6, 2))
 
 
 def draw_watered_cells(screen, state, camera_x, camera_y):
-    farming = get_current_scene_state(state)
-    watered_cells = farming.get("watered_cells", [])
-
-    for cell in watered_cells:
-        grid_x = cell[0]
-        grid_y = cell[1]
-
-        world_x, world_y = grid_to_world(grid_x, grid_y)
-
-        screen_x = int(world_x - camera_x)
-        screen_y = int(world_y - camera_y)
-
-        rect = pygame.Rect(screen_x, screen_y, TILE_SIZE, TILE_SIZE)
-        pygame.draw.rect(screen, WATERED_COLOR, rect)
+    for gx, gy in get_current_scene_state(state).get("watered_cells", []):
+        x, y = grid_to_world(gx, gy)
+        _draw_soil(screen, pygame.Rect(int(x-camera_x), int(y-camera_y), TILE_SIZE, TILE_SIZE), wet=True)
 
 def draw_placed_objects(screen, state, camera_x, camera_y):
     placed_objects = get_current_scene_state(state).get("placed_objects", [])
@@ -177,50 +200,57 @@ def draw_collision_debug(screen, camera_x, camera_y):
         pygame.draw.rect(screen, (255, 80, 80), rect, 2)
 
 def draw_farm_reach_grid(screen, player, camera_x, camera_y, bounds, mode="cardinal"):
-    """Debug grid and reach overlay, monochrome and only on chapter farm."""
+    """Terreno dibujado en pixeles y alcance indicado sin cuadricula masiva."""
     from game.world.action_range import occupied_cells, reachable_cells
+    _draw_grass(screen, camera_x, camera_y, bounds)
     left, top, width, height = bounds
-    x0, y0 = int(left // TILE_SIZE), int(top // TILE_SIZE)
-    x1, y1 = int((left + width) // TILE_SIZE), int((top + height) // TILE_SIZE)
     reach = reachable_cells(player, mode)
     feet = occupied_cells(player)
-    for gx in range(x0, x1 + 1):
-        for gy in range(y0, y1 + 1):
-            rect = pygame.Rect(int(gx * TILE_SIZE - camera_x), int(gy * TILE_SIZE - camera_y), TILE_SIZE, TILE_SIZE)
+    for gx in range(int(left//TILE_SIZE), int((left+width)//TILE_SIZE)+1):
+        for gy in range(int(top//TILE_SIZE), int((top+height)//TILE_SIZE)+1):
+            if (gx, gy) not in feet and (gx, gy) not in reach:
+                continue
+            rect = pygame.Rect(int(gx*TILE_SIZE-camera_x), int(gy*TILE_SIZE-camera_y), TILE_SIZE, TILE_SIZE)
             if (gx, gy) in feet:
-                pygame.draw.rect(screen, (185, 185, 185), rect)
-            elif (gx, gy) in reach:
-                pygame.draw.rect(screen, (224, 224, 224), rect)
-            pygame.draw.rect(screen, (225, 225, 225), rect, 1)
+                pygame.draw.rect(screen, GB_LIGHT, rect)
+                pygame.draw.rect(screen, GB_BLACK, rect, 2)
+            else:
+                pygame.draw.rect(screen, GB_LIGHT, rect, 1)
+                pygame.draw.rect(screen, GB_MID, rect.inflate(-4, -4), 1)
 
 def draw_wild_bushes(screen, state, camera_x, camera_y):
-    """Draw wild shrub silhouettes."""
-    bushes = get_current_scene_state(state).get("wild_bushes", [])
-    for gx, gy in bushes:
+    """Matorrales con volumen y sombreado de cuatro grises."""
+    for gx, gy in get_current_scene_state(state).get("wild_bushes", []):
         wx, wy = grid_to_world(gx, gy)
-        x, y = int(wx - camera_x), int(wy - camera_y)
-        pygame.draw.polygon(screen, (78, 105, 71), [(x+4,y+25),(x+8,y+13),(x+14,y+16),(x+17,y+7),(x+23,y+15),(x+28,y+13),(x+29,y+26)])
-        pygame.draw.polygon(screen, (105, 132, 85), [(x+6,y+22),(x+12,y+11),(x+18,y+17),(x+22,y+10),(x+27,y+23)])
-
+        x, y = int(wx-camera_x), int(wy-camera_y)
+        for color, dx, dy, w, h in (
+            (GB_BLACK, 6, 18, 21, 10), (GB_BLACK, 9, 11, 15, 18),
+            (GB_BLACK, 13, 6, 8, 21), (GB_MID, 8, 19, 17, 6),
+            (GB_MID, 10, 12, 12, 12), (GB_LIGHT, 11, 13, 5, 5),
+            (GB_LIGHT, 18, 18, 5, 4), (GB_LIGHT, 9, 23, 5, 2),
+            (GB_BLACK, 15, 27, 3, 3)):
+            pygame.draw.rect(screen, color, (x+dx, y+dy, w, h))
 
 def draw_placeable_fallback(screen, item_id, rect):
-    """Visible world art for placeables that do not yet have PNG assets."""
-    import pygame
-    inset = rect.inflate(-max(4, rect.width // 10), -max(4, rect.height // 10))
+    """Cofres, vallas y tablones en estilo pixel art de grises."""
+    inset = rect.inflate(-max(4, rect.width//10), -max(4, rect.height//10))
     if item_id == "wooden_chest":
-        pygame.draw.rect(screen, (106, 65, 37), inset, border_radius=3)
-        pygame.draw.rect(screen, (174, 112, 59), inset.inflate(-6, -6), border_radius=2)
-        pygame.draw.line(screen, (83, 54, 31), (inset.left, inset.centery), (inset.right, inset.centery), 3)
-        pygame.draw.rect(screen, (222, 183, 79), (rect.centerx - 3, rect.centery - 4, 6, 9))
+        pygame.draw.rect(screen, GB_BLACK, inset)
+        pygame.draw.rect(screen, GB_MID, inset.inflate(-4,-4))
+        pygame.draw.rect(screen, GB_LIGHT, (inset.left+3, inset.top+3, inset.width-6, 3))
+        pygame.draw.rect(screen, GB_BLACK, (inset.left, inset.centery, inset.width, 3))
+        pygame.draw.rect(screen, GB_WHITE, (rect.centerx-2, rect.centery-2, 4, 5))
     elif item_id == "wooden_fence":
-        for x in (inset.left + 3, inset.right - 7):
-            pygame.draw.rect(screen, (118, 73, 43), (x, inset.top, 6, inset.height))
-        for y in (inset.top + inset.height // 3, inset.top + 2 * inset.height // 3):
-            pygame.draw.rect(screen, (174, 116, 65), (inset.left, y, inset.width, 6))
+        for x in (inset.left+3, inset.right-7):
+            pygame.draw.rect(screen, GB_BLACK, (x, inset.top, 6, inset.height))
+            pygame.draw.rect(screen, GB_LIGHT, (x+1, inset.top+2, 2, inset.height-4))
+        for y in (inset.top+inset.height//3, inset.top+2*inset.height//3):
+            pygame.draw.rect(screen, GB_MID, (inset.left, y, inset.width, 6))
+            pygame.draw.rect(screen, GB_LIGHT, (inset.left+2, y+1, inset.width-4, 2))
     elif item_id == "wood_floor":
-        pygame.draw.rect(screen, (167, 113, 70), inset)
-        for y in (inset.top + inset.height // 3, inset.top + 2 * inset.height // 3):
-            pygame.draw.line(screen, (108, 71, 44), (inset.left, y), (inset.right, y), 2)
+        pygame.draw.rect(screen, GB_LIGHT, inset)
+        for y in (inset.top+inset.height//3, inset.top+2*inset.height//3):
+            pygame.draw.rect(screen, GB_MID, (inset.left, y, inset.width, 2))
     else:
-        pygame.draw.rect(screen, (129, 95, 61), inset, border_radius=3)
-        pygame.draw.rect(screen, (77, 58, 43), inset, 2, border_radius=3)
+        pygame.draw.rect(screen, GB_MID, inset)
+        pygame.draw.rect(screen, GB_BLACK, inset, 2)
