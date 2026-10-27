@@ -131,8 +131,8 @@ def draw_beach_ground(screen, camera_x, camera_y):
 def draw_beach_rocks(screen, camera_x, camera_y, collision_rects):
     """Varias rocas bajas ocupan cada obstaculo, no uno enorme estirado."""
     for rect in collision_rects:
-        if rect.width < 60 or rect.height < 30:
-            continue  # puertas y otros obstaculos pequeños se dibujan aparte
+        if rect.width < 60 or rect.height < 30 or rect.height > 150:
+            continue  # puertas y franja de agua: nunca son rocas
         cluster = pygame.Surface((int(rect.width), int(rect.height)), pygame.SRCALPHA)
         # Sombra de piedras dispersas, integrada en la arena.
         pygame.draw.ellipse(cluster, LIGHT, (0, 4, rect.width, rect.height - 5))
