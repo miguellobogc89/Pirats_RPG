@@ -10,7 +10,7 @@ import pygame
 
 from core.save_manager import save_state
 from game.scenes.farm_scene import FarmScene
-from game.ui.sprite_renderer import draw_pixel_actor, draw_pixel_tree, draw_pixel_building, draw_pixel_monster
+from game.ui.sprite_renderer import draw_pixel_actor, draw_pixel_tree, draw_pixel_building, draw_pixel_monster, draw_pixel_rock, draw_pixel_cliff
 from game.hud.menu_overlay import draw_menu
 from game.hud.stash_overlay import draw_stash_overlay
 from game.inventory.hotbar_manager import get_hotbar_slots, get_active_hotbar_index
@@ -735,16 +735,29 @@ class BrumazulScene(FarmScene):
             pygame.draw.rect(s, (239, 239, 239), pygame.Rect(-cx, -cy, 704, 704))
             pygame.draw.rect(s, LINE, pygame.Rect(-cx, -cy, 704, 704), 1)
             from game.world.collision_manager import get_scene_collision_rects
-            for collision in get_scene_collision_rects():
-                pygame.draw.rect(s, (194, 194, 194), pygame.Rect(collision.x - cx, collision.y - cy, collision.width, collision.height), 1)
+            # La franja de roca del norte es terreno existente, no un nuevo collider.
             pygame.draw.rect(s, PALE, pygame.Rect(-cx, -cy, 704, 165))
             pygame.draw.line(s, LINE, (-cx, 165 - cy), (704 - cx, 165 - cy), 1)
-            # Visible pebbled ground, source of guaranteed stones.
-            pygame.draw.rect(s, (199, 192, 178), (70 - cx, 350 - cy, 160, 115))
+            # Textura de guijarros: piedras recolectables siguen accesibles.
             for rx in range(84, 220, 22):
                 for ry in range(363, 458, 24):
-                    pygame.draw.ellipse(s, (123, 118, 109),
-                                        (rx - cx, ry - cy, 8, 5))
+                    pygame.draw.rect(s, LIGHT, (rx - cx, ry - cy, 6, 3))
+                    pygame.draw.rect(s, LINE, (rx - cx + 2, ry - cy + 2, 4, 2))
+            # Decorar exclusivamente obstaculos con colision ya definida.
+            for collision in get_scene_collision_rects():
+                if collision.width > 60 and collision.height > 35:
+                    draw_pixel_rock(
+                        s, collision.centerx - cx, collision.centery - cy,
+                        collision.width + 10, collision.height + 18,
+                    )
+                elif collision.width >= 70 and collision.height <= 15:
+                    draw_pixel_cliff(
+                        s, (collision.x - cx, collision.y - cy - 18,
+                            collision.width, 28),
+                    )
+            # Vegetacion costera en dos islotes rocosos ya bloqueados.
+            draw_pixel_tree(s, 163 - cx, 285 - cy, 70, 90, "palm")
+            draw_pixel_tree(s, 565 - cx, 310 - cy, 70, 85, "mangrove")
             # Interactable closed port gate (E).
             pygame.draw.line(s, (117, 88, 61), (696 - cx, 390 - cy),
                              (696 - cx, 490 - cy), 4)
@@ -931,7 +944,7 @@ class BrumazulScene(FarmScene):
             draw_crops(screen, self.app.state, cx, cy)
             draw_wild_bushes(screen, self.app.state, cx, cy)
         if self.scene_id == "brumazul_granja" and not self.app.state.get("notification_demo_tree_cut"):
-            draw_pixel_tree(screen, 680 - cx, 285 - cy, 76, 110)
+            draw_pixel_tree(screen, 680 - cx, 285 - cy, 76, 110, "oak")
         buildings = list(layout.get("buildings", []))
         buildings.extend(layout[k] for k in ("house", "workshop") if isinstance(layout.get(k), dict))
         for building in buildings:
