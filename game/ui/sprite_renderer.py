@@ -231,7 +231,22 @@ def draw_pixel_building(screen, rect, door_x=None):
         return
     sprite = _atlas_scaled("house", rect.width, rect.height)
     if sprite is not None:
-        screen.blit(sprite, rect)
+        if door_x is not None:
+            # El sprite original tiene la puerta en el primer tercio.
+            # Repartir la fachada alrededor de la puerta alinea el dibujo
+            # con la entrada real sin alterar el collider ni las misiones.
+            art = _atlas_part("house")
+            src_split = 34
+            desired = max(8, min(rect.width - 8, int(door_x - rect.x)))
+            left = pygame.transform.scale(art.subsurface(
+                (0, 0, src_split, art.get_height())), (desired, rect.height))
+            right = pygame.transform.scale(art.subsurface(
+                (src_split, 0, art.get_width() - src_split, art.get_height())),
+                (rect.width - desired, rect.height))
+            screen.blit(left, rect.topleft)
+            screen.blit(right, (rect.x + desired, rect.y))
+        else:
+            screen.blit(sprite, rect)
         return rect
     relative = .5 if door_x is None else (door_x - rect.x) / rect.width
     door_column = max(7, min(14, round(relative * 24) - 2))
