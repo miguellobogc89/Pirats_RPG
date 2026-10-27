@@ -10,7 +10,7 @@ import pygame
 
 from core.save_manager import save_state
 from game.scenes.farm_scene import FarmScene
-from game.ui.sprite_renderer import draw_pixel_actor, draw_pixel_tree, draw_pixel_building, draw_pixel_monster, draw_pixel_rock, draw_pixel_cliff
+from game.ui.sprite_renderer import draw_pixel_actor, draw_pixel_tree, draw_pixel_building, draw_pixel_monster
 from game.hud.menu_overlay import draw_menu
 from game.hud.stash_overlay import draw_stash_overlay
 from game.inventory.hotbar_manager import get_hotbar_slots, get_active_hotbar_index
