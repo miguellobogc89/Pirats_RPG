@@ -21,8 +21,8 @@ from game.dialogue.chapter_dialogues import get_chapter_dialogue, get_chapter_in
 from game.dialogue.chapter_conversation_renderer import draw_chapter_conversation
 
 WIDTH, HEIGHT = 960, 640
-WHITE = (240, 240, 240)
-PAPER = (240, 240, 240)
+WHITE = WHITE
+PAPER = WHITE
 PALE = (184, 184, 184)
 LIGHT = (184, 184, 184)
 LINE = (104, 104, 104)
@@ -958,18 +958,18 @@ class BrumazulScene(FarmScene):
         if self.scene_id == "brumazul_casa_almarin" and "bed" in layout:
             x, y = layout["bed"]
             bed = pygame.Rect(int(x - cx - 27), int(y - cy - 39), 54, 78)
-            pygame.draw.rect(screen, (125, 125, 125), bed, border_radius=5)
-            pygame.draw.rect(screen, (205, 205, 205), bed.inflate(-8, -8), border_radius=4)
-            pygame.draw.rect(screen, (240, 240, 240), (bed.x + 8, bed.y + 7, bed.width - 16, 17), border_radius=4)
-            pygame.draw.rect(screen, (160, 160, 160), (bed.x + 7, bed.y + 28, bed.width - 14, bed.height - 37), border_radius=3)
+            pygame.draw.rect(screen, INK, bed, border_radius=5)
+            pygame.draw.rect(screen, LINE, bed.inflate(-8, -8), border_radius=4)
+            pygame.draw.rect(screen, WHITE, (bed.x + 8, bed.y + 7, bed.width - 16, 17), border_radius=4)
+            pygame.draw.rect(screen, LIGHT, (bed.x + 7, bed.y + 28, bed.width - 14, bed.height - 37), border_radius=3)
             self.label("CAMA [E]", x - cx - 31, y - cy - 60)
         if self.scene_id == "brumazul_taller_almarin" and "chest" in layout:
             x, y = layout["chest"]
             chest_rect = pygame.Rect(int(x - cx - 24), int(y - cy - 17), 48, 34)
-            pygame.draw.rect(screen, (111, 71, 42), chest_rect, border_radius=4)
-            pygame.draw.rect(screen, (56, 39, 28), chest_rect, 3, border_radius=4)
-            pygame.draw.rect(screen, (192, 152, 75), (int(x - cx - 4), int(y - cy - 14), 8, 28))
-            pygame.draw.rect(screen, (222, 185, 98), (int(x - cx - 5), int(y - cy - 3), 10, 9))
+            pygame.draw.rect(screen, INK, chest_rect, border_radius=4)
+            pygame.draw.rect(screen, INK, chest_rect, 3, border_radius=4)
+            pygame.draw.rect(screen, LINE, (int(x - cx - 4), int(y - cy - 14), 8, 28))
+            pygame.draw.rect(screen, WHITE, (int(x - cx - 5), int(y - cy - 3), 10, 9))
             self.label("COFRE [E]", x - cx - 34, y - cy - 43)
         if self.scene_id == "brumazul_granja":
             progress = self.app.state.setdefault("farm_repairs", {})
@@ -977,18 +977,55 @@ class BrumazulScene(FarmScene):
             repaired = progress.get("repaired_fences", [])
             for i, (x, y) in enumerate(layout.get("wood_piles", [])):
                 if i not in collected:
-                    pygame.draw.rect(screen, LIGHT, (x - cx - 11, y - cy - 7, 22, 14))
-                    self.label("MADERA [E]", x - cx - 32, y - cy - 28)
+                    # Troncos pixelados apilados con vetas y extremos visibles.
+                    sx, sy = int(x - cx), int(y - cy)
+                    for dx, dy in ((-12, 0), (-8, -7), (-4, 7)):
+                        pygame.draw.rect(screen, INK, (sx + dx, sy + dy - 4, 24, 8))
+                        pygame.draw.rect(screen, LINE, (sx + dx + 2, sy + dy - 3, 20, 5))
+                        pygame.draw.rect(screen, LIGHT, (sx + dx + 3, sy + dy - 2, 13, 2))
+                        pygame.draw.rect(screen, INK, (sx + dx + 19, sy + dy - 2, 2, 4))
+                    self.label("MADERA [E]", x - cx - 32, y - cy - 31)
             for gap in layout.get("fence_gaps", []):
                 x, y, w, h = gap["rect"]
                 done = gap["id"] in repaired
-                pygame.draw.rect(screen, LINE if done else INK, (x - cx, y - cy, w, h), 4 if done else 2)
+                sx, sy = int(x - cx), int(y - cy)
+                # Postes y travesanos con hueco real mientras la valla esta rota.
+                if w >= h:
+                    for px in (sx + 2, sx + w - 8):
+                        pygame.draw.rect(screen, INK, (px, sy, 6, h))
+                        pygame.draw.rect(screen, LIGHT, (px + 1, sy + 2, 2, max(1, h - 4)))
+                    for py in (sy + 4, sy + h - 7):
+                        segments = ((sx + 5, w - 10),) if done else (
+                            (sx + 5, max(5, w // 3 - 5)),
+                            (sx + 2 * w // 3, max(5, w // 3 - 5)),
+                        )
+                        for px, length in segments:
+                            pygame.draw.rect(screen, INK, (px, py, length, 5))
+                            pygame.draw.rect(screen, LINE, (px, py + 1, length, 2))
+                else:
+                    for py in (sy + 2, sy + h - 8):
+                        pygame.draw.rect(screen, INK, (sx, py, w, 6))
+                        pygame.draw.rect(screen, LIGHT, (sx + 2, py + 1, max(1, w - 4), 2))
+                    for px in (sx + 4, sx + w - 7):
+                        segments = ((sy + 5, h - 10),) if done else (
+                            (sy + 5, max(5, h // 3 - 5)),
+                            (sy + 2 * h // 3, max(5, h // 3 - 5)),
+                        )
+                        for py, length in segments:
+                            pygame.draw.rect(screen, INK, (px, py, 5, length))
+                            pygame.draw.rect(screen, LINE, (px + 1, py, 2, length))
                 if not done:
                     self.label("VALLA ROTA [E]", x - cx - 20, y - cy - 23)
             gate_done = progress.get("gate_repaired", False)
             gate_x, gate_y = 770, 445
-            pygame.draw.rect(screen, PALE if not gate_done else LIGHT, (gate_x - cx - 25, gate_y - cy - 13, 50, 26))
-            pygame.draw.rect(screen, LINE, (gate_x - cx - 25, gate_y - cy - 13, 50, 26), 2)
+            gate_rect = pygame.Rect(int(gate_x - cx - 25), int(gate_y - cy - 13), 50, 26)
+            pygame.draw.rect(screen, INK, gate_rect, 2)
+            for px in range(gate_rect.left + 4, gate_rect.right - 4, 8):
+                if not gate_done and gate_rect.centerx - 4 <= px <= gate_rect.centerx + 4:
+                    continue
+                pygame.draw.rect(screen, LINE, (px, gate_rect.top + 3, 6, 20))
+                pygame.draw.rect(screen, LIGHT, (px + 1, gate_rect.top + 4, 2, 18))
+            pygame.draw.rect(screen, INK, (gate_rect.x + 3, gate_rect.y + 11, 44, 3), 1)
             self.label("PORTON REPARADO" if gate_done else "PORTON [E / CLIC]", gate_x - cx - 55, gate_y - cy - 35)
             self.label("MADERA: %d  |  VALLAS: %d/3" % (quantity(self.app.state, "wood"), len(repaired)), 22, 91)
         for node in layout.get("nodes", []):
