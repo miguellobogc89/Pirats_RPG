@@ -188,9 +188,12 @@ def _pixel_tree():
     return sprite
 
 
-def draw_pixel_tree(screen, center_x, center_y, width=72, height=96):
-    """Misma caja visual del arbol; no altera su posicion ni colisiones."""
-    sprite = pygame.transform.scale(_pixel_tree(), (int(width), int(height)))
+def draw_pixel_tree(screen, center_x, center_y, width=72, height=96, species="oak"):
+    """Arbol ilustrado PNG; conserva la caja de render, colisiones y fallback."""
+    species = species if species in ("oak", "palm", "mangrove") else "oak"
+    sprite = _atlas_scaled(species, int(width), int(height))
+    if sprite is None:
+        sprite = pygame.transform.scale(_pixel_tree(), (int(width), int(height)))
     rect = sprite.get_rect(center=(int(center_x), int(center_y)))
     screen.blit(sprite, rect)
     return rect
@@ -222,14 +225,19 @@ def _pixel_building(door_column):
 
 
 def draw_pixel_building(screen, rect, door_x=None):
-    """Edificio pixelado dentro del rectangulo existente del escenario."""
+    """Casa ilustrada en el rectangulo original, sin cambiar puertas ni fisicas."""
     rect = pygame.Rect(rect)
     if rect.width <= 0 or rect.height <= 0:
         return
+    sprite = _atlas_scaled("house", rect.width, rect.height)
+    if sprite is not None:
+        screen.blit(sprite, rect)
+        return rect
     relative = .5 if door_x is None else (door_x - rect.x) / rect.width
     door_column = max(7, min(14, round(relative * 24) - 2))
     sprite = pygame.transform.scale(_pixel_building(door_column), rect.size)
     screen.blit(sprite, rect)
+    return rect
 
 
 @lru_cache(maxsize=1)
@@ -263,3 +271,60 @@ def draw_pixel_monster(screen, center_x, center_y, preparing=False):
     screen.blit(sprite, (x - 36, y - 39))
     if preparing:
         pygame.draw.rect(screen, GB_BLACK, (x - 30, y - 42, 60, 3))
+
+
+# Atlas de arte real, generado para el simulador (no se renderizan formas
+# geometricas cuando el PNG esta disponible). Cada celda tiene alfa propio.
+_ART_ATLAS_PATH = "assets/world/gameboy_atlas.png"
+_ART_ATLAS_RECTS = {
+    "palm": (0, 0, 60, 85),
+    "oak": (60, 0, 68, 86),
+    "mangrove": (128, 0, 68, 82),
+    "cliff": (0, 86, 112, 36),
+    "rock": (112, 86, 56, 52),
+    "house": (0, 139, 116, 77),
+}
+
+
+@lru_cache(maxsize=12)
+def _atlas_part(name):
+    atlas = get_sprite(_ART_ATLAS_PATH)
+    source_rect = _ART_ATLAS_RECTS.get(name)
+    if atlas is None or source_rect is None:
+        return None
+    return atlas.subsurface(pygame.Rect(source_rect)).copy()
+
+
+@lru_cache(maxsize=128)
+def _atlas_scaled(name, width, height):
+    part = _atlas_part(name)
+    if part is None:
+        return None
+    return pygame.transform.scale(part, (max(1, width), max(1, height)))
+
+
+def draw_pixel_rock(screen, center_x, center_y, width=48, height=40):
+    """Roca decorativa centrada en un obstaculo que ya existe en el mundo."""
+    width, height = max(1, int(width)), max(1, int(height))
+    sprite = _atlas_scaled("rock", width, height)
+    if sprite is None:
+        sprite = pygame.Surface((width, height), pygame.SRCALPHA)
+        pygame.draw.ellipse(sprite, GB_BLACK, sprite.get_rect())
+        pygame.draw.ellipse(sprite, GB_MID, sprite.get_rect().inflate(-8, -8))
+    rect = sprite.get_rect(center=(int(center_x), int(center_y)))
+    screen.blit(sprite, rect)
+    return rect
+
+
+def draw_pixel_cliff(screen, rect):
+    """Tramo de pared rocosa; debe dibujarse sobre un limite ya bloqueado."""
+    rect = pygame.Rect(rect)
+    if rect.width <= 0 or rect.height <= 0:
+        return None
+    sprite = _atlas_scaled("cliff", rect.width, rect.height)
+    if sprite is not None:
+        screen.blit(sprite, rect)
+    else:
+        pygame.draw.rect(screen, GB_BLACK, rect, 3)
+        pygame.draw.rect(screen, GB_MID, rect.inflate(-6, -6), 2)
+    return rect
