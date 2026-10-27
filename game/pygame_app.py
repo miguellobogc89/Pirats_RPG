@@ -64,7 +64,7 @@ from game.cartography.ui.cartography_ui_state import CartographyUIState
 from game.data.item_database import get_item_data
 from game.inventory.slot_ui_state import SlotUIState
 from game.inventory.stash_state import ensure_stash_state
-from game.ui.sprite_renderer import draw_item_sprite, draw_sprite_centered
+from game.ui.sprite_renderer import draw_item_sprite, draw_sprite_centered, draw_pixel_actor, draw_pixel_tree
 from game.farming.farming_manager import advance_farming_day
 from game.bestiary.bestiary_manager import BestiaryManager
 from game.combat.combat_manager import CombatManager
@@ -88,10 +88,10 @@ WIDTH = 960
 HEIGHT = 640
 FPS = 60
 
-PANEL = (238, 230, 204)
-DARK = (48, 55, 43)
-WARN = (151, 76, 60)
-WHITE = (250, 248, 235)
+PANEL = (184, 184, 184)
+DARK = (24, 24, 24)
+WARN = (104, 104, 104)
+WHITE = (240, 240, 240)
 
 
 class PygameApp:
@@ -618,23 +618,7 @@ class PygameApp:
         px = int(player["x"] - camera_x)
         py = int(player["y"] - camera_y)
 
-        pygame.draw.circle(self.screen, DARK, (px, py), 13)
-        pygame.draw.circle(self.screen, WHITE, (px, py - 18), 9)
-
-        direction = player.get("direction", "down")
-
-        if direction == "up":
-            pygame.draw.circle(self.screen, WARN, (px, py - 18), 4)
-
-        elif direction == "down":
-            pygame.draw.circle(self.screen, WARN, (px, py + 18), 4)
-
-        elif direction == "left":
-            pygame.draw.circle(self.screen, WARN, (px - 18, py), 4)
-
-        elif direction == "right":
-            pygame.draw.circle(self.screen, WARN, (px + 18, py), 4)
-
+        draw_pixel_actor(self.screen, px, py, player.get("direction", "down"))
 
         if self.placement_mode and self.placement_item_id is not None:
             item_data = get_item_data(self.placement_item_id)
