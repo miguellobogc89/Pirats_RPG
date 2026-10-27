@@ -731,47 +731,34 @@ class BrumazulScene(FarmScene):
         world_height = self.area_layout.get("height", 800) if self.chapter_area else (1050 if self.village else 800)
         cx, cy = get_camera_position(p["x"], p["y"], WIDTH, HEIGHT, world_width, world_height)
         if self.beach:
-            pygame.draw.rect(s, PAPER, (0, 0, WIDTH, HEIGHT))
-            pygame.draw.rect(s, (239, 239, 239), pygame.Rect(-cx, -cy, 704, 704))
-            pygame.draw.rect(s, LINE, pygame.Rect(-cx, -cy, 704, 704), 1)
+            # Una sola playa continua: fondo de arena, costa y pequeñas rocas.
+            # Los obstáculos son los de la escena real; no añadimos plataformas.
+            from game.scenes.beach_art import (
+                draw_beach_ground, draw_beach_rocks, draw_beach_pickup,
+            )
             from game.world.collision_manager import get_scene_collision_rects
-            # La franja de roca del norte es terreno existente, no un nuevo collider.
-            pygame.draw.rect(s, PALE, pygame.Rect(-cx, -cy, 704, 165))
-            pygame.draw.line(s, LINE, (-cx, 165 - cy), (704 - cx, 165 - cy), 1)
-            # Textura de guijarros: piedras recolectables siguen accesibles.
-            for rx in range(84, 220, 22):
-                for ry in range(363, 458, 24):
-                    pygame.draw.rect(s, LIGHT, (rx - cx, ry - cy, 6, 3))
-                    pygame.draw.rect(s, LINE, (rx - cx + 2, ry - cy + 2, 4, 2))
-            # Decorar exclusivamente obstaculos con colision ya definida.
-            for collision in get_scene_collision_rects():
-                if collision.width > 60 and collision.height > 35:
-                    draw_pixel_rock(
-                        s, collision.centerx - cx, collision.centery - cy,
-                        collision.width + 10, collision.height + 18,
-                    )
-                elif collision.width >= 70 and collision.height <= 15:
-                    draw_pixel_cliff(
-                        s, (collision.x - cx, collision.y - cy - 18,
-                            collision.width, 28),
-                    )
-            # Vegetacion costera en dos islotes rocosos ya bloqueados.
-            draw_pixel_tree(s, 163 - cx, 285 - cy, 70, 90, "palm")
-            draw_pixel_tree(s, 565 - cx, 310 - cy, 70, 85, "mangrove")
-            # Interactable closed port gate (E).
-            pygame.draw.line(s, (117, 88, 61), (696 - cx, 390 - cy),
-                             (696 - cx, 490 - cy), 4)
-            pygame.draw.circle(s, (117, 88, 61), (690 - cx, 440 - cy), 3)
+            draw_beach_ground(s, cx, cy)
+            draw_beach_rocks(s, cx, cy, get_scene_collision_rects())
+
+            # Árboles a escala del personaje; sus troncos pisan las rocas.
+            draw_pixel_tree(s, 154 - cx, 273 - cy, 44, 60, "palm")
+            draw_pixel_tree(s, 552 - cx, 312 - cy, 46, 59, "mangrove")
+
+            # Puerta del puerto y acceso al pueblo en las posiciones originales.
+            pygame.draw.rect(s, INK, (693 - cx, 390 - cy, 7, 100))
+            pygame.draw.rect(s, LIGHT, (695 - cx, 398 - cy, 2, 84))
+            for py in range(399, 487, 13):
+                pygame.draw.rect(s, LINE, (689 - cx, py - cy, 11, 4))
             self.label("PUERTO [E]", 595 - cx, 380 - cy)
-            pygame.draw.line(s, (117, 88, 61), (350 - cx, 5 - cy),
-                             (450 - cx, 5 - cy), 4)
+            pygame.draw.rect(s, INK, (350 - cx, 3 - cy, 100, 7))
+            for gx in range(358, 445, 14):
+                pygame.draw.rect(s, LINE, (gx - cx, 2 - cy, 4, 11))
             self.label("PUEBLO [E] - CERRADO", 310 - cx, 23 - cy)
-            # Sin cuadricula: solo limites del mapa y del sendero.
-            for x in (350, 450):
-                pygame.draw.line(s, LIGHT, (x - cx, -cy), (x - cx, 360 - cy), 1)
+
+            # Los objetos recogibles siguen en sus posiciones jugables.
             for obj in self.app.state.get("collectables", []):
                 if obj.get("id", "").startswith("brumazul_"):
-                    pygame.draw.circle(s, LINE, (int(obj["x"] - cx), int(obj["y"] - cy)), 7, 1)
+                    draw_beach_pickup(s, obj["x"] - cx, obj["y"] - cy)
             # The prologue creature uses the shared combat engine, not the
             # old scripted chase. Show its aggro and telegraph states clearly.
             bx, by = int(self.boss.x - cx), int(self.boss.y - cy)
@@ -781,8 +768,8 @@ class BrumazulScene(FarmScene):
             draw_pixel_monster(s, bx, by, preparing)
             # Monster health bar and actual combat damage feedback.
             bar_x, bar_y = bx - 48, by - 89
-            pygame.draw.rect(s, (57, 55, 54), (bar_x, bar_y, 96, 10))
-            pygame.draw.rect(s, (157, 66, 61), (bar_x + 1, bar_y + 1,
+            pygame.draw.rect(s, INK, (bar_x, bar_y, 96, 10))
+            pygame.draw.rect(s, LINE, (bar_x + 1, bar_y + 1,
                              int(94 * creature.hp / creature.max_hp), 8))
             self.label(str(creature.hp) + "/" + str(creature.max_hp) + " PV",
                        bar_x + 10, bar_y - 18)
@@ -795,33 +782,33 @@ class BrumazulScene(FarmScene):
                 points = [(bx, by)] + [(int(bx + _math.cos(a) * creature.vision_range),
                                         int(by + _math.sin(a) * creature.vision_range)) for a in arc]
                 vision = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
-                pygame.draw.polygon(vision, (214, 170, 73, 40), points)
+                pygame.draw.polygon(vision, (104, 104, 104, 32), points)
                 s.blit(vision, (0, 0))
                 if creature.last_seen:
                     lx, ly = creature.last_seen
-                    pygame.draw.circle(s, (193, 112, 65),
+                    pygame.draw.circle(s, LINE,
                                        (int(lx - cx), int(ly - cy)), 9, 2)
             if preparing:
                 # Wind-up warning is visible in the actual game scene.
-                pygame.draw.circle(s, (181, 58, 51), (bx, by), 50, 4)
+                pygame.draw.circle(s, INK, (bx, by), 50, 4)
                 px, py = self.app.state["player"]["x"], self.app.state["player"]["y"]
-                pygame.draw.line(s, (181, 58, 51), (bx, by),
+                pygame.draw.line(s, INK, (bx, by),
                                  (int(px - cx), int(py - cy)), 3)
                 self.label("!", bx - 4, by - 72)
             elif active:
-                pygame.draw.circle(s, (165, 113, 78), (bx, by), 47, 2)
+                pygame.draw.circle(s, LINE, (bx, by), 47, 2)
                 self.label("!", bx - 4, by - 70)
             for stone in self.beach_combat.throwing.projectiles:
-                pygame.draw.circle(s, (86, 78, 70),
+                pygame.draw.circle(s, INK,
                                    (int(stone.x - cx), int(stone.y - cy)), 6)
             throwing = self.beach_combat.throwing
             if throwing.held:
-                pygame.draw.circle(s, (78, 74, 69),
+                pygame.draw.circle(s, INK,
                                    (int(p["x"] - cx + 16), int(p["y"] - cy - 8)), 6)
                 self.label("PIEDRA EN MANO · Mantén clic derecho para cargar", 22, 49)
             if throwing.charging:
                 pygame.draw.rect(s, (70, 70, 70), (22, 78, 204, 18), 2)
-                pygame.draw.rect(s, (115, 159, 103),
+                pygame.draw.rect(s, LINE,
                                  (24, 80, int(200 * throwing.charge), 14))
                 self.label("FUERZA", 235, 78)
             if self.beach_notice_timer > 0:
@@ -829,7 +816,7 @@ class BrumazulScene(FarmScene):
             hero = self.beach_combat.player
             self.label("VIDA " + str(hero.hp) + "/" + str(hero.max_hp), 22, 138)
             pygame.draw.rect(s, (75, 75, 75), (22, 159, 124, 12), 2)
-            pygame.draw.rect(s, (174, 68, 61), (24, 161, int(120 * hero.hp / hero.max_hp), 8))
+            pygame.draw.rect(s, LINE, (24, 161, int(120 * hero.hp / hero.max_hp), 8))
             self.label("PLAYA DE BRUMAZUL  /  NOCHE", 22, 18)
         elif self.tavern:
             self.draw_tavern(cx, cy)
