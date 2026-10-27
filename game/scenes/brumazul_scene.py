@@ -21,7 +21,7 @@ from game.dialogue.chapter_dialogues import get_chapter_dialogue, get_chapter_in
 from game.dialogue.chapter_conversation_renderer import draw_chapter_conversation
 
 WIDTH, HEIGHT = 960, 640
-WHITE = WHITE
+WHITE = (240, 240, 240)
 PAPER = WHITE
 PALE = (184, 184, 184)
 LIGHT = (184, 184, 184)
