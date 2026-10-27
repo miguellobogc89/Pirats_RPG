@@ -10,6 +10,7 @@ import pygame
 
 from core.save_manager import save_state
 from game.scenes.farm_scene import FarmScene
+from game.ui.sprite_renderer import draw_pixel_actor, draw_pixel_tree, draw_pixel_building, draw_pixel_monster
 from game.hud.menu_overlay import draw_menu
 from game.hud.stash_overlay import draw_stash_overlay
 from game.inventory.hotbar_manager import get_hotbar_slots, get_active_hotbar_index
@@ -20,12 +21,12 @@ from game.dialogue.chapter_dialogues import get_chapter_dialogue, get_chapter_in
 from game.dialogue.chapter_conversation_renderer import draw_chapter_conversation
 
 WIDTH, HEIGHT = 960, 640
-WHITE = (250, 250, 249)
-PAPER = (245, 245, 244)
-PALE = (231, 231, 230)
-LIGHT = (208, 208, 207)
-LINE = (166, 166, 166)
-INK = (105, 105, 105)
+WHITE = (240, 240, 240)
+PAPER = (240, 240, 240)
+PALE = (184, 184, 184)
+LIGHT = (184, 184, 184)
+LINE = (104, 104, 104)
+INK = (24, 24, 24)
 
 # La conversacion tiene indicaciones de escena en vez de lineas pronunciadas.
 INTRO = get_chapter_intro()
@@ -764,21 +765,7 @@ class BrumazulScene(FarmScene):
             creature = self.beach_combat.monster
             active = creature.awake
             preparing = creature.windup > 0
-            pygame.draw.ellipse(s, (186, 180, 172), (bx - 46, by + 25, 92, 20))
-            base_body = (132, 70, 67) if preparing else ((100, 93, 112) if active else (124, 126, 130))
-            body = self.beach_combat.feedback.fighter_color(creature, base_body)
-            pygame.draw.circle(s, body, (bx, by), 39)
-            pygame.draw.circle(s, (61, 55, 67), (bx, by), 39, 3)
-            for side in (-1, 1):
-                pygame.draw.polygon(s, (61, 55, 67), [
-                    (bx + side * 24, by - 23),
-                    (bx + side * 43, by - 57),
-                    (bx + side * 11, by - 35),
-                ])
-                pygame.draw.circle(s, (238, 212, 154) if active else (225, 225, 220),
-                                   (bx + side * 13, by - 7), 8)
-                pygame.draw.circle(s, (43, 37, 42), (bx + side * 13, by - 7), 3)
-            pygame.draw.arc(s, (43, 37, 42), (bx - 22, by - 1, 44, 35), 3.35, 6.08, 3)
+            draw_pixel_monster(s, bx, by, preparing)
             # Monster health bar and actual combat damage feedback.
             bar_x, bar_y = bx - 48, by - 89
             pygame.draw.rect(s, (57, 55, 54), (bar_x, bar_y, 96, 10))
@@ -848,18 +835,7 @@ class BrumazulScene(FarmScene):
             from game.construction.placement_mode import draw_placement_preview
             draw_placement_preview(self.app)
 
-        if not self.tavern and self.scene_id != "brumazul_pueblo":
-            pygame.draw.circle(s, LINE, (int(p["x"] - cx), int(p["y"] - cy)), 13, 1)
-            pygame.draw.circle(s, LIGHT, (int(p["x"] - cx), int(p["y"] - cy - 15)), 8, 1)
-        else:
-            pygame.draw.circle(s, LINE, (int(p["x"] - cx), int(p["y"] - cy)), 13, 1)
-        direction = p.get("direction", "down")
-        vectors = {"up": (0, -1), "down": (0, 1), "left": (-1, 0), "right": (1, 0)}
-        vx, vy = vectors.get(direction, (0, 1))
-        center = (int(p["x"] - cx), int(p["y"] - cy - 7))
-        tip = (center[0] + vx * 17, center[1] + vy * 17)
-        pygame.draw.line(s, (65, 65, 65), center, tip, 3)
-        pygame.draw.circle(s, (65, 65, 65), tip, 3)
+        draw_pixel_actor(s, p["x"] - cx, p["y"] - cy, p.get("direction", "down"))
         if self.beach:
             # Existing combat feedback owns damage numbers, sparks, slashes,
             # hit flashes and camera shake. No scene-specific combat VFX.
@@ -955,19 +931,19 @@ class BrumazulScene(FarmScene):
             draw_crops(screen, self.app.state, cx, cy)
             draw_wild_bushes(screen, self.app.state, cx, cy)
         if self.scene_id == "brumazul_granja" and not self.app.state.get("notification_demo_tree_cut"):
-            from game.ui.sprite_renderer import draw_sprite_centered
-            if draw_sprite_centered(screen, "assets/world/tree.png", 680 - cx, 285 - cy, 76, 110) is None:
-                pygame.draw.circle(screen, (86, 119, 73), (int(680 - cx), int(270 - cy)), 31)
-                pygame.draw.rect(screen, (117, 81, 52), (672 - cx, 285 - cy, 16, 34))
+            draw_pixel_tree(screen, 680 - cx, 285 - cy, 76, 110)
         buildings = list(layout.get("buildings", []))
         buildings.extend(layout[k] for k in ("house", "workshop") if isinstance(layout.get(k), dict))
         for building in buildings:
             if "rect" not in building:
                 continue
             x, y, w, h = building["rect"]
-            pygame.draw.rect(screen, PAPER, (x - cx, y - cy, w, h))
-            pygame.draw.rect(screen, LINE, (x - cx, y - cy, w, h), 2)
-            self.label(building.get("label", ""), x - cx + 5, y - cy + 8)
+            door = building.get("door")
+            door_x = None
+            if isinstance(door, (list, tuple)) and len(door) >= 2:
+                door_x = door[0] + (door[2] / 2 if len(door) == 4 else 0) - cx
+            draw_pixel_building(screen, (x - cx, y - cy, w, h), door_x)
+            self.label(building.get("label", ""), x - cx + 5, y - cy - 19)
         for door in layout.get("doors", []) + layout.get("exits", []):
             if "rect" in door:
                 x, y, w, h = door["rect"]
@@ -1041,10 +1017,9 @@ class BrumazulScene(FarmScene):
             pygame.draw.rect(s, PALE, (x - cx, y - cy, w, h))
         for building in VILLAGE_LAYOUT["buildings"]:
             x, y, w, h = building["rect"]
-            pygame.draw.rect(s, PAPER, (x - cx, y - cy, w, h))
-            pygame.draw.rect(s, LINE, (x - cx, y - cy, w, h), 2)
-            self.label(building["label"], x - cx + 8, y - cy + 10)
             dx, dy, dw, dh = building["door"]
+            draw_pixel_building(s, (x - cx, y - cy, w, h), dx + dw / 2 - cx)
+            self.label(building["label"], x - cx + 8, y - cy - 19)
             self.draw_door(dx, dy, dw, dh, cx, cy, building.get("label", ""))
         for exit_data in VILLAGE_LAYOUT.get("doors", []):
             x, y, w, h = exit_data["rect"]
@@ -1057,8 +1032,8 @@ class BrumazulScene(FarmScene):
 
     def actor(self, name, pos, cx, cy):
         x, y = int(pos.x - cx), int(pos.y - cy)
-        pygame.draw.circle(self.app.screen, LINE, (x, y), 15, 1)
-        self.label(name, x - 35, y - 33)
+        draw_pixel_actor(self.app.screen, x, y, npc=True)
+        self.label(name, x - 35, y - 51)
 
     def draw_dialogue(self, speaker, message, choices=None, selected=0):
         draw_chapter_conversation(self, speaker, message, choices, selected)
