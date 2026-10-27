@@ -106,6 +106,7 @@ GB_BLACK = (24, 24, 24)
 # Spritesheet idle original del protagonista, 4 vistas en celdas de 32x32.
 # Orden: abajo, izquierda, derecha, arriba. Fondo transparente.
 PLAYER_IDLE_SHEET = "assets/player/pirate_idle_32.png"
+PLAYER_IDLE_DISPLAY_SIZE = 64  # 32x32 original, drawn at 2x nearest neighbour
 _PLAYER_IDLE_COLUMNS = {"down": 0, "left": 1, "right": 2, "up": 3}
 
 
@@ -116,6 +117,17 @@ def _player_idle_frame(direction):
         return None
     index = _PLAYER_IDLE_COLUMNS[direction]
     return sheet.subsurface(pygame.Rect(index * 32, 0, 32, 32)).copy()
+
+
+@lru_cache(maxsize=4)
+def _player_idle_scaled(direction):
+    """Scale idle only once; pygame.transform.scale keeps hard pixel edges."""
+    idle = _player_idle_frame(direction)
+    if idle is None:
+        return None
+    return pygame.transform.scale(
+        idle, (PLAYER_IDLE_DISPLAY_SIZE, PLAYER_IDLE_DISPLAY_SIZE)
+    )
 
 
 @lru_cache(maxsize=16)
@@ -173,15 +185,18 @@ def _pixel_character(direction, npc):
 
 
 def draw_pixel_actor(screen, x, y, direction="down", npc=False):
-    """Dibuja un personaje 16x16 a escala 2; x,y indican los pies."""
+    """Dibuja el jugador ampliado, manteniendo los pies en x,y."""
     if direction not in ("up", "down", "left", "right"):
         direction = "down"
     x, y = int(x), int(y)
     if not npc:
-        idle = _player_idle_frame(direction)
+        idle = _player_idle_scaled(direction)
         if idle is not None:
-            # Anclaje en los pies: no cambia posicion ni colisiones.
-            screen.blit(idle, (x - 16, y - 32))
+            # Solo cambia el tamano grafico; pies, movimiento y colisiones intactos.
+            screen.blit(idle, (
+                x - PLAYER_IDLE_DISPLAY_SIZE // 2,
+                y - PLAYER_IDLE_DISPLAY_SIZE,
+            ))
             return
     # Fallback para NPCs o para una instalacion sin el PNG.
     pygame.draw.ellipse(screen, GB_LIGHT, (x - 12, y - 3, 24, 6))
