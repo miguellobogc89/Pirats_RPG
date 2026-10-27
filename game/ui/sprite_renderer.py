@@ -103,6 +103,21 @@ GB_MID = (104, 104, 104)
 GB_BLACK = (24, 24, 24)
 
 
+# Spritesheet idle original del protagonista, 4 vistas en celdas de 32x32.
+# Orden: abajo, izquierda, derecha, arriba. Fondo transparente.
+PLAYER_IDLE_SHEET = "assets/player/pirate_idle_32.png"
+_PLAYER_IDLE_COLUMNS = {"down": 0, "left": 1, "right": 2, "up": 3}
+
+
+@lru_cache(maxsize=4)
+def _player_idle_frame(direction):
+    sheet = get_sprite(PLAYER_IDLE_SHEET)
+    if sheet is None or sheet.get_size() != (128, 32):
+        return None
+    index = _PLAYER_IDLE_COLUMNS[direction]
+    return sheet.subsurface(pygame.Rect(index * 32, 0, 32, 32)).copy()
+
+
 @lru_cache(maxsize=16)
 def _pixel_character(direction, npc):
     sprite = pygame.Surface((16, 16), pygame.SRCALPHA)
@@ -162,6 +177,13 @@ def draw_pixel_actor(screen, x, y, direction="down", npc=False):
     if direction not in ("up", "down", "left", "right"):
         direction = "down"
     x, y = int(x), int(y)
+    if not npc:
+        idle = _player_idle_frame(direction)
+        if idle is not None:
+            # Anclaje en los pies: no cambia posicion ni colisiones.
+            screen.blit(idle, (x - 16, y - 32))
+            return
+    # Fallback para NPCs o para una instalacion sin el PNG.
     pygame.draw.ellipse(screen, GB_LIGHT, (x - 12, y - 3, 24, 6))
     sprite = pygame.transform.scale(_pixel_character(direction, npc), (32, 32))
     screen.blit(sprite, (x - 16, y - 32))
