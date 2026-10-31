@@ -25,17 +25,25 @@ def draw_main_menu(app):
         draw_load_game(app)
         return
 
-    title = app.big_font.render("Pirats RPG", True, app.WHITE)
-    app.screen.blit(
-        title,
-        (
-            (app.screen.get_width() - title.get_width()) // 2,
-            118,
-        ),
-    )
+    # Titulo grande pixelado con sombra, estilo pantalla de inicio clasica.
+    title_font = get_logo_font()
+    title_x = (app.screen.get_width() - title_font.size("PIRATS RPG")[0]) // 2
+    app.screen.blit(title_font.render("PIRATS RPG", False, (24, 24, 24)), (title_x + 4, 112))
+    app.screen.blit(title_font.render("PIRATS RPG", False, app.WHITE), (title_x, 108))
 
     app.main_menu_state["button_rects"] = draw_menu_buttons(app)
     draw_menu_message(app)
+
+
+_logo_font = None
+
+
+def get_logo_font():
+    global _logo_font
+    if _logo_font is None:
+        from game.ui.retro import PixelFont, TITLE_FONT_FILE
+        _logo_font = PixelFont(TITLE_FONT_FILE, 48, 48)
+    return _logo_font
 
 
 def draw_background(app):
@@ -70,13 +78,8 @@ def draw_menu_button(app, rect, label, selected):
     draw_panel(app.screen, rect)
 
     if selected:
-        pygame.draw.rect(
-            app.screen,
-            (250, 248, 235),
-            rect.inflate(-8, -8),
-            2,
-            border_radius=6,
-        )
+        from game.ui.retro import draw_cursor
+        draw_cursor(app.screen, rect.x + 16, rect.centery - 6, 12)
 
     draw_button_text(app.screen, app.font, label, rect, enabled=True)
 

@@ -5,19 +5,22 @@ from game.ui.ui_theme import (
 )
 
 
-WOOD_DARK = (165, 165, 165)
-WOOD_MID = (200, 200, 200)
-WOOD_LIGHT = (225, 225, 225)
+from game.ui.retro import INK, LINE, PAPER, SHADE, draw_frame
 
-PARCHMENT = (250, 250, 250)
-PARCHMENT_LIGHT = (253, 253, 253)
-PARCHMENT_DISABLED = (243, 243, 243)
+# Paleta en grises de alto contraste, estilo Game Boy.
+WOOD_DARK = INK
+WOOD_MID = LINE
+WOOD_LIGHT = SHADE
 
-TEXT_DARK = (110, 110, 110)
-TEXT_LIGHT = (110, 110, 110)
-TEXT_DISABLED = (175, 175, 175)
+PARCHMENT = PAPER
+PARCHMENT_LIGHT = SHADE
+PARCHMENT_DISABLED = (224, 224, 224)
 
-BAR_BACKGROUND = (242, 242, 242)
+TEXT_DARK = INK
+TEXT_LIGHT = PAPER
+TEXT_DISABLED = (150, 150, 150)
+
+BAR_BACKGROUND = PAPER
 
 
 def draw_text(screen, font, text, x, y, color):
@@ -26,8 +29,7 @@ def draw_text(screen, font, text, x, y, color):
 
 
 def draw_panel(screen, rect):
-    pygame.draw.rect(screen, PARCHMENT, rect)
-    pygame.draw.rect(screen, WOOD_MID, rect, 1)
+    draw_frame(screen, rect)
 
 
 def get_content_panel_rect(content_rect, padding=12):
@@ -61,35 +63,20 @@ def draw_window(screen, rect, title, font, title_font):
         36,
     )
 
-    pygame.draw.rect(
-        screen,
-        WOOD_MID,
-        header_rect,
-        border_radius=BORDER_RADIUS_SMALL,
-    )
+    # Cabecera invertida (fondo oscuro, texto claro).
+    pygame.draw.rect(screen, INK, header_rect)
 
-    pygame.draw.rect(
-        screen,
-        WOOD_DARK,
-        header_rect,
-        1,
-        border_radius=BORDER_RADIUS_SMALL,
-    )
-
-    draw_text(
-        screen,
-        title_font,
-        title,
-        header_rect.x + 10,
-        header_rect.y + 4,
-        TEXT_LIGHT,
+    title_surface = title_font.render(str(title), False, TEXT_LIGHT)
+    screen.blit(
+        title_surface,
+        (header_rect.x + 10, header_rect.y + (header_rect.height - title_surface.get_height()) // 2),
     )
 
 
 def draw_button(screen, rect, enabled=True, pressed=False):
     color = PARCHMENT_DISABLED if not enabled else (PARCHMENT if not pressed else PARCHMENT_LIGHT)
     pygame.draw.rect(screen, color, rect)
-    pygame.draw.rect(screen, WOOD_MID, rect, 1)
+    pygame.draw.rect(screen, INK if enabled else TEXT_DISABLED, rect, 2)
 
 
 def draw_button_text(screen, font, text, rect, enabled=True):
@@ -160,7 +147,7 @@ def draw_progress_bar(
         screen,
         background_color,
         rect,
-        border_radius=4,
+        border_radius=0,
     )
 
     fill_rect = pygame.Rect(
@@ -174,7 +161,7 @@ def draw_progress_bar(
         screen,
         fill_color,
         fill_rect,
-        border_radius=4,
+        border_radius=0,
     )
 
     pygame.draw.rect(
@@ -182,7 +169,7 @@ def draw_progress_bar(
         border_color,
         rect,
         1,
-        border_radius=4,
+        border_radius=0,
     )
 
 
@@ -203,7 +190,7 @@ def draw_scrollbar(
         screen,
         track_color,
         rect,
-        border_radius=4,
+        border_radius=0,
     )
 
     max_first_index = total_items - visible_items
@@ -229,7 +216,7 @@ def draw_scrollbar(
         screen,
         thumb_color,
         thumb_rect,
-        border_radius=4,
+        border_radius=0,
     )
 
     pygame.draw.rect(
@@ -237,7 +224,7 @@ def draw_scrollbar(
         border_color,
         rect,
         1,
-        border_radius=4,
+        border_radius=0,
     )
 
 
@@ -304,7 +291,7 @@ def draw_tab(screen, rect, text, font, selected=False):
         screen,
         WOOD_DARK,
         rect,
-        1,
+        2,
         border_top_left_radius=BORDER_RADIUS_SMALL,
         border_top_right_radius=BORDER_RADIUS_SMALL,
     )

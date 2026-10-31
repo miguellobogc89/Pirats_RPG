@@ -31,7 +31,9 @@ def get_menu_tabs():
 def get_menu_tab_at_position(mouse_x, mouse_y):
     tabs = get_menu_tabs()
     labels = get_menu_tab_labels()
-    font = pygame.font.SysFont("consolas", 14)
+    # Misma fuente con la que se dibujan las pestañas, para que el clic coincida.
+    from game.ui.ui_theme import create_game_fonts
+    font = create_game_fonts()["small"]
     tab_rects = get_tab_rects(tabs, labels, font, TAB_X, TAB_Y)
 
     for tab, rect in tab_rects.items():

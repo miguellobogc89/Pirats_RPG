@@ -25,6 +25,8 @@ PALE = (184, 184, 184)
 LIGHT = (184, 184, 184)
 LINE = (104, 104, 104)
 INK = (24, 24, 24)
+# Los textos de esquina van debajo del recuadro de vida (que ocupa y=18..66).
+HUD_OFFSET_Y = 62
 
 # La conversacion tiene indicaciones de escena en vez de lineas pronunciadas.
 INTRO = get_chapter_intro()
@@ -801,19 +803,19 @@ class BrumazulScene(FarmScene):
             if throwing.held:
                 pygame.draw.circle(s, INK,
                                    (int(p["x"] - cx + 16), int(p["y"] - cy - 8)), 6)
-                self.label("PIEDRA EN MANO · Mantén clic derecho para cargar", 22, 49)
+                self.label("PIEDRA EN MANO · Mantén clic derecho para cargar", 22, 49 + HUD_OFFSET_Y)
             if throwing.charging:
-                pygame.draw.rect(s, (70, 70, 70), (22, 78, 204, 18), 2)
+                pygame.draw.rect(s, (70, 70, 70), (22, 78 + HUD_OFFSET_Y, 204, 18), 2)
                 pygame.draw.rect(s, LINE,
-                                 (24, 80, int(200 * throwing.charge), 14))
-                self.label("FUERZA", 235, 78)
+                                 (24, 80 + HUD_OFFSET_Y, int(200 * throwing.charge), 14))
+                self.label("FUERZA", 235, 78 + HUD_OFFSET_Y)
             if self.beach_notice_timer > 0:
-                self.label(self.beach_notice, 22, 109)
+                self.label(self.beach_notice, 22, 109 + HUD_OFFSET_Y)
             hero = self.beach_combat.player
-            self.label("VIDA " + str(hero.hp) + "/" + str(hero.max_hp), 22, 138)
-            pygame.draw.rect(s, (75, 75, 75), (22, 159, 124, 12), 2)
-            pygame.draw.rect(s, LINE, (24, 161, int(120 * hero.hp / hero.max_hp), 8))
-            self.label("PLAYA DE BRUMAZUL  /  NOCHE", 22, 18)
+            self.label("VIDA " + str(hero.hp) + "/" + str(hero.max_hp), 22, 138 + HUD_OFFSET_Y)
+            pygame.draw.rect(s, (75, 75, 75), (22, 159 + HUD_OFFSET_Y, 124, 12), 2)
+            pygame.draw.rect(s, LINE, (24, 161 + HUD_OFFSET_Y, int(120 * hero.hp / hero.max_hp), 8))
+            self.label("PLAYA DE BRUMAZUL  /  NOCHE", 22, 18 + HUD_OFFSET_Y)
         elif self.tavern:
             self.draw_tavern(cx, cy)
         elif self.scene_id == "brumazul_pueblo":
@@ -885,9 +887,9 @@ class BrumazulScene(FarmScene):
             self.actor("POSADERA", self.keeper, cx, cy)
         if self.show_elder:
             self.actor("ANCIANO", self.elder, cx, cy)
-        self.label("POSADA  /  HABITACION", 22, 18)
+        self.label("POSADA  /  HABITACION", 22, 18 + HUD_OFFSET_Y)
         if self.phase == "free":
-            self.label(get_chapter_ui_text("room_exit_hint"), 24, 43)
+            self.label(get_chapter_ui_text("room_exit_hint"), 24, 43 + HUD_OFFSET_Y)
 
     def draw_door(self, x, y, w, h, cx, cy, label=""):
         rect = pygame.Rect(int(x - cx), int(y - cy), int(w), int(max(h, 8)))
@@ -907,8 +909,8 @@ class BrumazulScene(FarmScene):
         self.draw_door(430, 740, 110, 10, cx, cy, "PUEBLO")
         for name, race, pos, _ in TAVERN_NPCS:
             self.actor(name + " / " + race, pygame.Vector2(pos), cx, cy)
-        self.label("POSADA  /  SALON", 22, 18)
-        self.label(get_chapter_ui_text("tavern_hint"), 22, 43)
+        self.label("POSADA  /  SALON", 22, 18 + HUD_OFFSET_Y)
+        self.label(get_chapter_ui_text("tavern_hint"), 22, 43 + HUD_OFFSET_Y)
 
     def draw_chapter_area(self, cx, cy):
         layout = self.area_layout
@@ -1024,7 +1026,7 @@ class BrumazulScene(FarmScene):
                 pygame.draw.rect(screen, LIGHT, (px + 1, gate_rect.top + 4, 2, 18))
             pygame.draw.rect(screen, INK, (gate_rect.x + 3, gate_rect.y + 11, 44, 3), 1)
             self.label("PORTON REPARADO" if gate_done else "PORTON [E / CLIC]", gate_x - cx - 55, gate_y - cy - 35)
-            self.label("MADERA: %d  |  VALLAS: %d/3" % (quantity(self.app.state, "wood"), len(repaired)), 22, 91)
+            self.label("MADERA: %d  |  VALLAS: %d/3" % (quantity(self.app.state, "wood"), len(repaired)), 22, 91 + HUD_OFFSET_Y)
         for node in layout.get("nodes", []):
             x, y = node["position"]
             self.actor(node.get("label", node["id"]), pygame.Vector2(x, y), cx, cy)
@@ -1037,12 +1039,12 @@ class BrumazulScene(FarmScene):
                     elder_position.y += self.port_departure_progress * 180
                 self.actor("ANCIANO [E]", elder_position, cx, cy)
         pygame.draw.rect(screen, LINE, (-cx, -cy, layout.get("width", 800), layout.get("height", 704)), 2)
-        self.label(self.scene_id.replace("brumazul_", "").upper(), 22, 18)
+        self.label(self.scene_id.replace("brumazul_", "").upper(), 22, 18 + HUD_OFFSET_Y)
         if self.scene_id == "brumazul_granja":
             stage = self.app.state["quests"]["un_techo_propio"]
             objective = {"find_elder": "MISION: Habla con el anciano [E]", "repair_fence": "MISION: Repara las tres vallas", "inspect_gate": "MISION: Examina la puerta de la finca"}.get(stage)
             if objective:
-                self.label(objective, 22, 43)
+                self.label(objective, 22, 43 + HUD_OFFSET_Y)
 
     def draw_village(self, cx, cy):
         s = self.app.screen
@@ -1061,8 +1063,8 @@ class BrumazulScene(FarmScene):
         for name, race, pos, _ in VILLAGE_NPCS:
             self.actor(name, pygame.Vector2(pos), cx, cy)
         pygame.draw.rect(s, LINE, (-cx, -cy, 1400, 1050), 2)
-        self.label("BRUMAZUL  /  PUEBLO", 22, 18)
-        self.label(get_chapter_ui_text("village_hint"), 22, 43)
+        self.label("BRUMAZUL  /  PUEBLO", 22, 18 + HUD_OFFSET_Y)
+        self.label(get_chapter_ui_text("village_hint"), 22, 43 + HUD_OFFSET_Y)
 
     def actor(self, name, pos, cx, cy):
         x, y = int(pos.x - cx), int(pos.y - cy)

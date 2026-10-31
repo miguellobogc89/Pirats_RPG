@@ -110,6 +110,7 @@ class PygameApp:
         self.font = fonts["normal"]
         self.big_font = fonts["title"]
         self.small_font = fonts["small"]
+        self.dialogue_font = fonts["dialogue"]
 
         self.player_sprite = pygame.image.load(
             "assets/player/player_idle.png"

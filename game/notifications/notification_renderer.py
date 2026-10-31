@@ -59,7 +59,7 @@ def draw_loot_notifications(app, notifications):
         data = get_item_data(n["item_id"]) if n.get("item_id") else None
         icon_rect = pygame.Rect(7, 6, 34, 34)
         if not data or draw_item_sprite(surface, data, icon_rect, padding=2) is None:
-            pygame.draw.rect(surface, WOOD_MID, icon_rect, border_radius=4)
+            pygame.draw.rect(surface, WOOD_MID, icon_rect, border_radius=0)
             glyph = app.small_font.render((data or {}).get("icon", "?"), True, TEXT_LIGHT)
             surface.blit(glyph, glyph.get_rect(center=icon_rect.center))
         count = app.small_font.render("x" + str(n.get("amount", 1)), True, TEXT_DARK)
@@ -95,7 +95,7 @@ def draw_center_notifications(app, notifications):
         line_surf = app.small_font.render(line, True, TEXT_DARK)
         app.screen.blit(line_surf, line_surf.get_rect(center=(rect.centerx, rect.top + 75 + i * 23)))
     button = important_button_rect(app.screen)
-    pygame.draw.rect(app.screen, WOOD_DARK, button, border_radius=5)
+    pygame.draw.rect(app.screen, WOOD_DARK, button, border_radius=0)
     label = app.font.render("Aceptar", True, TEXT_LIGHT)
     app.screen.blit(label, label.get_rect(center=button.center))
 
@@ -113,14 +113,13 @@ def draw_notification_box(app, rect, notification, font, compact=False, centered
             surface,
             WOOD_MID,
             pygame.Rect(8, 8, 4, rect.height - 16),
-            border_radius=2,
+            border_radius=0,
         )
 
     text_color = TEXT_DARK
 
     if centered:
-        text_color = TEXT_LIGHT
-        pygame.draw.rect(surface, WOOD_DARK, local_rect, 3, border_radius=10)
+        pygame.draw.rect(surface, WOOD_DARK, local_rect, 4)
 
     draw_notification_text(
         surface,

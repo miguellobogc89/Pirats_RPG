@@ -3,6 +3,7 @@ import pygame
 from game.data.item_database import get_item_data
 from game.ui.sprite_renderer import draw_item_sprite
 from game.ui.ui_components import (
+    PARCHMENT,
     PARCHMENT_DISABLED,
     PARCHMENT_LIGHT,
     TEXT_DARK,
@@ -14,8 +15,8 @@ from game.ui.ui_components import (
 from game.ui.ui_theme import BORDER_RADIUS_SMALL
 
 
-SLOT_HOVER_BORDER = (175, 175, 175)
-SLOT_SELECTED_BORDER = (155, 155, 155)
+SLOT_HOVER_BORDER = (104, 104, 104)
+SLOT_SELECTED_BORDER = (24, 24, 24)
 
 
 def draw_slot(
@@ -101,14 +102,13 @@ def draw_slot_background(
     selected_fill_color=None,
     border_color=None,
 ):
-    base_fill_color = fill_color or PARCHMENT_LIGHT
-    selected_color = selected_fill_color or base_fill_color
-    current_border_color = border_color or WOOD_DARK
-    border_width = 1
+    base_fill_color = fill_color or PARCHMENT
+    selected_color = selected_fill_color or PARCHMENT_LIGHT
+    current_border_color = border_color or WOOD_MID
+    border_width = 2
 
     if selected:
         base_fill_color = selected_color
-        border_width = 1
 
     if disabled:
         base_fill_color = PARCHMENT_DISABLED
@@ -116,11 +116,11 @@ def draw_slot_background(
 
     if hovered:
         current_border_color = SLOT_HOVER_BORDER
-        border_width = 1
+        border_width = 3
 
     if selected:
         current_border_color = border_color or SLOT_SELECTED_BORDER
-        border_width = 1
+        border_width = 4
 
     pygame.draw.rect(
         screen,
@@ -192,14 +192,14 @@ def draw_slot_amount(screen, badge_rect, amount, small_font, disabled=False, tex
         screen,
         PARCHMENT_LIGHT,
         badge_rect,
-        border_radius=4,
+        border_radius=0,
     )
     pygame.draw.rect(
         screen,
         WOOD_DARK,
         badge_rect,
         1,
-        border_radius=4,
+        border_radius=0,
     )
 
     x = badge_rect.x + badge_padding_x

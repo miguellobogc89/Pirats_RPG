@@ -5,6 +5,7 @@ from game.dialogue.dialogue_manager import (
     get_dialogue_state,
     is_dialogue_active,
 )
+from game.ui.retro import draw_more_arrow
 from game.ui.sprite_renderer import draw_sprite_centered
 from game.ui.ui_components import (
     PARCHMENT_LIGHT,
@@ -17,7 +18,7 @@ from game.ui.ui_components import (
 
 
 DIALOGUE_MARGIN = 34
-DIALOGUE_HEIGHT = 132
+DIALOGUE_HEIGHT = 150
 PORTRAIT_SIZE = 112
 PANEL_GAP = 10
 PADDING_X = 26
@@ -66,21 +67,15 @@ def draw_dialogue(app):
         )
         y += speaker_surface.get_height() + 14
 
-    lines = wrap_text(draw_current_dialogue_text(app), app.font, text_rect.width)
+    font = getattr(app, "dialogue_font", app.font)
+    lines = wrap_text(draw_current_dialogue_text(app), font, text_rect.width)
 
     for line in lines[:3]:
-        text_surface = app.font.render(line, True, TEXT_DARK)
+        text_surface = font.render(line, False, TEXT_DARK)
         app.screen.blit(text_surface, (text_rect.x, y))
-        y += app.font.get_height() + 4
+        y += font.get_height() + 6
 
-    hint = app.small_font.render("E / Enter", True, TEXT_DISABLED)
-    app.screen.blit(
-        hint,
-        (
-            rect.right - hint.get_width() - 18,
-            rect.bottom - hint.get_height() - 12,
-        ),
-    )
+    draw_more_arrow(app.screen, rect.right - 30, rect.bottom - 24)
 
 
 def draw_portrait_box(app, rect):
@@ -90,14 +85,14 @@ def draw_portrait_box(app, rect):
         app.screen,
         PARCHMENT_LIGHT,
         inner_rect,
-        border_radius=6,
+        border_radius=0,
     )
     pygame.draw.rect(
         app.screen,
         WOOD_MID,
         inner_rect,
         2,
-        border_radius=6,
+        border_radius=0,
     )
 
     dialogue_state = get_dialogue_state(app) or {}
