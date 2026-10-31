@@ -95,19 +95,38 @@ class BrumazulScene(FarmScene):
         from game.story.chapter_01_encounters import initialize
         initialize(self)
         self.save_elapsed = 0.0
+        self.app.hud_health = None
         if self.beach:
             from game.story.beach_monster_combat import BeachMonsterCombat
             p = self.app.state["player"]
             from game.world.collision_manager import get_scene_collision_rects
+            beach = self.beach_config()
+            if beach.get("monster"):
+                self.boss = pygame.Vector2(*beach["monster"])
+            world_w, world_h = self.beach_world()
             self.beach_combat = BeachMonsterCombat(
                 p["x"], p["y"], self.boss.x, self.boss.y,
                 obstacles=get_scene_collision_rects(),
+                width=world_w, height=world_h,
+                stone_field=beach.get("stone_field"),
             )
             self.beach_notice = ""
             self.beach_notice_timer = 0.0
             self.beach_defeat_timer = None
             self.progress["chapter_started"] = True
             self.seed_collectables()
+
+    def beach_config(self):
+        return (self.app.scene_data or {}).get("beach") or {}
+
+    def beach_world(self):
+        """Tamaño en px de la playa (sale del mapa por casillas)."""
+        data = self.app.scene_data or {}
+        tile = data.get("tile_size", 32)
+        return data.get("width", 22) * tile, data.get("height", 22) * tile
+
+    def beach_decor(self, kind):
+        return [d for d in (self.app.scene_data or {}).get("decor", []) if d.get("type") == kind]
 
     def seed_collectables(self):
         from game.collectable_manager import ensure_collectables_state
@@ -117,7 +136,8 @@ class BrumazulScene(FarmScene):
         item_id = next((i for i in ("wood", "driftwood", "stone") if get_item_data(i)), None)
         if not item_id:
             return
-        for i, (x, y) in enumerate(((265, 510), (420, 620), (540, 420))):
+        drops = self.beach_config().get("drops") or ((265, 510), (420, 620), (540, 420))
+        for i, (x, y) in enumerate(drops):
             self.app.state["collectables"].append({
                 "id": "brumazul_" + str(i), "item_id": item_id,
                 "amount": 1, "x": x, "y": y, "radius": 10,
@@ -251,7 +271,7 @@ class BrumazulScene(FarmScene):
                 return True
             if event.type == pygame.MOUSEBUTTONUP and event.button == 3:
                 if throwing.charging:
-                    cx, cy = get_camera_position(p["x"], p["y"], WIDTH, HEIGHT, 704, 704)
+                    cx, cy = get_camera_position(p["x"], p["y"], WIDTH, HEIGHT, *self.beach_world())
                     throwing.throw(p["x"], p["y"], event.pos[0] + cx, event.pos[1] + cy)
                 return True
             if event.type == pygame.KEYDOWN and event.key in (pygame.K_SPACE, pygame.K_LSHIFT, pygame.K_RSHIFT):
@@ -262,13 +282,12 @@ class BrumazulScene(FarmScene):
                 return True
             # Doors respond only to a deliberate click on the door itself.
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                cx, cy = get_camera_position(p["x"], p["y"], WIDTH, HEIGHT, 704, 704)
+                cx, cy = get_camera_position(p["x"], p["y"], WIDTH, HEIGHT, *self.beach_world())
                 wx, wy = event.pos[0] + cx, event.pos[1] + cy
-                port_door = 686 <= wx <= 704 and 390 <= wy <= 490
-                village_door = 350 <= wx <= 450 and 0 <= wy <= 18
-                if port_door or village_door:
-                    door_x, door_y = (694, 440) if port_door else (400, 8)
-                    if math.dist((p["x"], p["y"]), (door_x, door_y)) <= 110:
+                doors = [pygame.Rect(d["rect"]) for d in self.beach_decor("gate") + self.beach_decor("exit")]
+                clicked = next((r for r in doors if r.inflate(16, 16).collidepoint(wx, wy)), None)
+                if clicked is not None:
+                    if math.dist((p["x"], p["y"]), clicked.center) <= 110:
                         from game.notifications import notify_character_dialogue
                         notify_character_dialogue(
                             self, "Parece que la puerta está bien cerrada."
@@ -463,6 +482,7 @@ class BrumazulScene(FarmScene):
             self.boss_awake = self.beach_combat.monster.awake
             self.boss_hp = self.beach_combat.monster.hp
             self.app.state["health"]["current"] = self.beach_combat.player.hp
+            self.app.hud_health = (self.beach_combat.player.hp, self.beach_combat.player.max_hp)
             if self.beach_combat.last_stone_event == "hit":
                 self.beach_message("¡La criatura se ha movido! Impactos: " +
                                    str(self.beach_combat.stone_hits) + "/3")
@@ -536,7 +556,7 @@ class BrumazulScene(FarmScene):
         if not self.beach:
             return
         p = self.app.state["player"]
-        cx, cy = get_camera_position(p["x"], p["y"], WIDTH, HEIGHT, 704, 704)
+        cx, cy = get_camera_position(p["x"], p["y"], WIDTH, HEIGHT, *self.beach_world())
         direction = (mouse[0] + cx - p["x"], mouse[1] + cy - p["y"])
         # Shared engine handles combo, reach, cooldown, hit, knockback and stun.
         self.beach_combat.player_attack(direction)
@@ -731,31 +751,38 @@ class BrumazulScene(FarmScene):
         p = self.app.state["player"]
         world_width = self.area_layout.get("width", 800) if self.chapter_area else (1400 if self.village else 800)
         world_height = self.area_layout.get("height", 800) if self.chapter_area else (1050 if self.village else 800)
+        if self.beach:
+            world_width, world_height = self.beach_world()
         cx, cy = get_camera_position(p["x"], p["y"], WIDTH, HEIGHT, world_width, world_height)
         if self.beach:
-            # Una sola playa continua: fondo de arena, costa y pequeñas rocas.
-            # Los obstáculos son los de la escena real; no añadimos plataformas.
-            from game.scenes.beach_art import (
-                draw_beach_ground, draw_beach_rocks, draw_beach_pickup,
-            )
-            from game.world.collision_manager import get_scene_collision_rects
-            draw_beach_ground(s, cx, cy)
-            draw_beach_rocks(s, cx, cy, get_scene_collision_rects())
-
-            # Árboles a escala del personaje; sus troncos pisan las rocas.
-            draw_pixel_tree(s, 154 - cx, 273 - cy, 44, 60, "palm")
-            draw_pixel_tree(s, 552 - cx, 312 - cy, 46, 59, "mangrove")
-
-            # Puerta del puerto y acceso al pueblo en las posiciones originales.
-            pygame.draw.rect(s, INK, (693 - cx, 390 - cy, 7, 100))
-            pygame.draw.rect(s, LIGHT, (695 - cx, 398 - cy, 2, 84))
-            for py in range(399, 487, 13):
-                pygame.draw.rect(s, LINE, (689 - cx, py - cy, 11, 4))
-            self.label("PUERTO [E]", 595 - cx, 380 - cy)
-            pygame.draw.rect(s, INK, (350 - cx, 3 - cy, 100, 7))
-            for gx in range(358, 445, 14):
-                pygame.draw.rect(s, LINE, (gx - cx, 2 - cy, 4, 11))
-            self.label("PUEBLO [E] - CERRADO", 310 - cx, 23 - cy)
+            # Playa dibujada casilla a casilla (data/scenes/brumazul_playa.json).
+            from game.world.tilemap import draw_char_map
+            from game.scenes import beach_props
+            from game.scenes.beach_art import draw_beach_pickup
+            tilemap = (self.app.scene_data or {}).get("tilemap") or {}
+            draw_char_map(s, tilemap.get("rows", []), cx, cy, "brumazul_playa")
+            camera = (cx, cy)
+            beach = self.beach_config()
+            if beach.get("stone_field"):
+                beach_props.draw_stone_field(s, beach["stone_field"], camera)
+            for decor in self.app.scene_data.get("decor", []):
+                kind = decor.get("type")
+                if kind == "wreck":
+                    beach_props.draw_wreck(s, decor["rect"], camera)
+                elif kind == "chest":
+                    beach_props.draw_chest(s, decor["cell"], camera)
+                elif kind == "gate":
+                    beach_props.draw_gate(s, decor["rect"], camera)
+                    self.label(decor.get("label", ""), decor["rect"][0] - cx - 112, decor["rect"][1] - cy - 22)
+                elif kind == "exit":
+                    beach_props.draw_exit_marker(s, decor["rect"], camera)
+                    self.label(decor.get("label", ""), decor["rect"][0] - cx - 10, decor["rect"][1] - cy + 40)
+            # Palmeras por detras del jugador se dibujan ya; las de delante, despues.
+            palms = self.beach_decor("palm")
+            self.front_palms = [d for d in palms if (d["cell"][1] + 1) * 32 > p["y"]]
+            for decor in palms:
+                if decor not in self.front_palms:
+                    beach_props.draw_palm(s, decor["cell"], camera)
 
             # Los objetos recogibles siguen en sus posiciones jugables.
             for obj in self.app.state.get("collectables", []):
@@ -815,10 +842,6 @@ class BrumazulScene(FarmScene):
                 self.label("FUERZA", 235, 78 + HUD_OFFSET_Y)
             if self.beach_notice_timer > 0:
                 self.label(self.beach_notice, 22, 109 + HUD_OFFSET_Y)
-            hero = self.beach_combat.player
-            self.label("VIDA " + str(hero.hp) + "/" + str(hero.max_hp), 22, 138 + HUD_OFFSET_Y)
-            pygame.draw.rect(s, (75, 75, 75), (22, 159 + HUD_OFFSET_Y, 124, 12), 2)
-            pygame.draw.rect(s, LINE, (24, 161 + HUD_OFFSET_Y, int(120 * hero.hp / hero.max_hp), 8))
             self.label("PLAYA DE BRUMAZUL  /  NOCHE", 22, 18 + HUD_OFFSET_Y)
         elif self.tavern:
             self.draw_tavern(cx, cy)
@@ -839,10 +862,13 @@ class BrumazulScene(FarmScene):
 
         draw_pixel_actor(s, p["x"] - cx, p["y"] - cy, p.get("direction", "down"))
         if self.beach:
+            from game.scenes.beach_props import draw_palm
+            for decor in getattr(self, "front_palms", []):
+                draw_palm(s, decor["cell"], (cx, cy))
             # Existing combat feedback owns damage numbers, sparks, slashes,
             # hit flashes and camera shake. No scene-specific combat VFX.
             feedback = self.beach_combat.feedback
-            effects = pygame.Surface((704, 704), pygame.SRCALPHA)
+            effects = pygame.Surface(self.beach_world(), pygame.SRCALPHA)
             feedback.draw(effects, self.beach_combat.world,
                           self.app.small_font, self.app.font)
             shake_x, shake_y = feedback.offset()

@@ -8,10 +8,10 @@ import pygame
 from game.ui.retro import INK, LINE, draw_cursor, draw_frame, draw_more_arrow
 
 BOX_MARGIN = 24
-BOX_HEIGHT = 150
+BOX_HEIGHT = 160
 TEXT_PADDING_X = 30
-TEXT_PADDING_TOP = 30
-LINE_HEIGHT = 28
+TEXT_PADDING_TOP = 22
+LINE_HEIGHT = 32
 MAX_LINES = 3
 
 

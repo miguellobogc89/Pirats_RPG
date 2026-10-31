@@ -26,10 +26,12 @@ class GroundThrow:
         self.depleted = set()
         self.projectiles = []
 
-    @staticmethod
-    def terrain(x, y):
-        # Beach test layout: visible pebble strip at the west side.
-        return "rocky" if 70 <= x <= 230 and 350 <= y <= 465 else "sand"
+    # Zona con piedras sueltas (x, y, ancho, alto); la escena puede cambiarla.
+    rocky_rect = (70, 350, 160, 115)
+
+    def terrain(self, x, y):
+        rx, ry, rw, rh = self.rocky_rect
+        return "rocky" if rx <= x <= rx + rw and ry <= y <= ry + rh else "sand"
 
     def pickup(self, x, y, terrain=None):
         if self.held:

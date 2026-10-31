@@ -1,20 +1,21 @@
 # Guía de estilo visual — Pirats RPG
 
-Objetivo: aspecto de **Pokémon Rojo/Azul** (Game Boy), con arte propio. De momento todo se ve en **escala de grises** (el juego convierte la pantalla a grises al final de cada fotograma), así que los assets pueden generarse en color.
+Objetivo: pixel art con la claridad de un RPG clásico (inspiración Pokémon Rojo/Azul, sin ser un clon), en **rejilla de 32 px** y más detallado. De momento todo se ve en **escala de grises** (el juego convierte la pantalla a grises al final de cada fotograma), así que los assets pueden generarse en color.
 
 ## 1. Reglas fijas
 
 | Regla | Valor |
 |---|---|
-| Rejilla del arte | **16 × 16 px** por casilla |
-| Escala en pantalla | **2×** (una casilla = 32 px en pantalla). Escalar siempre sin suavizado (`pygame.transform.scale`) |
-| Personajes | **16 × 16** (o 16 × 24 si necesitan más altura), centrados en su casilla |
-| Objetos de 1 casilla | rocas pequeñas, arbustos, carteles: 16 × 16 |
-| Objetos grandes | árboles altos y palmeras: 16 × 32 o 32 × 32; edificios: múltiplos de 16 (p. ej. 64 × 48) |
+| Rejilla del arte | **32 × 32 px** por casilla, nativo (sin escalar) |
+| Escalado | si algo se escala, siempre sin suavizado (`pygame.transform.scale`) |
+| Personajes | **32 × 32** (o 32 × 48 si necesitan más altura), centrados en su casilla |
+| Objetos de 1 casilla | rocas, arbustos, carteles, cofres: 32 × 32 |
+| Objetos grandes | palmeras y árboles altos: 64 × 96 aprox.; edificios: múltiplos de 32 (p. ej. 160 × 128) |
 | Perspectiva | cenital ligeramente inclinada (vista "desde arriba y un poco de frente") |
 | Luz | desde **arriba a la izquierda**; sombra abajo a la derecha |
 | Contorno | 1 px oscuro alrededor de personajes y objetos |
-| Tonos | 4 tonos por asset (blanco, claro, oscuro, casi negro), sin degradados ni antialiasing |
+| Tonos | paleta limitada (5–7 tonos), sin antialiasing |
+| Fuente | familia Jersey (pixel, OFL): Jersey 10 para textos pequeños, Jersey 15 en diálogos, Jersey 20 en títulos |
 | Fondo | transparente (PNG) |
 | Mapas | dimensiones y zonas transitables en múltiplos de **32 px** para que el arte y las colisiones coincidan |
 
@@ -28,7 +29,7 @@ Objetivo: aspecto de **Pokémon Rojo/Azul** (Game Boy), con arte propio. De mome
   - `port` (puerto): muelle de tablones; fuera, mar.
   - `interior` (casa, talleres, posada): suelo de madera, pared encima y negro alrededor.
   - `cave` (madrigueras): suelo de cueva; fuera, rocas.
-- La playa mantiene de momento su dibujo propio (`game/scenes/beach_art.py`).
+- Mapas dibujados casilla a casilla: en el JSON de la escena, `"tilemap": {"rows": [...]}` con una letra por casilla. Letras: `J` selva, `s` arena, `w` arena mojada, `~` agua, `=` agua profunda, `R` roca, `r` roca en el agua, `g` hierba, `p` camino, `d` muelle, `T` árbol. Las colisiones salen solas del terreno (selva, agua y rocas bloquean). Objetos encima en `"decor"` (naufragio, cofre, puerta, salida, palmeras). Primer mapa así: la playa.
 
 **Con PixelLab (por prompt)**:
 - Naturaleza: rocas, árboles, palmeras, arbustos (y un árbol "de borde" que sustituya al provisional del bosque).

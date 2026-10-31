@@ -12,8 +12,8 @@ class BeachMonsterCombat:
     REQUIRED_HITS = 3
 
     def __init__(self, player_x, player_y, monster_x=400, monster_y=255,
-                 obstacles=()):
-        self.world = CombatWorld(width=704, height=704)
+                 obstacles=(), width=704, height=704, stone_field=None):
+        self.world = CombatWorld(width=width, height=height)
         self.world.obstacles = [
             Obstacle(float(box.x), float(box.y), float(box.width), float(box.height))
             for box in obstacles
@@ -31,6 +31,8 @@ class BeachMonsterCombat:
         ))
         self.monster.facing_x, self.monster.facing_y = 0, 1
         self.throwing = GroundThrow()
+        if stone_field:
+            self.throwing.rocky_rect = tuple(stone_field)
         self.stone_hits = 0
         self.sleep_reaction = 0.0
         self.last_stone_event = ""

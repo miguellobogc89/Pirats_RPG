@@ -1,70 +1,233 @@
 {
   "id": "brumazul_playa",
   "name": "Playa de Brumazul",
-  "width": 44,
-  "height": 44,
-  "tile_size": 16,
+  "width": 40,
+  "height": 26,
+  "tile_size": 32,
   "player_spawn": {
-    "x": 352,
-    "y": 560
+    "x": 144,
+    "y": 656
   },
   "objects": [],
-  "collisions": [
+  "tilemap": {
+    "legend": {
+      "J": "selva",
+      "s": "arena",
+      "w": "arena mojada",
+      "~": "agua",
+      "=": "agua profunda",
+      "R": "roca",
+      "r": "roca en el agua"
+    },
+    "rows": [
+      "JJJJJJJJJJJJJJJJJJJJJJJJJJJJJJsssJJJJJJJ",
+      "JJJJJJJJJJJJJJJJJJJJJJJJJJJJJJsssJJJJJJJ",
+      "JJsssssJJJJJJJJJJJJJJJJJJJJJJJsssJJJJJJJ",
+      "JJsRssRJJJJJJJJJJJJJJJJJJJJsssssssssJJJJ",
+      "JJsssssJJJJJJJJJJJJJJJJJJJJRsssssssRJJJJ",
+      "JJsssssJJJJJJJJJJJJJJJJJJJJsssssssssJJJJ",
+      "JJssssssJJJJsssJJsssJJJJJJJsssssssssJJJJ",
+      "JJssssssRssRsRssssRRJJJJJJJsssssssssJJJJ",
+      "JJsssssssRRsssRssssssJJJJJssssssssssJJJJ",
+      "JJssssssssssssssssssRssssRRsssssssssJJJJ",
+      "JJRssssssssssssssssssRRsRsssssssssssJJJJ",
+      "JJssssssssssssssssssssssssssssssssssRsRR",
+      "JJssssssssssssssssssssssssssssssssssRRss",
+      "JJssssssssssssssssssssssssssssssssssssss",
+      "JJsssssssssssssssssssssssssssssswwwsssRR",
+      "JJssssssssssssssssssssssssssssww~~~www~~",
+      "JJssssssssssssssssssssssssssww~~~~~~~~~~",
+      "JJssssssssssssssssswwwwRRwww~~~~~~~rr~~~",
+      "JJRsssssssssssssssw~~~~~~rr~~~~~~~~~~~~~",
+      "JJJssssssssssRRsww~~~~~~~~~~~~~~===~~~==",
+      "JJJsssswwwwwwwww~~~~~~~~~~~~~~=rr=======",
+      "RRRsssw~~~rr~~~~~~~~~~~~~~~~============",
+      "RRRsww~~~~~~~~~~~~~==rr=================",
+      "RRRw~~~~~~~~~~~rr~===========rr=========",
+      "~~~~~~~~r~~~~~~~r=======r===============",
+      "~~~~~~~================================="
+    ]
+  },
+  "decor": [
     {
-      "x": 96,
-      "y": 270,
-      "w": 125,
-      "h": 55
+      "type": "wreck",
+      "rect": [
+        96,
+        352,
+        128,
+        256
+      ],
+      "solid_rect": [
+        104,
+        368,
+        112,
+        224
+      ]
     },
     {
-      "x": 490,
-      "y": 310,
-      "w": 115,
-      "h": 50
+      "type": "chest",
+      "cell": [
+        4,
+        4
+      ],
+      "solid": true
     },
     {
-      "x": 120,
-      "y": 470,
-      "w": 85,
-      "h": 80
+      "type": "gate",
+      "rect": [
+        1248,
+        384,
+        32,
+        64
+      ],
+      "label": "PUERTA CERRADA"
     },
     {
-      "x": 575,
-      "y": 480,
-      "w": 70,
-      "h": 100
+      "type": "exit",
+      "rect": [
+        960,
+        0,
+        96,
+        32
+      ],
+      "label": "SALIDA AL BOSQUE"
     },
     {
-      "x": 694,
-      "y": 390,
-      "w": 10,
-      "h": 100
+      "type": "palm",
+      "cell": [
+        2,
+        6
+      ],
+      "solid": true
     },
     {
-      "x": 350,
-      "y": 0,
-      "w": 100,
-      "h": 10
+      "type": "palm",
+      "cell": [
+        13,
+        6
+      ],
+      "solid": true
     },
     {
-      "x": 0,
-      "y": 164,
-      "w": 102,
-      "h": 540
+      "type": "palm",
+      "cell": [
+        18,
+        6
+      ],
+      "solid": true
+    },
+    {
+      "type": "palm",
+      "cell": [
+        27,
+        7
+      ],
+      "solid": true
+    },
+    {
+      "type": "palm",
+      "cell": [
+        28,
+        5
+      ],
+      "solid": true
+    },
+    {
+      "type": "palm",
+      "cell": [
+        34,
+        6
+      ],
+      "solid": true
+    },
+    {
+      "type": "palm",
+      "cell": [
+        35,
+        9
+      ],
+      "solid": true
+    },
+    {
+      "type": "palm",
+      "cell": [
+        7,
+        9
+      ],
+      "solid": true
+    },
+    {
+      "type": "palm",
+      "cell": [
+        33,
+        10
+      ],
+      "solid": true
+    },
+    {
+      "type": "palm",
+      "cell": [
+        5,
+        2
+      ],
+      "solid": true
+    },
+    {
+      "type": "palm",
+      "cell": [
+        29,
+        9
+      ],
+      "solid": true
+    },
+    {
+      "type": "palm",
+      "cell": [
+        12,
+        8
+      ],
+      "solid": true
     }
   ],
+  "beach": {
+    "monster": [
+      1008,
+      208
+    ],
+    "stone_field": [
+      512,
+      352,
+      192,
+      128
+    ],
+    "drops": [
+      [
+        240,
+        400
+      ],
+      [
+        272,
+        528
+      ],
+      [
+        304,
+        624
+      ]
+    ]
+  },
+  "collisions": [],
   "spawns": [
     {
       "id": "inicio",
       "cells": [
         [
-          22,
-          35
+          4,
+          20
         ]
       ],
       "spawn_cell": [
-        22,
-        35
+        4,
+        20
       ]
     }
   ],

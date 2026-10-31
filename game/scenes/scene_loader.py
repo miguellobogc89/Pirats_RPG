@@ -53,6 +53,9 @@ def normalize_scene_data(raw_scene, fallback_scene_id=None):
         "spawns": normalize_spawns(raw_scene),
         "exits": normalize_exits(raw_scene),
         "chapter_layout": raw_scene.get("chapter_layout", {}),
+        "tilemap": raw_scene.get("tilemap"),
+        "decor": raw_scene.get("decor", []),
+        "beach": raw_scene.get("beach", {}),
     }
 
 
@@ -143,6 +146,21 @@ def normalize_objects(raw_scene):
 
 def normalize_collisions(raw_scene):
     collisions = raw_scene.get("collisions")
+    tilemap = raw_scene.get("tilemap")
+
+    if isinstance(tilemap, dict) and tilemap.get("rows"):
+        # Mapa por casillas: el propio terreno decide por donde se anda.
+        from game.world.tilemap import collisions_from_rows
+        derived = collisions_from_rows(tilemap["rows"])
+        tile = raw_scene.get("tile_size", DEFAULT_TILE_SIZE)
+        for decor in raw_scene.get("decor", []):
+            if decor.get("solid") and "cell" in decor:
+                cx, cy = decor["cell"]
+                derived.append({"x": cx * tile, "y": cy * tile, "w": tile, "h": tile})
+            elif decor.get("solid_rect"):
+                x, y, w, h = decor["solid_rect"]
+                derived.append({"x": x, "y": y, "w": w, "h": h})
+        return derived + (collisions if isinstance(collisions, list) else [])
 
     if isinstance(collisions, list):
         return collisions
