@@ -1048,9 +1048,9 @@ class BrumazulScene(FarmScene):
 
     def draw_village(self, cx, cy):
         s = self.app.screen
-        # Chapter-one geometry; shared with the original simulator scene data.
-        for x, y, w, h in VILLAGE_LAYOUT["walkable"]:
-            pygame.draw.rect(s, PALE, (x - cx, y - cy, w, h))
+        # Suelo por casillas: calles, hierba y bosque como limite del mapa.
+        from game.world.tilemap import draw_ground
+        draw_ground(s, VILLAGE_LAYOUT, cx, cy, cache_key="brumazul_pueblo")
         for building in VILLAGE_LAYOUT["buildings"]:
             x, y, w, h = building["rect"]
             dx, dy, dw, dh = building["door"]
@@ -1062,7 +1062,6 @@ class BrumazulScene(FarmScene):
             self.draw_door(x, y, w, h, cx, cy, exit_data.get("label", ""))
         for name, race, pos, _ in VILLAGE_NPCS:
             self.actor(name, pygame.Vector2(pos), cx, cy)
-        pygame.draw.rect(s, LINE, (-cx, -cy, 1400, 1050), 2)
         self.label("BRUMAZUL  /  PUEBLO", 22, 18 + HUD_OFFSET_Y)
         self.label(get_chapter_ui_text("village_hint"), 22, 43 + HUD_OFFSET_Y)
 
@@ -1075,4 +1074,7 @@ class BrumazulScene(FarmScene):
         draw_chapter_conversation(self, speaker, message, choices, selected)
 
     def label(self, value, x, y):
-        self.app.screen.blit(self.app.small_font.render(str(value), True, INK), (int(x), int(y)))
+        # Fondo claro detras del texto para que se lea sobre cualquier terreno.
+        text = self.app.small_font.render(str(value), True, INK)
+        self.app.screen.fill(WHITE, (int(x) - 3, int(y) - 1, text.get_width() + 6, text.get_height() + 1))
+        self.app.screen.blit(text, (int(x), int(y)))
