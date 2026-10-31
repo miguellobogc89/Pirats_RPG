@@ -23,7 +23,12 @@ Objetivo: aspecto de **Pokémon Rojo/Azul** (Game Boy), con arte propio. De mome
 **Por código (sin gastar créditos)** — `game/world/terrain_tiles.py` y `game/world/tilemap.py`:
 - Suelo: hierba, flores, camino, arena, agua.
 - Bordes automáticos entre camino y hierba.
-- Límites del mapa: todo lo que no es transitable se rellena de bosque (como en Pokémon).
+- Límites del mapa: lo que no es transitable se rellena según el tema de la escena:
+  - `village` / `farm` (pueblo, granja): hierba y caminos; fuera, bosque.
+  - `port` (puerto): muelle de tablones; fuera, mar.
+  - `interior` (casa, talleres, posada): suelo de madera, pared encima y negro alrededor.
+  - `cave` (madrigueras): suelo de cueva; fuera, rocas.
+- La playa mantiene de momento su dibujo propio (`game/scenes/beach_art.py`).
 
 **Con PixelLab (por prompt)**:
 - Naturaleza: rocas, árboles, palmeras, arbustos (y un árbol "de borde" que sustituya al provisional del bosque).

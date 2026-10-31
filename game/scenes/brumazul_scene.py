@@ -27,6 +27,10 @@ LINE = (104, 104, 104)
 INK = (24, 24, 24)
 # Los textos de esquina van debajo del recuadro de vida (que ocupa y=18..66).
 HUD_OFFSET_Y = 62
+# Zonas de suelo de la posada (habitacion y salon, con pasillos hasta las puertas).
+ROOM_LAYOUT = {"id": "brumazul_posada", "width": 800, "height": 800, "walkable": [[192, 192, 416, 416]]}
+TAVERN_LAYOUT = {"id": "brumazul_taberna", "width": 800, "height": 800,
+                 "walkable": [[160, 224, 480, 384], [416, 96, 128, 128], [416, 608, 128, 160]]}
 
 # La conversacion tiene indicaciones de escena en vez de lineas pronunciadas.
 INTRO = get_chapter_intro()
@@ -877,11 +881,10 @@ class BrumazulScene(FarmScene):
 
     def draw_room(self, cx, cy):
         s = self.app.screen
-        room = pygame.Rect(200 - cx, 200 - cy, 400, 400)
-        pygame.draw.rect(s, PAPER, room)
-        pygame.draw.rect(s, LINE, room, 1)
-        pygame.draw.rect(s, LIGHT, (280 - cx, 400 - cy, 80, 120), 1)
-        pygame.draw.rect(s, LIGHT, (480 - cx, 280 - cy, 80, 80), 1)
+        from game.world.tilemap import draw_ground
+        draw_ground(s, ROOM_LAYOUT, cx, cy, "interior")
+        for x, y, w, h in ((280, 400, 80, 120), (480, 280, 80, 80)):
+            self.draw_furniture(x, y, w, h, cx, cy)
         self.draw_door(430, 595, 110, 10, cx, cy, "SALON")
         if self.show_keeper:
             self.actor("POSADERA", self.keeper, cx, cy)
@@ -890,6 +893,14 @@ class BrumazulScene(FarmScene):
         self.label("POSADA  /  HABITACION", 22, 18 + HUD_OFFSET_Y)
         if self.phase == "free":
             self.label(get_chapter_ui_text("room_exit_hint"), 24, 43 + HUD_OFFSET_Y)
+
+    def draw_furniture(self, x, y, w, h, cx, cy):
+        """Mueble sencillo (mesa o cama): tablero claro con contorno y sombra."""
+        rect = pygame.Rect(int(x - cx), int(y - cy), int(w), int(h))
+        pygame.draw.rect(self.app.screen, LINE, rect.move(4, 4))
+        pygame.draw.rect(self.app.screen, LIGHT, rect)
+        pygame.draw.rect(self.app.screen, INK, rect, 2)
+        pygame.draw.line(self.app.screen, WHITE, (rect.x + 4, rect.y + 4), (rect.right - 5, rect.y + 4), 2)
 
     def draw_door(self, x, y, w, h, cx, cy, label=""):
         rect = pygame.Rect(int(x - cx), int(y - cy), int(w), int(max(h, 8)))
@@ -901,10 +912,10 @@ class BrumazulScene(FarmScene):
     def draw_tavern(self, cx, cy):
         s = self.app.screen
         # Salon mas compacto; puertas y transiciones comparten coordenadas.
-        pygame.draw.rect(s, PAPER, pygame.Rect(180 - cx, 220 - cy, 440, 400))
-        pygame.draw.rect(s, LINE, pygame.Rect(180 - cx, 220 - cy, 440, 400), 2)
+        from game.world.tilemap import draw_ground
+        draw_ground(s, TAVERN_LAYOUT, cx, cy, "interior")
         for x, y, w, h in ((225, 270, 85, 55), (460, 440, 95, 65), (395, 320, 85, 55)):
-            pygame.draw.rect(s, LIGHT, (x - cx, y - cy, w, h), 1)
+            self.draw_furniture(x, y, w, h, cx, cy)
         self.draw_door(430, 100, 110, 10, cx, cy, "HABITACION")
         self.draw_door(430, 740, 110, 10, cx, cy, "PUEBLO")
         for name, race, pos, _ in TAVERN_NPCS:
@@ -915,8 +926,8 @@ class BrumazulScene(FarmScene):
     def draw_chapter_area(self, cx, cy):
         layout = self.area_layout
         screen = self.app.screen
-        for x, y, w, h in layout.get("walkable", []):
-            pygame.draw.rect(screen, PALE, (x - cx, y - cy, w, h))
+        from game.world.tilemap import draw_ground, theme_for_scene
+        draw_ground(screen, layout, cx, cy, theme_for_scene(self.scene_id), cache_key=self.scene_id)
         if self.scene_id == "brumazul_granja":
             from game.world.grid_renderer import draw_tilled_cells, draw_watered_cells, draw_crops, draw_wild_bushes, draw_farm_reach_grid
             from game.inventory.hotbar_manager import get_active_tool, get_active_item_data
@@ -1050,7 +1061,7 @@ class BrumazulScene(FarmScene):
         s = self.app.screen
         # Suelo por casillas: calles, hierba y bosque como limite del mapa.
         from game.world.tilemap import draw_ground
-        draw_ground(s, VILLAGE_LAYOUT, cx, cy, cache_key="brumazul_pueblo")
+        draw_ground(s, VILLAGE_LAYOUT, cx, cy, "village", cache_key="brumazul_pueblo")
         for building in VILLAGE_LAYOUT["buildings"]:
             x, y, w, h = building["rect"]
             dx, dy, dw, dh = building["door"]

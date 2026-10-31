@@ -124,6 +124,83 @@ def _tree(variant):
     return surf
 
 
+def _planks(variant, horizontal=True):
+    surf = _surface()
+    surf.fill(WHITE)
+    # Tablones de 4 px con juntas oscuras y vetas claras.
+    for i in range(0, 16, 4):
+        if horizontal:
+            surf.fill(DARK, (0, i + 3, 16, 1))
+            seam = (variant * 5 + i * 3) % 16
+            surf.fill(DARK, (seam, i, 1, 3))
+            _put(surf, (seam + 7) % 16, i + 1, LIGHT)
+        else:
+            surf.fill(DARK, (i + 3, 0, 1, 16))
+            seam = (variant * 5 + i * 3) % 16
+            surf.fill(DARK, (i, seam, 3, 1))
+    return surf
+
+
+def _dock(variant):
+    return _planks(variant, horizontal=False)
+
+
+def _floor(variant):
+    return _planks(variant, horizontal=True)
+
+
+def _wall(variant):
+    surf = _surface()
+    surf.fill(LIGHT)
+    # Friso de madera con zocalo oscuro.
+    for x in range(0, 16, 4):
+        surf.fill(DARK, (x, 0, 1, 12))
+    surf.fill(WHITE, (0, 2, 16, 1))
+    surf.fill(INK, (0, 12, 16, 4))
+    surf.fill(DARK, (0, 12, 16, 1))
+    return surf
+
+
+def _void(variant):
+    surf = _surface()
+    surf.fill(INK)
+    return surf
+
+
+def _cave(variant):
+    surf = _surface()
+    surf.fill(LIGHT)
+    for i in range(5):
+        h = _hash(variant, 21, i)
+        x, y = h % 15, (h >> 8) % 15
+        _put(surf, x, y, DARK)
+        _put(surf, x + 1, y, WHITE)
+    return surf
+
+
+def _rock(variant):
+    """Bloque de roca de una casilla; repetido forma las paredes de una cueva."""
+    surf = _surface()
+    cx, cy = 7.5, 8.0
+    for y in range(ART_SIZE):
+        for x in range(ART_SIZE):
+            dx, dy = x - cx, y - cy
+            # Forma irregular: radio que varia con el angulo.
+            angle = math.atan2(dy, dx)
+            radius = 7.3 + 0.45 * math.sin(angle * 2 + variant * 1.7) + 0.35 * math.sin(angle * 5 + variant)
+            dist = math.hypot(dx, dy)
+            if dist > radius:
+                continue
+            if dist > radius - 1.1:
+                _put(surf, x, y, INK)
+                continue
+            light = -(dx + dy) / 12.0
+            grain = (_hash(variant, x, y, 5) % 100) / 100.0
+            value = light + (grain - 0.5) * 0.5
+            _put(surf, x, y, WHITE if value > 0.5 else LIGHT if value > -0.1 else DARK)
+    return surf
+
+
 _BUILDERS = {
     "grass": (_grass, 4),
     "flowers": (_flowers, 2),
@@ -131,6 +208,12 @@ _BUILDERS = {
     "sand": (_sand, 4),
     "water": (_water, 4),
     "tree": (_tree, 3),
+    "dock": (_dock, 3),
+    "floor": (_floor, 3),
+    "wall": (_wall, 1),
+    "void": (_void, 1),
+    "cave": (_cave, 4),
+    "rock": (_rock, 4),
 }
 
 
