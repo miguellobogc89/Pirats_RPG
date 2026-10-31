@@ -41,10 +41,6 @@ def update_collectables(app):
     collected = []
 
     for collectable in app.state["collectables"]:
-        dx = collectable["x"] - player["x"]
-        dy = collectable["y"] - player["y"]
-        distance = (dx * dx + dy * dy) ** 0.5
-
         if not can_interact_point(player, collectable["x"], collectable["y"]):
             continue
 

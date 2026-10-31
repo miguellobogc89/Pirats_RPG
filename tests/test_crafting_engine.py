@@ -1,9 +1,8 @@
 import unittest
-from unittest.mock import patch
 
-from game.crafting.crafting_manager import craft_item, check_craft, can_craft
-from game.inventory.inventory_manager import add_item, get_item_quantity, get_inventory_grid
-from game.inventory.item_transactions import exchange, can_receive
+from game.crafting.crafting_manager import craft_item, can_craft
+from game.inventory.inventory_manager import add_item, get_item_quantity
+from game.inventory.item_transactions import exchange
 
 
 class CraftingEngineTests(unittest.TestCase):

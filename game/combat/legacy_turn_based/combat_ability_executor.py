@@ -14,7 +14,6 @@ def use_ability(manager, actor, targets, ability):
     apply_ability_cooldown(actor, ability)
     tick_statuses(actor)
 
-    actor_id = actor["unit_id"]
     effect = ability["effect"]
 
     if effect == "status_all_allies":

@@ -83,10 +83,10 @@ def build_python_file(variable_name, bitmap_id, width, height, pixel_size, palet
     lines.append(f'    "width": {width},')
     lines.append(f'    "height": {height},')
     lines.append(f'    "pixel_size": {pixel_size},')
-    lines.append(f'    "collision_width": 2,')
-    lines.append(f'    "collision_height": 2,')
-    lines.append(f'    "collision_offset_x": 0,')
-    lines.append(f'    "collision_offset_y": 1,')
+    lines.append('    "collision_width": 2,')
+    lines.append('    "collision_height": 2,')
+    lines.append('    "collision_offset_x": 0,')
+    lines.append('    "collision_offset_y": 1,')
     lines.append('    "palette": {')
 
     for symbol, color in palette.items():

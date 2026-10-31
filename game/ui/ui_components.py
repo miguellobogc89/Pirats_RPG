@@ -2,7 +2,6 @@ import pygame
 
 from game.ui.ui_theme import (
     BORDER_RADIUS_SMALL,
-    BORDER_RADIUS_MEDIUM,
 )
 
 

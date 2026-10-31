@@ -1,4 +1,3 @@
-import sys
 import pygame
 
 from core.rules_engine import (
@@ -6,14 +5,8 @@ from core.rules_engine import (
 )
 from game.hud.hud_renderer import draw_hud
 from game.time.time_manager import update_time, reset_time_to_wake_up
-from game.interaction_manager import get_nearby_object, interact_with_nearby_object
+from game.interaction_manager import get_nearby_object
 
-from game.inventory.hotbar_manager import (
-    get_active_item_data,
-    get_active_item_id,
-    get_active_tool,
-    set_active_hotbar_index,
-)
 from game.world.grid_manager import TILE_SIZE, world_to_grid, grid_to_world
 from game.world.object_sprite_layout import get_object_sprite_rect
 from game.cartography.cartography_manager import CartographyManager
@@ -24,7 +17,6 @@ from game.cartography.cartography_validator import (
 )
 from game.player_controller import update_player_movement
 from game.skills.skill_manager import SkillManager
-from game.ui_renderer import draw_log
 from game.world.camera import get_camera_position
 from game.world.world_config import WORLD_WIDTH, WORLD_HEIGHT
 from game.world.world_renderer import draw_world_background
@@ -67,19 +59,16 @@ from game.inventory.stash_state import ensure_stash_state
 from game.ui.sprite_renderer import draw_item_sprite, draw_sprite_centered, draw_pixel_actor, draw_pixel_tree
 from game.farming.farming_manager import advance_farming_day
 from game.bestiary.bestiary_manager import BestiaryManager
-from game.combat.combat_manager import CombatManager
-from game.hud.menu_overlay import draw_menu, get_menu_tab_at_position
+from game.combat.legacy_turn_based.combat_manager import CombatManager
+from game.hud.menu_overlay import draw_menu
 from game.hud.stash_overlay import draw_stash_overlay
 from game.ui.ui_theme import create_game_fonts
 from game.world.grid_renderer import (
-    draw_world_grid,
     draw_tilled_cells,
     draw_watered_cells,
     draw_crops,
     draw_wild_bushes,
     draw_placed_objects,
-    draw_occupied_cells_debug,
-    draw_collision_debug,
 )
 from game.world.collision_manager import set_scene_collision_rects
 
@@ -164,9 +153,16 @@ class PygameApp:
         ensure_scene_state(self.state)
         ensure_stash_state(self.state)
         from game.inventory.item_transactions import receive
+        # Materiales de prueba: cada uno se entrega una sola vez (recibo por objeto),
+        # asi un inventario lleno no provoca entregas repetidas en cargas siguientes.
         if not self.state.get("crafting_demo_materials_granted"):
             grants = {"wood": 99, "stone": 60, "rope": 30}
-            if all(receive(self.state, item_id, amount) for item_id, amount in grants.items()):
+            receipts = self.state.setdefault("item_receipts", [])
+            for item_id, amount in grants.items():
+                receipt_id = f"crafting_demo_{item_id}"
+                if receipt_id not in receipts:
+                    receive(self.state, item_id, amount, receipt_id=receipt_id)
+            if all(f"crafting_demo_{item_id}" in receipts for item_id in grants):
                 self.state["crafting_demo_materials_granted"] = True
 
         from game.inventory.debug_full_inventory import fill_inventory_for_crafting_test

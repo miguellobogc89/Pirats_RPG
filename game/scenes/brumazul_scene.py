@@ -4,8 +4,6 @@ El estado del personaje, inventario, recoleccion y menu siguen siendo los del mo
 El prototipo independiente no se modifica.
 """
 import math
-import json
-from pathlib import Path
 import pygame
 
 from core.save_manager import save_state
@@ -13,9 +11,9 @@ from game.scenes.farm_scene import FarmScene
 from game.ui.sprite_renderer import draw_pixel_actor, draw_pixel_tree, draw_pixel_building, draw_pixel_monster
 from game.hud.menu_overlay import draw_menu
 from game.hud.stash_overlay import draw_stash_overlay
-from game.inventory.hotbar_manager import get_hotbar_slots, get_active_hotbar_index
 from game.inventory.item_transactions import receive, spend, spend_bundle, quantity, migrate_chapter_items
 from game.world.camera import get_camera_position
+from game.scenes.chapter_area_navigation import village_layout
 from game.data.item_database import get_item_data
 from game.dialogue.chapter_dialogues import get_chapter_dialogue, get_chapter_intro, get_chapter_npcs, get_chapter_ui_text
 from game.dialogue.chapter_conversation_renderer import draw_chapter_conversation
@@ -33,9 +31,7 @@ INTRO = get_chapter_intro()
 SCRIPT = [(entry["speaker"], entry["text"]) for entry in INTRO["script"]]
 CHOICES = INTRO["choices"]
 RESPONSES = INTRO["responses"]
-VILLAGE_LAYOUT = json.loads(
-    (Path(__file__).resolve().parents[2] / "python_simulator" / "scenes" / "pueblo.json").read_text(encoding="utf-8")
-)
+VILLAGE_LAYOUT = village_layout()
 VILLAGE_NPCS = [(npc["name"], npc["race"], tuple(npc["position"]), npc["dialogue"]) for npc in get_chapter_npcs("village")]
 TAVERN_NPCS = [(npc["name"], npc["race"], tuple(npc["position"]), npc["dialogue"]) for npc in get_chapter_npcs("tavern")]
 
@@ -154,7 +150,7 @@ class BrumazulScene(FarmScene):
         progress = self.app.state.setdefault("farm_repairs", {})
         collected = progress.setdefault("collected_wood", [])
         repaired = progress.setdefault("repaired_fences", [])
-        wood = progress.setdefault("wood", 0)
+        progress.setdefault("wood", 0)
         cx, cy = get_camera_position(p["x"], p["y"], WIDTH, HEIGHT, layout.get("width", 900), layout.get("height", 760))
         clicked = (click_position[0] + cx, click_position[1] + cy) if click_position is not None else None
         for i, position in enumerate(layout.get("wood_piles", [])):
@@ -616,7 +612,7 @@ class BrumazulScene(FarmScene):
                         dispatch_story_event(self.app, "npc_talked", {"npc_id": "anciano"})
                     self.npc_dialogue = get_chapter_dialogue("elder_fences_done")
                 else:
-                    self.npc_dialogue = get_chapter_dialogue("elder_fences_pending" if stage == "repair_fence" else "elder_farm_other")
+                    self.npc_dialogue = get_chapter_dialogue("elder_fences_pending") if stage == "repair_fence" else get_chapter_dialogue("elder_farm_other")
                 self.autosave()
                 return True
         if self.village:
@@ -869,7 +865,8 @@ class BrumazulScene(FarmScene):
             from game.trading.chapter_trade import draw as draw_trade
             draw_trade(self)
         if self.sleep_confirmation:
-            self.draw_dialogue("DESCANSAR", "¿Quieres dormir hasta las 06:00 del día siguiente? [S / ENTER] Sí   [N / ESC] No")
+            speaker, lines = get_chapter_dialogue("sleep_confirm")
+            self.draw_dialogue(speaker, lines[0])
         if self.phase in ("fade", "port_fade"):
             overlay = pygame.Surface((WIDTH, HEIGHT))
             overlay.fill(WHITE)

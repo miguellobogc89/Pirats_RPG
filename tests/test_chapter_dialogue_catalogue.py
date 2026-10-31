@@ -1,7 +1,6 @@
 """Guard against broken chapter dialogue references and inline spoken dialogue."""
 import ast
 import json
-import re
 import unittest
 from pathlib import Path
 
@@ -76,7 +75,11 @@ class ChapterDialogueAudit(unittest.TestCase):
         result = apply_chapter_quest_event(state, "npc_talked", {"npc_id": "sylvarin"})
         self.assertEqual([entry["quest_id"] for entry in result], ["el_hierro_que_canta"])
         self.assertEqual(state["quests"]["cuando_callan_las_campanas"], "not_started")
+        # Hablar otra vez con Sylvarin no abre la mision siguiente por si sola:
+        # la abre el evento explicito de oferta del nido.
         result = apply_chapter_quest_event(state, "npc_talked", {"npc_id": "sylvarin"})
+        self.assertEqual(result, [])
+        result = apply_chapter_quest_event(state, "rat_nest_offered", {"object_id": "sylvarin"})
         self.assertEqual([entry["quest_id"] for entry in result], ["cuando_callan_las_campanas"])
 
     def test_reward_dialogue_has_matching_inventory_transaction(self):

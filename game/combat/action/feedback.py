@@ -137,7 +137,6 @@ class CombatFeedback:
             fraction = slash[1] / slash[2]
             direction = math.atan2(actor.facing_y, actor.facing_x)
             reach = actor.radius + actor.reach * 0.72
-            center = (round(actor.x), round(actor.y))
             start = direction - 0.9 + (1 - fraction) * 0.4
             points = [(round(actor.x + math.cos(start + i * 0.12) * reach),
                        round(actor.y + math.sin(start + i * 0.12) * reach))

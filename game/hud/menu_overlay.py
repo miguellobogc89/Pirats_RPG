@@ -4,12 +4,9 @@ from core.rules_engine import build_upgrade, continue_and_risk, secure_return, s
 from game.inventory.hotbar_manager import get_active_hotbar_index
 from game.inventory.inventory_state import INVENTORY_COLUMNS, INVENTORY_ROWS
 from game.data.item_database import get_item_data
-from game.data.recipe_database import get_all_recipes
-from game.crafting.crafting_manager import can_craft, check_craft
 from game.skills.skill_database import SKILL_DATABASE
 from game.ui.ui_components import (
     TEXT_DARK,
-    TEXT_DISABLED,
     WOOD_DARK,
     draw_button_text,
     draw_content_panel,

@@ -255,7 +255,6 @@ def get_slot_hitbox_at_position(app, position):
 def handle_container_slot_click(app, slot_hitbox):
     slot_ui_state = app.slot_ui_state
     grid = get_slot_container_grid(app, slot_hitbox["container_id"])
-    columns = get_slot_container_columns(slot_hitbox["container_id"])
     row = slot_hitbox["row"]
     column = slot_hitbox["column"]
     ensure_grid_position(grid, row, column)

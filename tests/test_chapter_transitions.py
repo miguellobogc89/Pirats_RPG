@@ -27,9 +27,7 @@ class ChapterTransitionsAudit(unittest.TestCase):
                     rx, ry, rw, rh = reverse["rect"]
                     self.assertFalse(rx <= x <= rx + rw and ry <= y <= ry + rh,
                                      f"Spawn from {link['from']} to {link['to']} overlaps exit to {reverse['to']}")
-                legacy_name = link["to"].replace("brumazul_", "")
-                legacy_name = {"taberna": "salon_posada", "posada": "habitacion_posada"}.get(legacy_name, legacy_name)
-                source = ROOT / "python_simulator" / "scenes" / (legacy_name + ".json")
+                source = ROOT / "data" / "chapter_layouts" / (link["to"].replace("brumazul_", "") + ".json")
                 if source.exists():
                     scene = json.loads(source.read_text(encoding="utf-8"))
                     walkable = scene.get("walkable")

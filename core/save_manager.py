@@ -1,9 +1,12 @@
 import json
+import os
+import tempfile
 from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
-SAVE_FILE = PROJECT_ROOT / "save.json"
 SAVE_DIR = PROJECT_ROOT / "saves"
+# Antes el hueco 1 vivia en la raiz del repo; se migra automaticamente a saves/.
+LEGACY_SAVE_FILE = PROJECT_ROOT / "save.json"
 MAX_SAVE_SLOTS = 3
 SAVE_SLOT_IDS = [
     f"slot_{index}"
@@ -29,10 +32,35 @@ def save_state(state):
     ensure_farming_state(state)
     serialized_state = {key: value for key, value in state.items() if key != "farming"}
 
-    with save_path.open("w", encoding="utf-8") as file:
-        json.dump(serialized_state, file, indent=2, ensure_ascii=False)
+    # Serializar antes de tocar el disco: si falla, la partida anterior queda intacta.
+    payload = json.dumps(serialized_state, indent=2, ensure_ascii=False)
+    write_file_atomically(save_path, payload)
 
     return save_path
+
+
+def write_file_atomically(path, text):
+    """Escribe en un temporal y lo renombra: el archivo nunca queda a medias."""
+    fd, tmp_name = tempfile.mkstemp(dir=path.parent, prefix=path.name + ".", suffix=".tmp")
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as file:
+            file.write(text)
+            file.flush()
+            os.fsync(file.fileno())
+        os.replace(tmp_name, path)
+    except BaseException:
+        try:
+            os.unlink(tmp_name)
+        except OSError:
+            pass
+        raise
+
+
+def migrate_legacy_save_file():
+    target = SAVE_DIR / "slot_1.json"
+    if LEGACY_SAVE_FILE.exists() and not target.exists():
+        SAVE_DIR.mkdir(parents=True, exist_ok=True)
+        os.replace(LEGACY_SAVE_FILE, target)
 
 
 def load_saved_state(save_slot_id="slot_1"):
@@ -41,8 +69,16 @@ def load_saved_state(save_slot_id="slot_1"):
     if not save_path.exists():
         return None
 
-    with save_path.open("r", encoding="utf-8") as file:
-        state = json.load(file)
+    try:
+        with save_path.open("r", encoding="utf-8") as file:
+            state = json.load(file)
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError) as error:
+        quarantine_corrupt_save(save_path, error)
+        return None
+
+    if not isinstance(state, dict):
+        quarantine_corrupt_save(save_path, "el contenido no es un objeto JSON")
+        return None
 
     state["save_slot_id"] = save_slot_id
     return state
@@ -104,9 +140,19 @@ def get_available_save_slot_id():
     return None
 
 
+def quarantine_corrupt_save(save_path, reason):
+    """Aparta un guardado ilegible para que no bloquee el arranque ni se pierda."""
+    corrupt_path = save_path.with_suffix(".corrupt.json")
+    try:
+        os.replace(save_path, corrupt_path)
+        print(f"[save] Guardado danado ({reason}); movido a {corrupt_path.name}")
+    except OSError:
+        print(f"[save] Guardado danado ({reason}): {save_path}")
+
+
 def get_save_slot_path(save_slot_id):
     if save_slot_id == "slot_1":
-        return SAVE_FILE
+        migrate_legacy_save_file()
 
     return SAVE_DIR / f"{save_slot_id}.json"
 

@@ -8,3 +8,8 @@ __pycache__/
 venv/
 .idea/
 .vscode/
+
+# Partidas guardadas (locales, no se versionan)
+saves/
+save.json
+*.tmp

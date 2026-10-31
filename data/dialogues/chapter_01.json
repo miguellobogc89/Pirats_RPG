@@ -5,7 +5,8 @@
     "sylvarin_intro": {
       "speaker": "SYLVARIN",
       "lines": [
-        "Bienvenido. ¿En que puedo ayudarte?"
+        "Gracias otra vez por recuperar mi taller.",
+        "Si traes materiales orgánicos, podemos comerciar."
       ]
     },
     "elder_farm_first": {
@@ -32,14 +33,15 @@
     "elder_farm_other": {
       "speaker": "ANCIANO",
       "lines": [
-        "Bienvenido a las tierras de Almarin.",
-        "Esta finca necesita reparaciones. Recoge madera y arregla las vallas."
+        "Sigue con las reparaciones de la finca.",
+        "Cuando hayas terminado, ven a hablar conmigo."
       ]
     },
     "smith_idle": {
       "speaker": "HERRERO",
       "lines": [
-        "Bienvenido. ¿En que puedo ayudarte?"
+        "Bienvenido a la herrería. Ahora mismo la forja no descansa.",
+        "Si algún día necesitas algo de metal, ya sabes dónde encontrarme."
       ]
     },
     "smith_offer": {
@@ -78,14 +80,7 @@
     "farm_fence_repaired": {
       "speaker": "SISTEMA",
       "lines": [
-        "Reparar este tramo requiere 10 de madera. Tienes {wood}."
-      ]
-    },
-    "farm_fences_complete": {
-      "speaker": "ANCIANO",
-      "lines": [
-        "Buen trabajo con las vallas.",
-        "Ahora debemos asegurar la entrada con madera y un cerrojo."
+        "Tramo de valla reparado ({done} de {total}). Te quedan {wood} de madera."
       ]
     },
     "farm_gate_inspect": {
@@ -108,45 +103,49 @@
       ]
     },
     "generic_villager": {
-      "speaker": "NPC",
+      "speaker": "VECINO",
       "lines": [
-        "Que necesitas?"
+        "¿Qué necesitas?"
       ]
     },
     "village_smith": {
       "speaker": "HERRERO",
       "lines": [
-        "Bienvenido. ¿En que puedo ayudarte?"
+        "Bienvenido a la herrería. Si necesitas algo de metal, habla conmigo."
       ]
     },
     "village_botica": {
       "speaker": "BOTICA",
       "lines": [
-        "Bienvenido. ¿En que puedo ayudarte?"
+        "Hierbas, ungüentos y remedios.",
+        "Si te hieres ahí fuera, ven a verme antes de que sea tarde."
       ]
     },
     "village_mercader": {
-      "speaker": "MERCADER",
+      "speaker": "HERBOLARIO",
       "lines": [
-        "Bienvenido. ¿En que puedo ayudarte?"
+        "Muchas de estas plantas solo crecen en la costa de Brumazul.",
+        "Cuídalas bien y ellas cuidarán de ti."
       ]
     },
     "village_posadera": {
       "speaker": "POSADERA",
       "lines": [
-        "Bienvenido. ¿En que puedo ayudarte?"
+        "La posada está abierta. Pasa si buscas una cama o algo caliente que comer."
       ]
     },
     "tavern_marinera": {
-      "speaker": "POSADERA",
+      "speaker": "MARINERA",
       "lines": [
-        "Bienvenido. ¿En que puedo ayudarte?"
+        "Dicen que la niebla trae algo más que pescado últimamente.",
+        "Yo, por si acaso, ya no salgo al mar de noche."
       ]
     },
     "tavern_viajero": {
-      "speaker": "POSADERA",
+      "speaker": "VIAJERO",
       "lines": [
-        "Bienvenido. ¿En que puedo ayudarte?"
+        "Vengo de muy lejos. Brumazul parece un lugar tranquilo...",
+        "Demasiado tranquilo, si me preguntas."
       ]
     },
     "sylvarin_metal_explained": {
@@ -180,19 +179,14 @@
     "inventory_full": {
       "speaker": "SISTEMA",
       "lines": [
-        "Comercio pendiente de implementar."
+        "Tu inventario está lleno. Libera espacio y vuelve a intentarlo."
       ]
     },
     "innkeeper_tavern": {
       "speaker": "POSADERA",
       "lines": [
-        "Bienvenido. ¿En que puedo ayudarte?"
-      ]
-    },
-    "innkeeper_port_clue": {
-      "speaker": "POSADERA",
-      "lines": [
-        "Bienvenido. ¿En que puedo ayudarte?"
+        "Bienvenido a la posada.",
+        "Si necesitas descansar, la habitación está al norte."
       ]
     },
     "elder_port_followup": {
@@ -208,18 +202,6 @@
       "speaker": "ANCIANO",
       "lines": [
         "Nos veremos en la finca al anochecer."
-      ]
-    },
-    "smith_gate_repaired": {
-      "speaker": "HERRERO",
-      "lines": [
-        "Bienvenido. ¿En que puedo ayudarte?"
-      ]
-    },
-    "smith_trade": {
-      "speaker": "HERRERO",
-      "lines": [
-        "Bienvenido. ¿En que puedo ayudarte?"
       ]
     },
     "inn_elder_clue": {
@@ -268,6 +250,12 @@
         "Tu padre habría estado orgulloso de ti. Desde hoy, la casa y el taller de Almarin son oficialmente tuyos.",
         "Aquí tienes la escritura de la propiedad y las llaves de ambos edificios.",
         "Podrás descansar y guardar tus progresos en la cama de la casa, y almacenar tus pertenencias en el cofre del taller."
+      ]
+    },
+    "sleep_confirm": {
+      "speaker": "DESCANSAR",
+      "lines": [
+        "¿Quieres dormir hasta las 06:00 del día siguiente? [S / ENTER] Sí   [N / ESC] No"
       ]
     }
   },

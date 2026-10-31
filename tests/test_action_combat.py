@@ -100,7 +100,7 @@ class ActionCombatTests(unittest.TestCase):
         for step in range(1, 4):
             self.assertTrue(self.world.attack("hero", (1, 0)))
             self.assertEqual(hero.combo_step, step)
-            self.world.update(0.48)
+            self.world.update(hero.attack_cooldown)
         self.assertEqual(rat.hp, 0)
         self.world.add(Fighter("dummy", "enemy", 135, 100, hp=10, max_hp=10, speed=0, aggro_radius=0))
         self.world.update(0.5)

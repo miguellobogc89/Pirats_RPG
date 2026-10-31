@@ -4,6 +4,13 @@ from functools import lru_cache
 from pathlib import Path
 
 TRANSITIONS_PATH = Path(__file__).resolve().parents[2] / "data" / "scenes" / "chapter_01_transitions.json"
+VILLAGE_LAYOUT_PATH = Path(__file__).resolve().parents[2] / "data" / "chapter_layouts" / "pueblo.json"
+
+
+@lru_cache(maxsize=1)
+def village_layout():
+    """Mapa transitable del pueblo. Se lee del disco una sola vez."""
+    return json.loads(VILLAGE_LAYOUT_PATH.read_text(encoding="utf-8"))
 
 
 @lru_cache(maxsize=1)
@@ -58,12 +65,7 @@ def can_walk_chapter_area(scene_id, x, y, layout=None):
     """Collision against walkable paths and building footprints (world pixels)."""
     layout = layout or {}
     if scene_id == "brumazul_pueblo":
-        from pathlib import Path
-        import json
-        path = Path(__file__).resolve().parents[2] / "data" / "scenes" / "brumazul_pueblo.json"
-        # The village walkable map is shared with the chapter-one source until migrated.
-        source = Path(__file__).resolve().parents[2] / "python_simulator" / "scenes" / "pueblo.json"
-        layout = json.loads(source.read_text(encoding="utf-8"))
+        layout = village_layout()
     paths = layout.get("walkable", [])
     if not paths:
         return True
@@ -93,14 +95,7 @@ def recover_chapter_position(state, scene_id, scene_data):
     x, y = player.get("x"), player.get("y")
     layout = (scene_data or {}).get("chapter_layout", {})
     if scene_id == "brumazul_pueblo":
-        source = Path(__file__).resolve().parents[2] / "python_simulator" / "scenes" / "pueblo.json"
-        layout = json.loads(source.read_text(encoding="utf-8"))
-    elif not layout:
-        legacy = scene_id.removeprefix("brumazul_")
-        legacy = {"taberna": "salon_posada", "posada": "habitacion_posada"}.get(legacy, legacy)
-        source = Path(__file__).resolve().parents[2] / "python_simulator" / "scenes" / (legacy + ".json")
-        if source.is_file():
-            layout = json.loads(source.read_text(encoding="utf-8"))
+        layout = village_layout()
     if isinstance(x, (int, float)) and isinstance(y, (int, float)):
         if can_walk_chapter_area(scene_id, x, y, layout):
             width = layout.get("width", (scene_data or {}).get("width", 50) * (scene_data or {}).get("tile_size", 16))

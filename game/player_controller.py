@@ -45,19 +45,6 @@ def update_player_movement(state, speed, dt, world_width=WORLD_WIDTH, world_heig
         next_x = player["x"] + dx / length * speed * dt
         next_y = player["y"] + dy / length * speed * dt
 
-        left = next_x - PLAYER_COLLISION_WIDTH // 2
-        right = next_x + PLAYER_COLLISION_WIDTH // 2
-
-        top = next_y + PLAYER_FOOT_OFFSET_Y
-        bottom = top + PLAYER_COLLISION_HEIGHT
-
-        collision_points = [
-            world_to_grid(left, top),
-            world_to_grid(right, top),
-            world_to_grid(left, bottom),
-            world_to_grid(right, bottom),
-        ]
-
         # Allow escape from a cell that became occupied (e.g. a placed object).
         # Never enter another blocked cell; slide along obstacles per axis.
         current_cells = {

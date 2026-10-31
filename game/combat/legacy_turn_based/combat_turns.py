@@ -1,6 +1,6 @@
 import random
 
-from game.combat.legacy_turn_based.combat_status import tick_actor_cooldowns_on_turn_start
+from game.combat.legacy_turn_based.combat_status import tick_ability_cooldowns, tick_actor_cooldowns_on_turn_start
 from game.combat.legacy_turn_based.combat_targeting import get_valid_targets
 from game.combat.legacy_turn_based.combat_ability_executor import use_ability
 

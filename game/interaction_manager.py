@@ -90,7 +90,6 @@ def interact_with_nearby_object(app):
         return
 
     functional_type = world_object.get("functional_type", "decorative")
-    functional_data = world_object.get("functional_data", {})
 
     if functional_type == "pickup":
         pickup_world_object(app, world_object)
@@ -200,7 +199,7 @@ def get_interaction_message(world_object):
         return f"Inspeccionas {name}."
 
     if interaction_mode == "talk":
-        return f"No parece querer hablar ahora."
+        return "No parece querer hablar ahora."
 
     if interaction_mode == "open":
         return f"No puedes abrir {name} ahora."
